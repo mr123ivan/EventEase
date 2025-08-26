@@ -37,6 +37,11 @@ export const getEventDetails = () => {
     : {
         location: "",
         eventDate: "",
+        // Newly added fields for event details
+        celebrantName: "", // required
+        celebrantNameOptional: "", // optional
+        projectedAttendees: "", // required (number)
+        budget: "", // required (currency/number)
         note: "",
       }
 }

@@ -38,35 +38,109 @@ const PaymentProofPage = () => {
     setBookingData(getCompleteBookingData())
   }, [])
 
-  // Calculate payment amount (10% of subtotal) using actual service prices
-  const calculateSubtotal = () => {
-    const { servicesData } = bookingData
-
-    if (servicesData.activeTab === "package" && servicesData.selectedPackage) {
-      // Find the selected package and return its price
-      const selectedPkg = PACKAGES.find((pkg) => pkg.id === servicesData.selectedPackage)
-      return selectedPkg ? selectedPkg.price : 0
-    } else if (servicesData.activeTab === "custom") {
-      // Calculate total from selected custom services
-      let total = 0
-      const { selectedServices, availableServices } = servicesData
-
-      Object.entries(selectedServices).forEach(([serviceId, isSelected]) => {
-        if (isSelected) {
-          const service = availableServices.find((s) => s.id.toString() === serviceId)
-          if (service) {
-            total += service.price
-          }
-        }
-      })
-
-      return total
-    }
-
-    return 0
+  // Service definitions mirroring selectservice-page.jsx
+  const RADIO_GROUPS = {
+    bridalGown: {
+      label: "Bridal gown",
+      options: [
+        { id: "gown_owned_5k", label: "Owned", price: 5000 },
+        { id: "gown_rental_2k", label: "Rental", price: 2000 },
+        { id: "gown_none", label: "No gown", price: 0 },
+      ],
+    },
+    groomSuit: {
+      label: "Groom suit",
+      options: [
+        { id: "suit_owned_4k", label: "Owned", price: 4000 },
+        { id: "suit_rental_1_5k", label: "Rental", price: 1500 },
+        { id: "suit_none", label: "No suit", price: 0 },
+      ],
+    },
+    photoVideo: {
+      label: "Photography/Videography",
+      options: [
+        { id: "photo_video_25k", label: "Photo + Video (prenup & wedding day)", price: 25000 },
+        { id: "photo_6k", label: "Photography (prenup & wedding day)", price: 6000 },
+        { id: "video_4k", label: "Videography (wedding day only)", price: 4000 },
+        { id: "none_photo_video", label: "None of the above", price: 0 },
+      ],
+    },
+    weddingCake: {
+      label: "Wedding cake",
+      options: [
+        { id: "cake_4tier_10k", label: "4-tier cake + cupcakes", price: 10000 },
+        { id: "cake_3tier_8k", label: "3-tier cake", price: 8000 },
+        { id: "cake_2tier_5k", label: "2-tier cake", price: 5000 },
+        { id: "cake_none", label: "No wedding cake", price: 0 },
+      ],
+    },
   }
 
-  const subtotal = calculateSubtotal()
+  const OTHER_SERVICES = [
+    { id: "photobooth_3k", label: "Photobooth", price: 3000 },
+    { id: "invites_souvenirs_3k", label: "Invitations and souvenirs", price: 3000 },
+    { id: "doves_1k", label: "Doves", price: 1000 },
+    { id: "wedding_makeup_3k", label: "Wedding makeup", price: 3000 },
+    { id: "same_day_edit_3k", label: "Same day edit video", price: 3000 },
+    { id: "catering_20k", label: "Catering", price: 20000 },
+    { id: "decorations_15k", label: "Decorations", price: 15000 },
+    { id: "host_6k", label: "Host", price: 6000 },
+    { id: "lechon_6k", label: "Lechon", price: 6000 },
+    { id: "bridal_car_1k", label: "Bridal car", price: 1000 },
+    { id: "van_service_2k", label: "Van service", price: 2000 },
+    { id: "sounds_lights_7k", label: "Sounds and lights", price: 7000 },
+    { id: "bridal_entourage_10k", label: "Bridal entourage gown, suit and flowers", price: 10000 },
+    { id: "wine_toasting_1k", label: "Wine for toasting", price: 1000 },
+    { id: "mobile_bar_5k", label: "Mobile bar", price: 5000 },
+  ]
+
+  const ADD_ONS = [
+    { id: "led_wall_trusses_7k", label: "LED wall and trusses", price: 7000 },
+    { id: "grazing_table_2k", label: "Grazing table", price: 2000 },
+    { id: "kakanin_bar_1k", label: "Kakanin bar", price: 1000 },
+    { id: "coffee_bar_1k", label: "Coffee bar", price: 1000 },
+    { id: "cocktail_mobile_bar_1k", label: "Cocktail mobile bar", price: 1000 },
+    { id: "caramel_beer_bar_1k", label: "Caramel beer bar", price: 1000 },
+    { id: "desserts_bar_1k", label: "Desserts bar", price: 1000 },
+  ]
+
+  const allOptionsMap = (() => {
+    const m = {}
+    Object.entries(RADIO_GROUPS).forEach(([k, g]) => {
+      g.options.forEach((opt) => { m[opt.id] = { label: `${g.label}: ${opt.label}`, price: opt.price } })
+    })
+    OTHER_SERVICES.forEach((s) => { m[s.id] = { label: s.label, price: s.price } })
+    ADD_ONS.forEach((s) => { m[s.id] = { label: s.label, price: s.price } })
+    return m
+  })()
+
+  const getSelectedItems = () => {
+    const { servicesData } = bookingData
+    const items = []
+    if (!servicesData) return items
+    const { selectedServices = {}, selectedPackage } = servicesData
+    if (selectedPackage) {
+      const pkg = PACKAGES.find((p) => p.id === selectedPackage)
+      if (pkg) items.push({ id: pkg.id, label: pkg.name, price: pkg.price, isPackage: true, icon: pkg.icon })
+      return items
+    }
+    // Radios
+    Object.keys(RADIO_GROUPS).forEach((groupKey) => {
+      const optId = selectedServices[groupKey]
+      if (optId && allOptionsMap[optId]) {
+        const it = allOptionsMap[optId]
+        items.push({ id: optId, label: it.label, price: it.price })
+      }
+    })
+    // Checkboxes
+    ;[...OTHER_SERVICES, ...ADD_ONS].forEach((s) => {
+      if (selectedServices[s.id]) items.push({ id: s.id, label: s.label, price: s.price })
+    })
+    return items
+  }
+
+  const selectedItems = getSelectedItems()
+  const subtotal = selectedItems.reduce((sum, it) => sum + (Number(it.price) || 0), 0)
   const paymentAmount = subtotal * 0.1 // 10% downpayment
 
   // Format number as Philippine Peso
@@ -189,22 +263,17 @@ const PaymentProofPage = () => {
       showModal("Missing event details. Please go back and complete all required fields.")
       return false
     }
-    if (servicesData.activeTab === "package") {
-      if (!servicesData.selectedPackage) {
-        showModal("No package selected. Please go back and select a package.")
-        return false
-      }
-    } else if (servicesData.activeTab === "custom") {
-      const hasSelectedServices = Object.values(servicesData.selectedServices).some((selected) => selected)
-      if (!hasSelectedServices) {
-        showModal("No services selected. Please go back and select at least one service.")
-        return false
-      }
+    // Validate selection under new model
+    const hasPackage = !!servicesData.selectedPackage
+    const hasAnyItem = hasPackage || getSelectedItems().length > 0
+    if (!hasAnyItem) {
+      showModal("No selection found. Please go back and select services or a package.")
+      return false
     }
     return true
   }
 
-  const handleDeleteFormDraft =  async () => {
+  const handleDeleteFormDraft = async () => {
     const token = localStorage.getItem("token")
     try {
       const response = await axios.delete(`http://localhost:8080/form-draft/delete/${currentEmail}/${currentEventName}`, {
@@ -273,15 +342,11 @@ const PaymentProofPage = () => {
         transactionNote: bookingData.eventDetails.note || "",
 
         // Services - Use serviceIds (subcontractor IDs) for custom services
-        serviceType: bookingData.servicesData.activeTab === "package" ? "PACKAGE" : "CUSTOM",
-        packageId:
-          bookingData.servicesData.activeTab === "package"
-            ? getPackageId(bookingData.servicesData.selectedPackage)
-            : null,
-        serviceIds:
-          bookingData.servicesData.activeTab === "custom"
-            ? getSelectedServiceIds(bookingData.servicesData.selectedServices)
-            : null,
+        serviceType: bookingData.servicesData.selectedPackage ? "PACKAGE" : "CUSTOM",
+        packageId: bookingData.servicesData.selectedPackage
+          ? getPackageId(bookingData.servicesData.selectedPackage)
+          : null,
+        serviceIds: null, // custom selections no longer map to subcontractor IDs
 
         // Payment Information - matching DTO fields exactly
         paymentNote: `Payment for ${currentEventName} booking - Amount: ${formatAsPeso(paymentAmount)} - Ref: ${referenceNumber}`,
@@ -300,14 +365,8 @@ const PaymentProofPage = () => {
       console.log("Transaction Date:", transactionData.transactionDate)
       console.log("Complete transaction data:", transactionData)
 
-      // Validate that we have either package OR services, not both or neither
-      if (transactionData.packageId && transactionData.serviceIds) {
-        showModal("Error: Cannot have both package and custom services selected")
-        setIsSubmitting(false)
-        return
-      }
-
-      if (!transactionData.packageId && (!transactionData.serviceIds || transactionData.serviceIds.length === 0)) {
+      // Validate selection presence based on new model
+      if (transactionData.packageId === null && selectedItems.length === 0) {
         showModal("Error: Must select either a package or custom services")
         setIsSubmitting(false)
         return
@@ -439,6 +498,10 @@ const PaymentProofPage = () => {
                 <div className="summary-row">
                   <span>Subtotal:</span>
                   <span>{formatAsPeso(subtotal)}</span>
+                </div>
+                <div className="summary-row">
+                  <span>Budget:</span>
+                  <span>₱{String(bookingData?.eventDetails?.budget ?? 0).replace(/[^0-9.]/g, "").length > 0 ? Number(String(bookingData.eventDetails.budget).replace(/[^0-9.]/g, "")).toLocaleString() : "0"}</span>
                 </div>
                 <div className="summary-row">
                   <span>Downpayment (10%):</span>
