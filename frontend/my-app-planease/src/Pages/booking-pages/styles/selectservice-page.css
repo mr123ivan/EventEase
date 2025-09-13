@@ -166,11 +166,40 @@
   padding: 18px;
 }
 
+.group-title-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
 .group-title {
   font-size: 18px;
   font-weight: 600;
   color: #333;
-  margin: 0 0 12px 0;
+  margin: 0;
+}
+
+.clear-selection-btn {
+  padding: 4px 10px;
+  background-color: #f1f3f5;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  color: #6c757d;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.clear-selection-btn:hover {
+  background-color: #e9ecef;
+  color: #495057;
+}
+
+.clear-selection-btn:active {
+  background-color: #dee2e6;
+  transform: translateY(1px);
 }
 
 .group-title .required {

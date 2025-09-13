@@ -28,7 +28,7 @@ const PreviewBookingPagePackage = () => {
   useEffect(() => {
     const refreshedData = getCompleteBookingData()
     setBookingData(refreshedData)
-    console.log("Package booking data:", refreshedData)
+    console.log("Package booking data:", refreshedData) 
 
     // Validate that we have package data
     if (!refreshedData.servicesData.livePackageData && !refreshedData.servicesData.selectedPackage) {

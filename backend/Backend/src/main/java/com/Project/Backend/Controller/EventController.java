@@ -19,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.Project.Backend.Entity.EventEntity;
 import com.Project.Backend.Service.EventService;
+import com.Project.Backend.DTO.EventUpsertDTO;
 
 @RestController
 @RequestMapping("/api/events")
@@ -28,8 +29,8 @@ public class EventController {
     private EventService eventService;
 
     @PostMapping("/createEvent")
-    public ResponseEntity<EventEntity> create(@RequestBody EventEntity event) {
-        return ResponseEntity.ok(eventService.create(event));
+    public ResponseEntity<EventEntity> create(@RequestBody EventUpsertDTO dto) {
+        return ResponseEntity.ok(eventService.createFromDto(dto));
     }
 
     @GetMapping("/{id}")
@@ -53,8 +54,19 @@ public class EventController {
 
 
     @PutMapping
-    public ResponseEntity<EventEntity> update(@RequestBody EventEntity event) {
-        return ResponseEntity.ok(eventService.update(event));
+    public ResponseEntity<EventEntity> update(@RequestBody EventUpsertDTO dto) {
+        // Backward tolerance: if id is missing but name exists, try to resolve by name
+        if (dto.getEvent_Id() == null && dto.getEvent_name() != null) {
+            EventEntity existing = eventService.getEventByEventName(dto.getEvent_name());
+            if (existing != null) {
+                dto.setEvent_Id(existing.getEvent_Id());
+            }
+        }
+        if (dto.getEvent_Id() == null) {
+            // If still null, treat as create to avoid losing sections from frontend
+            return ResponseEntity.ok(eventService.createFromDto(dto));
+        }
+        return ResponseEntity.ok(eventService.updateFromDto(dto));
     }
 
     @DeleteMapping("/{id}")

@@ -2,11 +2,7 @@ package com.Project.Backend.Entity;
 
 import com.fasterxml.jackson.annotation.*;
 import jakarta.persistence.*;
-
-import java.sql.Date;
-import java.time.LocalDateTime;
 import java.util.List;
-
 
 @Entity
 @Table(name ="Events")
@@ -26,9 +22,17 @@ public class EventEntity {
     private String event_description;
     @Column(columnDefinition = "TEXT")
     private String event_summary;
+    // Stores the admin-defined sections and assigned services as JSON
+    @Column(columnDefinition = "LONGTEXT")
+    private String event_sections;
     private boolean event_isAvailable;
     private double event_price;
     private String event_image;
+
+    // List of allowed services for this event (flattened from sections)
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference("event-allowed-services")
+    private List<EventAllowedServiceEntity> allowedServices;
 
     public int getEvent_Id() {
         return event_Id;
@@ -70,6 +74,14 @@ public class EventEntity {
         this.event_description = event_description;
     }
 
+    public String getEvent_sections() {
+        return event_sections;
+    }
+
+    public void setEvent_sections(String event_sections) {
+        this.event_sections = event_sections;
+    }
+
     public boolean isEvent_isAvailable() {
         return event_isAvailable;
     }
@@ -92,5 +104,13 @@ public class EventEntity {
 
     public void setEvent_image(String event_image) {
         this.event_image = event_image;
+    }
+
+    public List<EventAllowedServiceEntity> getAllowedServices() {
+        return allowedServices;
+    }
+
+    public void setAllowedServices(List<EventAllowedServiceEntity> allowedServices) {
+        this.allowedServices = allowedServices;
     }
 }

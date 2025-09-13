@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.Project.Backend.DTO.CreateSubcontractorRequest;
+import com.Project.Backend.DTO.CreateBasicSubcontractorRequest;
 import com.Project.Backend.DTO.GetSubcontractor;
 import com.Project.Backend.DTO.SubcontractorDescriptionDTO;
 import org.apache.commons.lang3.ObjectUtils;
@@ -90,6 +91,13 @@ public class SubcontractorController {
         subcontractor.setShowcase(null);
         SubcontractorEntity savedSubcontractor = subcontractorService.saveSubcontractor(subcontractor);
         return ResponseEntity.ok(savedSubcontractor);
+    }
+
+    // New simplified creation endpoint: business name, contact person, and services
+    @PostMapping("/create-basic")
+    public ResponseEntity<SubcontractorEntity> createBasic(@RequestBody CreateBasicSubcontractorRequest request) {
+        SubcontractorEntity saved = subcontractorService.createBasicSubcontractor(request);
+        return ResponseEntity.ok(saved);
     }
 
     @DeleteMapping("/{id}")
