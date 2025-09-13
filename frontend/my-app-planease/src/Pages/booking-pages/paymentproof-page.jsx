@@ -28,6 +28,9 @@ const PaymentProofPage = () => {
 
   // Get booking data for payment amount
   const [bookingData, setBookingData] = useState(getCompleteBookingData)
+  const [sections, setSections] = useState([])
+  const [serviceMap, setServiceMap] = useState({})
+  const [packageMap, setPackageMap] = useState({})
 
   const [modalOpen, setModalOpen] = useState(false)
   const [modalMessage, setModalMessage] = useState("")
@@ -37,6 +40,103 @@ const PaymentProofPage = () => {
   useEffect(() => {
     setBookingData(getCompleteBookingData())
   }, [])
+  
+  // Fetch event details to get event_sections
+  useEffect(() => {
+    const fetchEventSections = async () => {
+      if (!currentEventName) return
+      try {
+        const res = await axios.get(`http://localhost:8080/api/events/event-details/${encodeURIComponent(currentEventName)}`)
+        const ev = res?.data
+        const raw = ev?.event_sections
+        const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw
+        const arr = Array.isArray(parsed) ? parsed : []
+        setSections(arr)
+      } catch (err) {
+        console.warn('Unable to load event sections for', currentEventName, err)
+        setSections([])
+      }
+    }
+    fetchEventSections()
+  }, [currentEventName])
+
+  // Fetch all subcontractor services once to build id -> meta map
+  useEffect(() => {
+    const fetchServices = async () => {
+      try {
+        const resp = await axios.get('http://localhost:8080/subcontractor/getall')
+        const arr = Array.isArray(resp.data) ? resp.data : []
+        const map = {}
+        arr.forEach(sc => {
+          ;(sc.services || []).forEach(svc => {
+            const sid = Number(svc.id ?? svc.serviceId ?? svc.service_id)
+            if (Number.isFinite(sid)) {
+              map[sid] = { 
+                name: svc.name ?? svc.service_name ?? `Service ${sid}`, 
+                price: Number(svc.price ?? svc.service_price ?? 0) 
+              }
+            }
+          })
+        })
+        setServiceMap(map)
+      } catch (e) {
+        console.warn('Unable to fetch subcontractor services for mapping', e)
+        setServiceMap({})
+      }
+    }
+    fetchServices()
+  }, [])
+
+  // Fetch all packages once to build id -> meta map
+  useEffect(() => {
+    const fetchPackages = async () => {
+      try {
+        const resp = await axios.get('http://localhost:8080/package/getall')
+        const arr = Array.isArray(resp.data) ? resp.data : []
+        const map = {}
+        arr.forEach(pkg => {
+          const pid = Number(pkg.id ?? pkg.packageId ?? pkg.package_id)
+          if (Number.isFinite(pid)) {
+            map[pid] = { 
+              name: pkg.name ?? pkg.package_name ?? `Package ${pid}`, 
+              price: Number(pkg.price ?? pkg.package_price ?? 0) 
+            }
+          }
+        })
+        setPackageMap(map)
+      } catch (e) {
+        console.warn('Unable to fetch packages for mapping', e)
+        setPackageMap({})
+      }
+    }
+    fetchPackages()
+  }, [])
+  
+  // Check if using event sections from database
+  const usingEventSections = Array.isArray(sections) && sections.length > 0
+  
+  // Build dynamic sections from event sections if available
+  const dynamicSections = (() => {
+    if (!usingEventSections) return []
+    return sections.map((sec, idx) => {
+      const options = (sec.services || []).map((s, sIdx) => {
+        const rawId = s?.id ?? s?.serviceId ?? s?.service_id ?? `${idx}_${sIdx}`
+        const idStr = String(rawId)
+        const idNum = Number(rawId)
+        const meta = Number.isFinite(idNum) ? serviceMap[idNum] : undefined
+        const label = meta?.name ?? s?.name ?? s?.service_name ?? s?.label ?? `Option ${sIdx + 1}`
+        const price = Number(meta?.price ?? s?.price ?? s?.service_price ?? 0)
+        return { id: idStr, label, price }
+      })
+      return {
+        key: `section_${idx}`,
+        label: sec?.title || `Section ${idx + 1}`,
+        required: !!sec?.required,
+        multi: !!sec?.multi,
+        options,
+      }
+    })
+  })()
 
   // Service definitions mirroring selectservice-page.jsx
   const RADIO_GROUPS = {
@@ -106,36 +206,153 @@ const PaymentProofPage = () => {
 
   const allOptionsMap = (() => {
     const m = {}
-    Object.entries(RADIO_GROUPS).forEach(([k, g]) => {
-      g.options.forEach((opt) => { m[opt.id] = { label: `${g.label}: ${opt.label}`, price: opt.price } })
-    })
-    OTHER_SERVICES.forEach((s) => { m[s.id] = { label: s.label, price: s.price } })
-    ADD_ONS.forEach((s) => { m[s.id] = { label: s.label, price: s.price } })
+    if (usingEventSections && dynamicSections.length > 0) {
+      dynamicSections.forEach((sec) => {
+        sec.options.forEach((opt) => { 
+          m[opt.id] = { label: `${sec.label}: ${opt.label}`, price: opt.price } 
+        })
+      })
+    } else {
+      Object.entries(RADIO_GROUPS).forEach(([k, g]) => {
+        g.options.forEach((opt) => { m[opt.id] = { label: `${g.label}: ${opt.label}`, price: opt.price } })
+      })
+      OTHER_SERVICES.forEach((s) => { m[s.id] = { label: s.label, price: s.price } })
+      ADD_ONS.forEach((s) => { m[s.id] = { label: s.label, price: s.price } })
+    }
     return m
   })()
+
+  // Build available packages from event sections
+  const getAvailablePackages = () => {
+    if (!usingEventSections) return PACKAGES
+    
+    const byId = new Map()
+    ;(sections || []).forEach((sec) => {
+      // New/expanded shape: packages: [{ id, name?, price? } | { packageId, packageName?, packagePrice? } | number]
+      ;(sec.packages || []).forEach((p) => {
+        const raw = typeof p === 'number' || typeof p === 'string' ? p : (p?.id ?? p?.packageId ?? p?.package_id)
+        const idNum = Number(raw)
+        if (!Number.isFinite(idNum)) return
+        const inlineName = (typeof p === 'object' && p) ? (p.name ?? p.packageName ?? p.package_name) : undefined
+        const inlinePrice = (typeof p === 'object' && p) ? (p.price ?? p.packagePrice ?? p.package_price) : undefined
+        const meta = packageMap[idNum] || {}
+        const name = inlineName ?? meta.name ?? `Package ${idNum}`
+        const price = Number(inlinePrice ?? meta.price ?? 0)
+        byId.set(idNum, { id: idNum, name, price, icon: "📦" })
+      })
+      // Legacy shape: packageIds: [id, id]
+      ;(sec.packageIds || []).forEach((rawId) => {
+        const idNum = Number(rawId)
+        if (!Number.isFinite(idNum)) return
+        const meta = packageMap[idNum] || {}
+        if (!byId.has(idNum)) byId.set(idNum, { 
+          id: idNum, 
+          name: meta.name || `Package ${idNum}`, 
+          price: Number(meta.price || 0),
+          icon: "📦"
+        })
+      })
+    })
+    return Array.from(byId.values())
+  }
+
+  const availablePackages = getAvailablePackages()
 
   const getSelectedItems = () => {
     const { servicesData } = bookingData
     const items = []
     if (!servicesData) return items
+    
     const { selectedServices = {}, selectedPackage } = servicesData
+    
+    // Handle package selection
     if (selectedPackage) {
-      const pkg = PACKAGES.find((p) => p.id === selectedPackage)
-      if (pkg) items.push({ id: pkg.id, label: pkg.name, price: pkg.price, isPackage: true, icon: pkg.icon })
-      return items
-    }
-    // Radios
-    Object.keys(RADIO_GROUPS).forEach((groupKey) => {
-      const optId = selectedServices[groupKey]
-      if (optId && allOptionsMap[optId]) {
-        const it = allOptionsMap[optId]
-        items.push({ id: optId, label: it.label, price: it.price })
+      // First try to find in available packages
+      const pkgIdNum = Number(selectedPackage)
+      if (Number.isFinite(pkgIdNum)) {
+        const pkg = availablePackages.find(p => Number(p.id) === pkgIdNum)
+        if (pkg) {
+          items.push({ 
+            id: pkg.id, 
+            label: pkg.name, 
+            price: pkg.price, 
+            isPackage: true, 
+            icon: pkg.icon || "📦" 
+          })
+          return items
+        }
       }
-    })
-    // Checkboxes
-    ;[...OTHER_SERVICES, ...ADD_ONS].forEach((s) => {
-      if (selectedServices[s.id]) items.push({ id: s.id, label: s.label, price: s.price })
-    })
+      
+      // Fallback to static packages
+      const pkg = PACKAGES.find(p => p.id === selectedPackage)
+      if (pkg) {
+        items.push({ 
+          id: pkg.id, 
+          label: pkg.name, 
+          price: pkg.price, 
+          isPackage: true, 
+          icon: pkg.icon || "📦" 
+        })
+        return items
+      }
+    }
+    
+    // Handle custom service selections
+    if (usingEventSections && dynamicSections.length > 0) {
+      // Process dynamic sections
+      dynamicSections.forEach((sec) => {
+        if (sec.multi) {
+          // For multi-select sections, check each option
+          sec.options.forEach((opt) => {
+            if (selectedServices[opt.id]) {
+              items.push({ 
+                id: opt.id, 
+                label: `${sec.label}: ${opt.label}`, 
+                price: opt.price 
+              })
+            }
+          })
+        } else {
+          // For single-select sections, get the selected option
+          const sel = selectedServices[sec.key]
+          if (sel) {
+            // Find the selected option
+            const option = sec.options.find(o => o.id === sel)
+            if (option) {
+              items.push({ 
+                id: sel, 
+                label: `${sec.label}: ${option.label}`, 
+                price: option.price 
+              })
+            }
+          }
+        }
+      })
+    } else {
+      // Process static service groups
+      Object.keys(RADIO_GROUPS).forEach((groupKey) => {
+        const optId = selectedServices[groupKey]
+        if (optId) {
+          const group = RADIO_GROUPS[groupKey]
+          const option = group.options.find(o => o.id === optId)
+          if (option) {
+            items.push({ 
+              id: optId, 
+              label: `${group.label}: ${option.label}`, 
+              price: option.price 
+            })
+          }
+        }
+      })
+      
+      // Process checkbox services
+      ;[...OTHER_SERVICES, ...ADD_ONS].forEach((s) => {
+        if (selectedServices[s.id]) {
+          items.push({ id: s.id, label: s.label, price: s.price })
+        }
+      })
+    }
+    
     return items
   }
 
@@ -214,24 +431,21 @@ const PaymentProofPage = () => {
   }
 
   // Helper function to get selected service IDs (subcontractor IDs)
-  const getSelectedServiceIds = (selectedServices) => {
-    const selectedIds = []
-
-    console.log("Processing selected services:", selectedServices)
-
-    // selectedServices is an object with subcontractor IDs as keys and boolean values
-    Object.entries(selectedServices).forEach(([serviceId, isSelected]) => {
-      if (isSelected) {
-        // Convert string ID to number (subcontractor_Id)
-        const numericId = Number.parseInt(serviceId)
-        if (!isNaN(numericId)) {
-          selectedIds.push(numericId)
-        }
-      }
-    })
-
-    console.log("Selected service IDs to send:", selectedIds)
-    return selectedIds.length > 0 ? selectedIds : null
+  // Extract numeric service IDs from selectedItems for backend submission
+  const extractServiceIds = (items) => {
+    if (!items || items.length === 0) return null;
+    
+    // Extract any numeric IDs from the selected items
+    const numericIds = items
+      .map(item => {
+        // Try to extract a numeric ID from the item.id
+        const numId = parseInt(item.id);
+        return !isNaN(numId) ? numId : null;
+      })
+      .filter(id => id !== null);
+    
+    console.log("Extracted service IDs:", numericIds);
+    return numericIds.length > 0 ? numericIds : null;
   }
 
   // Helper function to get package ID
@@ -346,7 +560,8 @@ const PaymentProofPage = () => {
         packageId: bookingData.servicesData.selectedPackage
           ? getPackageId(bookingData.servicesData.selectedPackage)
           : null,
-        serviceIds: null, // custom selections no longer map to subcontractor IDs
+        // Extract service IDs from the selected items if using CUSTOM type
+        serviceIds: bookingData.servicesData.selectedPackage ? null : extractServiceIds(selectedItems),
 
         // Payment Information - matching DTO fields exactly
         paymentNote: `Payment for ${currentEventName} booking - Amount: ${formatAsPeso(paymentAmount)} - Ref: ${referenceNumber}`,
@@ -366,10 +581,24 @@ const PaymentProofPage = () => {
       console.log("Complete transaction data:", transactionData)
 
       // Validate selection presence based on new model
-      if (transactionData.packageId === null && selectedItems.length === 0) {
-        showModal("Error: Must select either a package or custom services")
+      if (transactionData.serviceType === "PACKAGE" && transactionData.packageId === null) {
+        showModal("Error: Selected package is invalid. Please go back and select a valid package.")
         setIsSubmitting(false)
         return
+      }
+      
+      if (transactionData.serviceType === "CUSTOM" && (!selectedItems || selectedItems.length === 0)) {
+        showModal("Error: No services selected. Please go back and select at least one service.")
+        setIsSubmitting(false)
+        return
+      }
+      
+      // If using custom services but couldn't extract any valid service IDs, use a fallback approach
+      if (transactionData.serviceType === "CUSTOM" && transactionData.serviceIds === null) {
+        // Create an array of service names as a fallback
+        const serviceNames = selectedItems.map(item => item.label).join(", ");
+        transactionData.transactionNote += ` | Selected services: ${serviceNames}`;
+        console.log("Using service names as fallback in notes:", serviceNames);
       }
 
       // Create FormData for multipart request

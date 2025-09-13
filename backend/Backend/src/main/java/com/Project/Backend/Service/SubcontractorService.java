@@ -7,7 +7,10 @@ import java.util.Map;
 import java.util.Optional;
 
 import com.Project.Backend.DTO.GetSubcontractor;
+import com.Project.Backend.DTO.CreateBasicSubcontractorRequest;
+import com.Project.Backend.Entity.SubcontractorServiceEntity;
 import com.Project.Backend.Repository.SubContractorRepository;
+import com.Project.Backend.Repository.SubcontractorServiceRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.Project.Backend.Entity.SubcontractorEntity;
@@ -18,6 +21,8 @@ public class SubcontractorService {
 
     @Autowired
     private SubContractorRepository subContractorRepository;
+    @Autowired
+    private SubcontractorServiceRepository subcontractorServiceRepository;
     @Autowired
     private S3Service s3Service;
 
@@ -103,5 +108,32 @@ public class SubcontractorService {
            return "Error";
        }
         return description;
+    }
+
+    // Create subcontractor with business name, contact person, and services
+    public SubcontractorEntity createBasicSubcontractor(CreateBasicSubcontractorRequest req) {
+        SubcontractorEntity subcontractor = new SubcontractorEntity();
+        subcontractor.setBusinessName(req.getBusinessName());
+        subcontractor.setContactPerson(req.getContactPerson());
+        // preserve backward-compat fields empty
+        subcontractor.setSubcontractor_description(null);
+        subcontractor.setSubcontractor_serviceCategory(null);
+        subcontractor.setSubcontractor_serviceName(null);
+        subcontractor.setSubcontractor_service_price(0);
+
+        SubcontractorEntity saved = subContractorRepository.save(subcontractor);
+
+        if (req.getServices() != null && !req.getServices().isEmpty()) {
+            for (CreateBasicSubcontractorRequest.ServiceItem item : req.getServices()) {
+                if (item.getName() == null) continue;
+                SubcontractorServiceEntity s = new SubcontractorServiceEntity();
+                s.setName(item.getName());
+                s.setPrice(item.getPrice());
+                s.setSubcontractor(saved);
+                subcontractorServiceRepository.save(s);
+            }
+        }
+        // Reload to include services
+        return subContractorRepository.findById(saved.getSubcontractor_Id()).orElse(saved);
     }
 }

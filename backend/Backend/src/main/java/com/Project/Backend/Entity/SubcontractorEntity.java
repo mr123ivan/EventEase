@@ -19,6 +19,10 @@ public class SubcontractorEntity {
     private String subcontractor_serviceCategory;
     private double subcontractor_service_price;
 
+    // New simplified fields
+    private String businessName;
+    private String contactPerson;
+
     @OneToOne(cascade = CascadeType.REMOVE)
     @JoinColumn(name = "user_id")
     @JsonManagedReference("subcontractor-user")
@@ -40,6 +44,11 @@ public class SubcontractorEntity {
     @OneToMany(mappedBy = "subcontractor", cascade = CascadeType.REMOVE)
     @JsonManagedReference("subcontractor-package-service")
     private List<PackageServicesEntity> packageServices;
+
+    // New: services offered by this subcontractor (name + price)
+    @OneToMany(mappedBy = "subcontractor", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference("subcontractor-services")
+    private List<SubcontractorServiceEntity> services;
 
     public int getSubcontractor_Id() {
         return subcontractor_Id;
@@ -97,6 +106,15 @@ public class SubcontractorEntity {
     public void setPackageServices(List<PackageServicesEntity> packageServices) {
         this.packageServices = packageServices;
     }
+
+    public String getBusinessName() { return businessName; }
+    public void setBusinessName(String businessName) { this.businessName = businessName; }
+
+    public String getContactPerson() { return contactPerson; }
+    public void setContactPerson(String contactPerson) { this.contactPerson = contactPerson; }
+
+    public List<SubcontractorServiceEntity> getServices() { return services; }
+    public void setServices(List<SubcontractorServiceEntity> services) { this.services = services; }
 
     public String getSubcontractor_serviceCategory() {
         return subcontractor_serviceCategory;
