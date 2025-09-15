@@ -12,8 +12,10 @@ import com.Project.Backend.Entity.SubcontractorServiceEntity;
 import com.Project.Backend.Repository.SubContractorRepository;
 import com.Project.Backend.Repository.SubcontractorServiceRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import com.Project.Backend.Entity.SubcontractorEntity;
+import com.Project.Backend.Entity.UserEntity;
 import software.amazon.awssdk.core.exception.SdkClientException;
 
 @Service
@@ -135,5 +137,46 @@ public class SubcontractorService {
         }
         // Reload to include services
         return subContractorRepository.findById(saved.getSubcontractor_Id()).orElse(saved);
+    }
+
+    // Create subcontractor with user creation, default password and role
+    public SubcontractorEntity createSubcontractorWithUser(CreateBasicSubcontractorRequest req) {
+        // Create user entity
+        UserEntity user = new UserEntity();
+        user.setFirstname(req.getFirstname());
+        user.setLastname(req.getLastname());
+        user.setEmail(req.getEmail());
+        user.setPhoneNumber(req.getPhoneNumber());
+        user.setRole("SubContractor");
+        // Set default password "Welcome1!" encoded
+        user.setPassword(userService.encodePassword("Welcome1!"));
+
+        // Save user
+        UserEntity savedUser = userService.saveUser(user);
+
+        // Create subcontractor entity
+        SubcontractorEntity subcontractor = new SubcontractorEntity();
+        subcontractor.setUser(savedUser);
+        subcontractor.setBusinessName(req.getBusinessName());
+        subcontractor.setContactPerson(req.getContactPerson());
+        subcontractor.setSubcontractor_description(null);
+        subcontractor.setSubcontractor_serviceCategory(null);
+        subcontractor.setSubcontractor_serviceName(null);
+        subcontractor.setSubcontractor_service_price(0);
+
+        SubcontractorEntity savedSubcontractor = subContractorRepository.save(subcontractor);
+
+        if (req.getServices() != null && !req.getServices().isEmpty()) {
+            for (CreateBasicSubcontractorRequest.ServiceItem item : req.getServices()) {
+                if (item.getName() == null) continue;
+                SubcontractorServiceEntity s = new SubcontractorServiceEntity();
+                s.setName(item.getName());
+                s.setPrice(item.getPrice());
+                s.setSubcontractor(savedSubcontractor);
+                subcontractorServiceRepository.save(s);
+            }
+        }
+        // Reload to include services
+        return subContractorRepository.findById(savedSubcontractor.getSubcontractor_Id()).orElse(savedSubcontractor);
     }
 }

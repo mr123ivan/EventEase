@@ -156,5 +156,9 @@ public UserEntity updateUserProfilePicture(String email, MultipartFile file) thr
         return bCryptPasswordEncoder.matches(inputPassword, user.getPassword());
     }
 
+    public String encodePassword(String password) {
+        return bCryptPasswordEncoder.encode(password);
+    }
+
 
 }

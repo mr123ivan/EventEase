@@ -2,7 +2,7 @@ package com.Project.Backend.DTO;
 
 import java.util.List;
 
-public class CreateBasicSubcontractorRequest {
+public class CreateSubcontractorWithUserRequest {
     private String firstname;
     private String lastname;
     private String email;

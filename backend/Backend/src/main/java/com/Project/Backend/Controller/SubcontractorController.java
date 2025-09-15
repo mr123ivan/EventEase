@@ -96,7 +96,12 @@ public class SubcontractorController {
     // New simplified creation endpoint: business name, contact person, and services
     @PostMapping("/create-basic")
     public ResponseEntity<SubcontractorEntity> createBasic(@RequestBody CreateBasicSubcontractorRequest request) {
-        SubcontractorEntity saved = subcontractorService.createBasicSubcontractor(request);
+        SubcontractorEntity saved;
+        if (request.getFirstname() != null && request.getLastname() != null && request.getEmail() != null && request.getPhoneNumber() != null) {
+            saved = subcontractorService.createSubcontractorWithUser(request);
+        } else {
+            saved = subcontractorService.createBasicSubcontractor(request);
+        }
         return ResponseEntity.ok(saved);
     }
 

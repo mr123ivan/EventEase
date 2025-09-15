@@ -204,6 +204,10 @@ const AdminSubContractors = () => {
     }
 
     const payload = {
+      firstname: firstname.trim(),
+      lastname: lastname.trim(),
+      email: email.trim(),
+      phoneNumber: selectedCountry.dialCode + phoneNumber.trim(),
       businessName: businessName.trim(),
       contactPerson: contactPerson.trim(),
       services: cleanedServices,

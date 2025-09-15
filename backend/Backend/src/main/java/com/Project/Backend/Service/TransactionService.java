@@ -198,16 +198,19 @@ public class TransactionService {
     //helper function for the eventService entity
     private List<Map<String, Object>>  getSubcontractorsOfEvent(List<EventServiceEntity> eventServices){
        return eventServices.stream()
+               .filter(eventService -> eventService.getSubcontractor() != null) // Filter out null subcontractors
                .map(eventService -> {
                    SubcontractorEntity subcontractor = subcontractorService.getSubcontractorById(
                            eventService.getSubcontractor().getSubcontractor_Id()
                    );
 
                    Map<String, Object> subcontractorDetails = new HashMap<>();
-                   subcontractorDetails.put("subcontractorUserId", subcontractor.getUser().getUserId());
+                   subcontractorDetails.put("subcontractorUserId", subcontractor.getUser() != null ? subcontractor.getUser().getUserId() : 0);
                    subcontractorDetails.put("subcontractorEntityId", subcontractor.getSubcontractor_Id()); // Add the correct subcontractor entity ID
-                   subcontractorDetails.put("subcontractorName", subcontractor.getUser().getFirstname() + " " + subcontractor.getUser().getLastname());
-                   subcontractorDetails.put("subcontractorEmail", subcontractor.getUser().getEmail());
+                   subcontractorDetails.put("subcontractorName", subcontractor.getUser() != null ?
+                       subcontractor.getUser().getFirstname() + " " + subcontractor.getUser().getLastname() :
+                       subcontractor.getSubcontractor_serviceName());
+                   subcontractorDetails.put("subcontractorEmail", subcontractor.getUser() != null ? subcontractor.getUser().getEmail() : "N/A");
                    subcontractorDetails.put("serviceName", subcontractor.getSubcontractor_serviceName());
                    subcontractorDetails.put("serviceCategory", subcontractor.getSubcontractor_serviceCategory());
                    //add the category here
@@ -221,10 +224,12 @@ public class TransactionService {
         return subcontractors.stream().map(
                 subcontractor -> {
                     Map<String, Object> subcontractorDetails = new HashMap<>();
-                    subcontractorDetails.put("subcontractorUserId", subcontractor.getUser().getUserId());
+                    subcontractorDetails.put("subcontractorUserId", subcontractor.getUser() != null ? subcontractor.getUser().getUserId() : 0);
                     subcontractorDetails.put("subcontractorEntityId", subcontractor.getSubcontractor_Id()); // Add the correct subcontractor entity ID
-                    subcontractorDetails.put("subcontractorName", subcontractor.getUser().getFirstname() + " " + subcontractor.getUser().getLastname());
-                    subcontractorDetails.put("subcontractorEmail", subcontractor.getUser().getEmail());
+                    subcontractorDetails.put("subcontractorName", subcontractor.getUser() != null ?
+                        subcontractor.getUser().getFirstname() + " " + subcontractor.getUser().getLastname() :
+                        subcontractor.getSubcontractor_serviceName());
+                    subcontractorDetails.put("subcontractorEmail", subcontractor.getUser() != null ? subcontractor.getUser().getEmail() : "N/A");
                     subcontractorDetails.put("serviceName", subcontractor.getSubcontractor_serviceName());
                     subcontractorDetails.put("serviceCategory", subcontractor.getSubcontractor_serviceCategory());
 
