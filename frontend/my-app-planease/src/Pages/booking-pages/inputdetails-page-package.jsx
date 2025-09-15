@@ -456,7 +456,8 @@ const InputDetailsPagePackage = () => {
                       className="readonly-input"
                     />
                   </div>
-                  <div className="input-group">
+
+<div className="input-group">
                     <label htmlFor="location">Location *</label>
                     <input
                       type="text"
@@ -465,6 +466,20 @@ const InputDetailsPagePackage = () => {
                       value={eventDetails.location}
                       onChange={handleEventDetailsChange}
                       placeholder="Enter event location"
+                      required
+                    />
+                  </div>
+
+
+                  <div className="input-group">
+                    <label htmlFor="location">Location *</label>
+                    <input
+                      type="text"
+                      id="location"
+                      name="location"
+                      value={eventDetails.location}
+                      onChange={handleEventDetailsChange}
+                      placeholder="Enter event locations"
                       required
                     />
                   </div>

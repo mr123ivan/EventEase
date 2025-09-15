@@ -189,11 +189,27 @@ const InputDetailsPage = () => {
 
   // Validate form data
   const isFormValid = () => {
+    const attendeesVal = Number(eventDetails.projectedAttendees)
+    const budgetVal = Number(eventDetails.budget)
+    const hasValidAttendees =
+      eventDetails.projectedAttendees !== undefined &&
+      String(eventDetails.projectedAttendees).trim() !== "" &&
+      !Number.isNaN(attendeesVal) &&
+      attendeesVal > 0
+    const hasValidBudget =
+      eventDetails.budget !== undefined &&
+      String(eventDetails.budget).trim() !== "" &&
+      !Number.isNaN(budgetVal) &&
+      budgetVal >= 0
     return (
       personalInfo.firstName.trim() &&
       personalInfo.lastName.trim() &&
       personalInfo.email.trim() &&
       personalInfo.contact.trim() &&
+      // Event Details
+      eventDetails.celebrantName && String(eventDetails.celebrantName).trim() &&
+      hasValidAttendees &&
+      hasValidBudget &&
       eventDetails.location.trim() &&
       eventDetails.eventDate.trim()
     )
@@ -373,6 +389,64 @@ const InputDetailsPage = () => {
                       value={eventDetails.location}
                       onChange={handleEventDetailsChange}
                       placeholder="Enter event location"
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Celebrant Names */}
+                <div className="input-row">
+                  <div className="input-group">
+                    <label htmlFor="celebrantName">Name of Celebrant/s *</label>
+                    <input
+                      type="text"
+                      id="celebrantName"
+                      name="celebrantName"
+                      value={eventDetails.celebrantName || ""}
+                      onChange={handleEventDetailsChange}
+                      placeholder="Enter celebrant name(s)"
+                      required
+                    />
+                  </div>
+                  <div className="input-group">
+                    <label htmlFor="celebrantNameOptional">Name of Celebrant/s (optional)</label>
+                    <input
+                      type="text"
+                      id="celebrantNameOptional"
+                      name="celebrantNameOptional"
+                      value={eventDetails.celebrantNameOptional || ""}
+                      onChange={handleEventDetailsChange}
+                      placeholder="Enter additional celebrant name(s) (optional)"
+                    />
+                  </div>
+                </div>
+
+                {/* Numbers: Attendees and Budget */}
+                <div className="input-row">
+                  <div className="input-group">
+                    <label htmlFor="projectedAttendees">Projected Number of Attendees *</label>
+                    <input
+                      type="number"
+                      id="projectedAttendees"
+                      name="projectedAttendees"
+                      value={eventDetails.projectedAttendees || ""}
+                      onChange={handleEventDetailsChange}
+                      placeholder="e.g., 150"
+                      min="1"
+                      required
+                    />
+                  </div>
+                  <div className="input-group">
+                    <label htmlFor="budget">Budget for the Event (₱) *</label>
+                    <input
+                      type="number"
+                      id="budget"
+                      name="budget"
+                      value={eventDetails.budget || ""}
+                      onChange={handleEventDetailsChange}
+                      placeholder="e.g., 50000"
+                      min="0"
+                      step="0.01"
                       required
                     />
                   </div>
