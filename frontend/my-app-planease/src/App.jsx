@@ -31,6 +31,8 @@ import InputDetailsPagePackage from './Pages/booking-pages/inputdetails-page-pac
 // import PreviewBookingPagePackage from './Pages/booking-pages/previewbooking-page-package.jsx'
 import AdminPackages from './Pages/admin-pages/admin-your-packages.jsx'
 import UserBookingsPage from './Pages/user-bookings.jsx'
+import EventTrackingAdmin from './Pages/admin-pages/admin-eventprogress.jsx'
+import SubcontractorProgress from './Pages/subcontractor-pages/subcontractor-progress.jsx'
 
 function App() {
   return (
@@ -122,6 +124,11 @@ function App() {
                 <SubcontractorCalendar />
             </SubContractorProtectedRoute>
             } />
+            <Route path="/subcontractor/progress" element={
+             <SubContractorProtectedRoute>
+                <SubcontractorProgress />
+             </SubContractorProtectedRoute>
+            } />
           <Route path="/subcontractor/login" element={<SubcontractorLogin />} />
 
 
@@ -151,6 +158,11 @@ function App() {
                  <AdminProtectedRoute>
                 < AdminPackages/>
                  </AdminProtectedRoute>
+            }/>
+              <Route path="/admin/eventprogress" element={
+                <AdminProtectedRoute>
+                  < EventTrackingAdmin/>
+                </AdminProtectedRoute>
             }/>
           
           <Route path="/home" element={

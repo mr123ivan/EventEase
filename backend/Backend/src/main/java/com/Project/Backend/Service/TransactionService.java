@@ -66,6 +66,9 @@ public class TransactionService {
     @Autowired
     private BookingRejectionNoteService bookingRejectionNoteService;
 
+    @Autowired
+    private TransactionProgressService transactionProgressService;
+
 
     public TransactionsEntity create(CreateTransactionDTO createTransactionDTO) {
         try{
@@ -93,10 +96,10 @@ public class TransactionService {
     }
 
     //connecting the transactions and the chosen services of subcontractors in event_service table;
-    public List<SubcontractorEntity> assignedEventService(List<Integer> sucontractorsId, TransactionsEntity transactions){
+    public List<SubcontractorEntity> assignedEventService(List<Integer> subcontractorsId, TransactionsEntity transactions){
         List<SubcontractorEntity> subcontractors = new ArrayList<>();
 
-        for(int subcontractorid: sucontractorsId){
+        for(int subcontractorid: subcontractorsId){
             SubcontractorEntity subcontractorEntity = subcontractorService.getSubcontractorById(subcontractorid);
             if(subcontractorEntity == null){
                 throw new RuntimeException("Subcontractor with id " + subcontractorid + " not found");
@@ -110,6 +113,7 @@ public class TransactionService {
         return subcontractors;
     };
 
+    @Transactional
     public TransactionsEntity validateTransaction(int id, String status, CreateBookingRejectionNoteDTO reason){
         TransactionsEntity transaction = transactionRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Transaction with id " + id + " not found"));
@@ -117,6 +121,15 @@ public class TransactionService {
             case "APPROVED":
                     transaction.setTransactionStatus(TransactionsEntity.Status.ONGOING);
                     transaction.setTransactionisApprove(true);
+                    // Create initial progress record when transaction is approved
+                    try {
+                        transactionProgressService.createInitialProgress(transaction);
+                        // Also create initial subcontractor progress records
+                        transactionProgressService.createInitialSubcontractorProgress(transaction);
+                    } catch (Exception e) {
+                        System.out.println("Warning: Failed to create progress records: " + e.getMessage());
+                        // Continue even if progress creation fails
+                    }
                     break;
             case "CANCELLED":
                     transaction.setTransactionStatus(TransactionsEntity.Status.CANCELLED);
@@ -192,6 +205,7 @@ public class TransactionService {
 
                    Map<String, Object> subcontractorDetails = new HashMap<>();
                    subcontractorDetails.put("subcontractorUserId", subcontractor.getUser().getUserId());
+                   subcontractorDetails.put("subcontractorEntityId", subcontractor.getSubcontractor_Id()); // Add the correct subcontractor entity ID
                    subcontractorDetails.put("subcontractorName", subcontractor.getUser().getFirstname() + " " + subcontractor.getUser().getLastname());
                    subcontractorDetails.put("subcontractorEmail", subcontractor.getUser().getEmail());
                    subcontractorDetails.put("serviceName", subcontractor.getSubcontractor_serviceName());
@@ -208,6 +222,7 @@ public class TransactionService {
                 subcontractor -> {
                     Map<String, Object> subcontractorDetails = new HashMap<>();
                     subcontractorDetails.put("subcontractorUserId", subcontractor.getUser().getUserId());
+                    subcontractorDetails.put("subcontractorEntityId", subcontractor.getSubcontractor_Id()); // Add the correct subcontractor entity ID
                     subcontractorDetails.put("subcontractorName", subcontractor.getUser().getFirstname() + " " + subcontractor.getUser().getLastname());
                     subcontractorDetails.put("subcontractorEmail", subcontractor.getUser().getEmail());
                     subcontractorDetails.put("serviceName", subcontractor.getSubcontractor_serviceName());
@@ -268,9 +283,9 @@ public class TransactionService {
     }
 
     //revise this, it must accomodate the subcontactors of packages
-    public TransactionPaymentAndSubcontractorsDTO findAllJoinedWIthPaymentAndSubcontractorsByTransactionId(int transcationId) {
-        TransactionPaymentAndSubcontractorsDTO existingTransactions = transactionRepo.findAllJoinedWIthPaymentAndSubcontractorsByTransactionId(transcationId);
-        existingTransactions.setSubcontractors(getSubcontractorsOfEvent(eventServiceService.getByTransactionId(transcationId)));
+    public TransactionPaymentAndSubcontractorsDTO findAllJoinedWIthPaymentAndSubcontractorsByTransactionId(int transactionId) {
+        TransactionPaymentAndSubcontractorsDTO existingTransactions = transactionRepo.findAllJoinedWIthPaymentAndSubcontractorsByTransactionId(transactionId);
+        existingTransactions.setSubcontractors(getSubcontractorsOfEvent(eventServiceService.getByTransactionId(transactionId)));
         return existingTransactions;
     }
 
@@ -334,7 +349,7 @@ public class TransactionService {
             // 4. Upload payment proof to S3
             String paymentReceiptUrl = null;
             if (paymentProof != null && !paymentProof.isEmpty()) {
-                System.out.println("Uploading payment proof to S3...");
+                System.out.println("Attempting to upload payment proof to S3...");
                 try {
                     File convFile = File.createTempFile("payment_proof", paymentProof.getOriginalFilename());
                     paymentProof.transferTo(convFile);
@@ -342,8 +357,8 @@ public class TransactionService {
                     convFile.delete();
                     System.out.println("Payment proof uploaded successfully: " + paymentReceiptUrl);
                 } catch (Exception e) {
-                    System.out.println("ERROR: Failed to upload payment proof: " + e.getMessage());
-                    throw new IOException("Failed to upload payment proof: " + e.getMessage());
+                    System.out.println("ERROR: S3 upload failed: " + e.getMessage());
+                    throw e;
                 }
             }
             
@@ -521,7 +536,7 @@ public class TransactionService {
             // 4. Upload payment proof to S3
             String paymentReceiptUrl = null;
             if (paymentProof != null && !paymentProof.isEmpty()) {
-                System.out.println("Uploading payment proof to S3...");
+                System.out.println("Attempting to upload payment proof to S3...");
                 try {
                     File convFile = File.createTempFile("payment_proof_package", paymentProof.getOriginalFilename());
                     paymentProof.transferTo(convFile);
@@ -529,8 +544,8 @@ public class TransactionService {
                     convFile.delete();
                     System.out.println("Payment proof uploaded successfully: " + paymentReceiptUrl);
                 } catch (Exception e) {
-                    System.out.println("ERROR: Failed to upload payment proof: " + e.getMessage());
-                    throw new IOException("Failed to upload payment proof: " + e.getMessage());
+                    System.out.println("ERROR: S3 upload failed: " + e.getMessage());
+                    throw e;
                 }
             }
 
@@ -637,6 +652,15 @@ public class TransactionService {
             case "APPROVED":
                 transaction.setTransactionStatus(TransactionsEntity.Status.ONGOING);
                 transaction.setTransactionisApprove(true);
+                // Create initial progress record when transaction is approved
+                try {
+                    transactionProgressService.createInitialProgress(transaction);
+                    // Also create initial subcontractor progress records
+                    transactionProgressService.createInitialSubcontractorProgress(transaction);
+                } catch (Exception e) {
+                    System.out.println("Warning: Failed to create progress records: " + e.getMessage());
+                    // Continue even if progress creation fails
+                }
                 break;
             case "CANCELLED":
                 transaction.setTransactionStatus(TransactionsEntity.Status.CANCELLED);
@@ -667,6 +691,36 @@ public class TransactionService {
                     Map<String, Object> transactionData = new HashMap<>();
                     transactionData.put("transactionId", t.getTransaction_Id());
                     transactionData.put("transactionDate", t.getTransactionDate());
+                    return transactionData;
+                })
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Get all transactions assigned to a subcontractor
+     */
+    public List<Map<String, Object>> getTransactionsBySubcontractorId(int subcontractorId) {
+        System.out.println("Getting transactions for subcontractor ID: " + subcontractorId);
+
+        // Get all transactions where this subcontractor is assigned
+        List<TransactionsEntity> transactions = transactionRepo.findTransactionsBySubcontractorId(subcontractorId);
+
+        System.out.println("Found " + transactions.size() + " transactions for subcontractor");
+
+        return transactions.stream()
+                .filter(t -> t.getTransactionIsActive() &&
+                        (t.getTransactionStatus() == TransactionsEntity.Status.ONGOING))
+                .map(t -> {
+                    Map<String, Object> transactionData = new HashMap<>();
+                    transactionData.put("transactionId", t.getTransaction_Id());
+                    transactionData.put("eventName", t.getEvent() != null ? t.getEvent().getEvent_name() :
+                                                     (t.getPackages() != null ? t.getPackages().getPackageName() : "Unknown Event"));
+                    transactionData.put("location", t.getTransactionVenue());
+                    transactionData.put("startDate", t.getTransactionDate());
+                    transactionData.put("status", t.getTransactionStatus().toString());
+                    transactionData.put("progressPercentage", 0); // Will be updated from progress service
+                    transactionData.put("checkInStatus", "PENDING"); // Will be updated from progress service
+                    transactionData.put("lastUpdate", null); // Will be updated from progress service
                     return transactionData;
                 })
                 .collect(Collectors.toList());

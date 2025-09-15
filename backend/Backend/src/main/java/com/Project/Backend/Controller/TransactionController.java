@@ -1,12 +1,20 @@
 package com.Project.Backend.Controller;
 
 import com.Project.Backend.DTO.*;
+import com.Project.Backend.Entity.TransactionProgressEntity;
 import com.Project.Backend.Entity.TransactionsEntity;
+import com.Project.Backend.Entity.SubcontractorProgressEntity;
+import com.Project.Backend.Entity.SubcontractorEntity;
 import com.Project.Backend.Entity.UserEntity;
 import com.Project.Backend.Repository.UserRepository;
+import com.Project.Backend.Repository.SubContractorRepository;
 import com.Project.Backend.Service.TokenService;
+import com.Project.Backend.Service.TransactionProgressService;
 import com.Project.Backend.Service.TransactionService;
 import com.Project.Backend.Service.UserService;
+import com.Project.Backend.Service.S3Service;
+import com.Project.Backend.Repository.TransactionRepo;
+import com.Project.Backend.Repository.SubcontractorProgressRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -19,6 +27,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/transactions")
@@ -33,9 +42,23 @@ public class TransactionController {
     @Autowired
     private final UserRepository userRepository;
 
+    @Autowired
+    private TransactionProgressService transactionProgressService;
+
+    @Autowired
+    private TransactionRepo transactionRepository;
+
+    @Autowired
+    private SubcontractorProgressRepository subcontractorProgressRepository;
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private S3Service s3Service;
+
+    @Autowired
+    private SubContractorRepository subContractorRepository;
 
     public TransactionController(TokenService tokenService, UserRepository userRepository) {
         this.tokenService = tokenService;
@@ -116,7 +139,7 @@ public class TransactionController {
     @GetMapping("/getPaymentAndSubcontractors/{transactionId}")
     public ResponseEntity<TransactionPaymentAndSubcontractorsDTO> findAllJoinedWIthPaymentAndSubcontractorsByTransactionId(@PathVariable int transactionId) {
         TransactionPaymentAndSubcontractorsDTO transactions = transactionService.findAllJoinedWIthPaymentAndSubcontractorsByTransactionId(transactionId);
-        if (transactions != null) {
+        if (transactions == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
         return ResponseEntity.ok(transactions);
@@ -483,5 +506,351 @@ public ResponseEntity<?> getCurrentUserReservations(@RequestHeader("Authorizatio
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
         return ResponseEntity.ok(dates);
+    }
+    @PutMapping("/updateProgress/{transactionId}")
+    public ResponseEntity<?> updateTransactionProgress(
+            @PathVariable int transactionId,
+            @RequestParam int progressPercentage,
+            @RequestParam(required = false) String message) {
+        try {
+            TransactionProgressEntity updatedProgress = transactionProgressService.updateProgress(transactionId, progressPercentage, message);
+            TransactionProgressDTO progressDTO = new TransactionProgressDTO(
+                updatedProgress.getTransaction().getTransaction_Id(),
+                updatedProgress.getCurrentProgress(),
+                updatedProgress.getProgressNote(),
+                updatedProgress.getStatus().toString(),
+                updatedProgress.getCreatedAt(),
+                updatedProgress.getUpdatedAt()
+            );
+            return ResponseEntity.ok(progressDTO);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+    
+    @GetMapping("/progress/{transactionId}")
+    public ResponseEntity<?> getTransactionProgress(@PathVariable int transactionId) {
+        try {
+            TransactionProgressEntity progressEntity = transactionProgressService.getProgressByTransactionId(transactionId)
+                .orElseThrow(() -> new RuntimeException("Progress not found for transaction ID: " + transactionId));
+            TransactionProgressDTO progressDTO = new TransactionProgressDTO(
+                progressEntity.getTransaction().getTransaction_Id(),
+                progressEntity.getCurrentProgress(),
+                progressEntity.getProgressNote(),
+                progressEntity.getStatus().toString(),
+                progressEntity.getCreatedAt(),
+                progressEntity.getUpdatedAt()
+            );
+            return ResponseEntity.ok(progressDTO);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @GetMapping("/progress/all/{transactionId}")
+    public ResponseEntity<?> getAllProgressHistory(@PathVariable int transactionId) {
+        try {
+            List<TransactionProgressEntity> progressHistory = transactionProgressService.getProgressHistory(transactionId);
+            List<TransactionProgressDTO> progressDTOs = progressHistory.stream()
+                .map(progress -> new TransactionProgressDTO(
+                    progress.getTransaction().getTransaction_Id(),
+                    progress.getCurrentProgress(),
+                    progress.getProgressNote(),
+                    progress.getStatus().toString(),
+                    progress.getCreatedAt(),
+                    progress.getUpdatedAt()
+                ))
+                .collect(Collectors.toList());
+            return ResponseEntity.ok(progressDTOs);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                "success", false,
+                "message", "Progress history not found: " + e.getMessage()
+            ));
+        }
+    }
+
+    // ==================== SUBCONTRACTOR PROGRESS ENDPOINTS ====================
+
+    /**
+     * Update subcontractor progress
+     */
+    @PutMapping("/subcontractor-progress/{transactionId}/{subcontractorId}")
+    public ResponseEntity<?> updateSubcontractorProgress(
+            @PathVariable int transactionId,
+            @PathVariable int subcontractorId,
+            @RequestParam int progressPercentage,
+            @RequestParam String checkInStatus,
+            @RequestParam(required = false) String notes,
+            @RequestParam(required = false) String imageUrl,
+            @RequestParam(required = false) String comment) {
+        try {
+            SubcontractorProgressEntity updatedProgress = transactionProgressService.updateSubcontractorProgress(
+                transactionId, subcontractorId, progressPercentage, checkInStatus, notes, imageUrl, comment);
+            return ResponseEntity.ok(updatedProgress);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    /**
+     * Get all subcontractor progress for a transaction
+     */
+    @GetMapping("/subcontractor-progress/{transactionId}")
+    public ResponseEntity<List<SubcontractorProgressDTO>> getSubcontractorProgress(@PathVariable int transactionId) {
+        try {
+            List<SubcontractorProgressDTO> progress = transactionProgressService.getSubcontractorProgressDTOs(transactionId);
+            return ResponseEntity.ok(progress);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    /**
+     * Get subcontractor progress by subcontractorProgressId
+     */
+    @GetMapping("/subcontractor-progress/id/{subcontractorProgressId}")
+    public ResponseEntity<?> getSubcontractorProgressById(@PathVariable int subcontractorProgressId) {
+        try {
+            SubcontractorProgressEntity progress = subcontractorProgressRepository.findById(subcontractorProgressId).orElse(null);
+            if (progress == null) {
+                return ResponseEntity.notFound().build();
+            }
+        SubcontractorProgressDTO dto = new SubcontractorProgressDTO(
+            progress.getSubcontractorProgressId(),
+            progress.getTransactionProgress().getTransaction().getTransaction_Id(),
+            progress.getSubcontractor().getSubcontractor_Id(),
+            progress.getSubcontractor().getUser() != null ?
+                progress.getSubcontractor().getUser().getUserId() : 0,
+            progress.getSubcontractor().getSubcontractor_serviceName(),
+            progress.getSubcontractor().getSubcontractor_serviceCategory(),
+            progress.getSubcontractor().getUser() != null ?
+                progress.getSubcontractor().getUser().getProfilePicture() : null,
+            progress.getProgressPercentage(),
+            progress.getCheckInStatus().toString(),
+            progress.getProgressNotes(),
+            progress.getProgressImageUrl(),
+            progress.getComment(),
+            progress.getCreatedAt(),
+            progress.getUpdatedAt()
+        );
+            return ResponseEntity.ok(dto);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                "success", false,
+                "message", "Failed to fetch subcontractor progress: " + e.getMessage()
+            ));
+        }
+    }
+
+    /**
+     * Get event progress with subcontractors
+     */
+    @GetMapping("/event-progress/{transactionId}")
+    public ResponseEntity<EventProgressDTO> getEventProgress(@PathVariable int transactionId) {
+        try {
+            EventProgressDTO eventProgress = transactionProgressService.getEventProgress(transactionId);
+            return ResponseEntity.ok(eventProgress);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    /**
+     * Get all events progress
+     */
+    @GetMapping("/events-progress")
+    public ResponseEntity<List<EventProgressDTO>> getAllEventsProgress() {
+        try {
+            List<EventProgressDTO> eventsProgress = transactionProgressService.getAllEventsProgress();
+            return ResponseEntity.ok(eventsProgress);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(null);
+        }
+    }
+
+    /**
+     * Upload subcontractor progress image
+     */
+    @PostMapping("/subcontractor-progress/{transactionId}/{subcontractorId}/upload-image")
+    public ResponseEntity<?> uploadSubcontractorProgressImage(
+            @PathVariable int transactionId,
+            @PathVariable int subcontractorId,
+            @RequestParam("images") MultipartFile[] images,
+            @RequestParam int progressPercentage,
+            @RequestParam String checkInStatus,
+            @RequestParam(required = false) String notes,
+            @RequestParam(required = false) String comment) {
+        try {
+            if (images == null || images.length == 0) {
+                return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", "At least one image file is required"
+                ));
+            }
+
+            List<String> imageUrls = new ArrayList<>();
+            for (MultipartFile image : images) {
+                if (image == null || image.isEmpty()) {
+                    continue;
+                }
+                String contentType = image.getContentType();
+                if (contentType == null || !contentType.startsWith("image/")) {
+                    return ResponseEntity.badRequest().body(Map.of(
+                        "success", false,
+                        "message", "Only image files are allowed"
+                    ));
+                }
+                java.io.File tempFile = java.io.File.createTempFile("progress_", "_" + image.getOriginalFilename());
+                image.transferTo(tempFile);
+                String folderPath = "subcontractor-progress/" + transactionId + "/" + subcontractorId + "/";
+                String imageUrl = s3Service.upload(tempFile, folderPath, image.getOriginalFilename());
+                tempFile.delete();
+                imageUrls.add(imageUrl);
+            }
+
+            // Convert list of URLs to JSON string
+            ObjectMapper objectMapper = new ObjectMapper();
+            String imageUrlsJson = objectMapper.writeValueAsString(imageUrls);
+
+            SubcontractorProgressEntity updatedProgress = transactionProgressService.updateSubcontractorProgress(
+                transactionId, subcontractorId, progressPercentage, checkInStatus, notes, imageUrlsJson, comment);
+
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Progress images uploaded successfully",
+                "imageUrls", imageUrls,
+                "progress", updatedProgress
+            ));
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                "success", false,
+                "message", "Failed to upload images: " + e.getMessage()
+            ));
+        }
+    }
+
+    /**
+     * Get subcontractor progress by user email
+     */
+    @GetMapping("/subcontractor-progress-by-email/{userEmail}")
+    public ResponseEntity<List<SubcontractorProgressDTO>> getSubcontractorProgressByEmail(@PathVariable String userEmail) {
+        try {
+            List<SubcontractorProgressDTO> progress = transactionProgressService.getSubcontractorProgressByUserEmail(userEmail);
+            return ResponseEntity.ok(progress);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    /**
+     * Check if subcontractor progress exists (create-if-not-exists but doesn't create)
+     */
+    @PostMapping("/subcontractor-progress/{transactionId}/email/{userEmail}/create-if-not-exists")
+    public ResponseEntity<?> checkSubcontractorProgressExists(@PathVariable int transactionId, @PathVariable String userEmail) {
+        try {
+            boolean exists = transactionProgressService.checkIfExistsByEmail(transactionId, userEmail);
+            if (exists) {
+                return ResponseEntity.ok(Map.of("exists", true, "message", "Progress record exists"));
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                    "exists", false,
+                    "message", "Subcontractor progress not found. Progress must be initialized first."
+                ));
+            }
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
+     * Update subcontractor progress by email (without image)
+     */
+    @PutMapping("/subcontractor-progress/{transactionId}/email/{userEmail}")
+    public ResponseEntity<?> updateSubcontractorProgressByEmail(
+            @PathVariable int transactionId,
+            @PathVariable String userEmail,
+            @RequestParam int progressPercentage,
+            @RequestParam String checkInStatus,
+            @RequestParam(required = false) String notes,
+            @RequestParam(required = false) String imageUrl,
+            @RequestParam(required = false) String comment) {
+        try {
+            SubcontractorProgressEntity updatedProgress = transactionProgressService.updateSubcontractorProgressByEmail(
+                transactionId, userEmail, progressPercentage, checkInStatus, notes, imageUrl, comment);
+            return ResponseEntity.ok(updatedProgress);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    /**
+     * Upload subcontractor progress image by email
+     */
+    @PostMapping("/subcontractor-progress/{transactionId}/email/{userEmail}/upload-image")
+    public ResponseEntity<?> uploadSubcontractorProgressImageByEmail(
+            @PathVariable int transactionId,
+            @PathVariable String userEmail,
+            @RequestParam("images") MultipartFile[] images,
+            @RequestParam int progressPercentage,
+            @RequestParam String checkInStatus,
+            @RequestParam(required = false) String notes,
+            @RequestParam(required = false) String comment) {
+        try {
+            if (images == null || images.length == 0) {
+                return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", "At least one image file is required"
+                ));
+            }
+
+            SubcontractorEntity subcontractor = subContractorRepository.findByEmail(userEmail);
+            if (subcontractor == null) {
+                return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", "Subcontractor not found for email: " + userEmail
+                ));
+            }
+
+            List<String> imageUrls = new ArrayList<>();
+            for (MultipartFile image : images) {
+                if (image == null || image.isEmpty()) {
+                    continue;
+                }
+                String contentType = image.getContentType();
+                if (contentType == null || !contentType.startsWith("image/")) {
+                    return ResponseEntity.badRequest().body(Map.of(
+                        "success", false,
+                        "message", "Only image files are allowed"
+                    ));
+                }
+                java.io.File tempFile = java.io.File.createTempFile("progress_", "_" + image.getOriginalFilename());
+                image.transferTo(tempFile);
+                String folderPath = "subcontractor-progress/" + transactionId + "/" + subcontractor.getSubcontractor_Id() + "/";
+                String imageUrl = s3Service.upload(tempFile, folderPath, image.getOriginalFilename());
+                tempFile.delete();
+                imageUrls.add(imageUrl);
+            }
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            String imageUrlsJson = objectMapper.writeValueAsString(imageUrls);
+
+            SubcontractorProgressEntity updatedProgress = transactionProgressService.updateSubcontractorProgress(
+                transactionId, subcontractor.getSubcontractor_Id(), progressPercentage, checkInStatus, notes, imageUrlsJson, comment);
+
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Progress images uploaded successfully",
+                "imageUrls", imageUrls,
+                "progress", updatedProgress
+            ));
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                "success", false,
+                "message", "Failed to upload images: " + e.getMessage()
+            ));
+        }
     }
 }

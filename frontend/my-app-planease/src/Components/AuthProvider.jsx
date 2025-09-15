@@ -44,7 +44,6 @@ export const AuthProvider = ({ children }) => {
 
         // If we get here, the token is valid and we have user data
         console.log("Token verified successfully")
-        console.log("User data fetched:", response.data)
         
         // Set the user data
         setUser(response.data)

@@ -53,13 +53,14 @@ public class GetTransactionDTO {
         this.subcontractors = transaction.getEventServices().stream()
             .map(eventService -> {
                 Map<String, Object> subcontractorMap = new HashMap<>();
-                subcontractorMap.put("subcontractor_id", eventService.getSubcontractor().getSubcontractor_Id());
-                subcontractorMap.put("subcontractor_name", eventService.getSubcontractor().getUser().getFirstname() + " " + eventService.getSubcontractor().getUser().getLastname());
-                subcontractorMap.put("subcontractor_email", eventService.getSubcontractor().getUser().getEmail());
-                subcontractorMap.put("subcontractor_phone", eventService.getSubcontractor().getUser().getPhoneNumber());
-                subcontractorMap.put("subcontractor_address", eventService.getSubcontractor().getUser().getRegion() + ", " + eventService.getSubcontractor().getUser().getCityAndMul() + ", " + eventService.getSubcontractor().getUser().getBarangay());
-                subcontractorMap.put("subcontractor_service", eventService.getSubcontractor().getSubcontractor_serviceName());
-                subcontractorMap.put("subcontractor_service_category", eventService.getSubcontractor().getSubcontractor_serviceCategory());
+                subcontractorMap.put("subcontractorUserId", eventService.getSubcontractor().getUser().getUserId());
+                subcontractorMap.put("subcontractorEntityId", eventService.getSubcontractor().getSubcontractor_Id()); // Add the correct subcontractor entity ID
+                subcontractorMap.put("subcontractorName", eventService.getSubcontractor().getUser().getFirstname() + " " + eventService.getSubcontractor().getUser().getLastname());
+                subcontractorMap.put("subcontractorEmail", eventService.getSubcontractor().getUser().getEmail());
+                subcontractorMap.put("subcontractorPhone", eventService.getSubcontractor().getUser().getPhoneNumber());
+                subcontractorMap.put("subcontractorAddress", eventService.getSubcontractor().getUser().getRegion() + ", " + eventService.getSubcontractor().getUser().getCityAndMul() + ", " + eventService.getSubcontractor().getUser().getBarangay());
+                subcontractorMap.put("serviceName", eventService.getSubcontractor().getSubcontractor_serviceName());
+                subcontractorMap.put("serviceCategory", eventService.getSubcontractor().getSubcontractor_serviceCategory());
                 subcontractorMap.put("subcontractor_service_description", eventService.getSubcontractor().getSubcontractor_description());
                 subcontractorMap.put("subcontractor_service_price", eventService.getSubcontractor().getSubcontractor_service_price());
                 return subcontractorMap;

@@ -76,4 +76,7 @@ public interface TransactionRepo extends JpaRepository<TransactionsEntity, Integ
     @Query("SELECT t FROM TransactionsEntity t")
     TransactionsEntity getAllTransactionsDate();
 
+    @Query("SELECT t FROM TransactionsEntity t JOIN t.eventServices es WHERE es.subcontractor.subcontractor_Id = :subcontractorId")
+    List<TransactionsEntity> findTransactionsBySubcontractorId(@Param("subcontractorId") int subcontractorId);
+
 }

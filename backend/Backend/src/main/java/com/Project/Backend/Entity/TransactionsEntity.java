@@ -52,6 +52,8 @@ public class TransactionsEntity {
     @Column(columnDefinition = "TEXT")
     private String transactionNote;
 
+    private int progress; // 0-100 percentage
+
     public enum Status {
         COMPLETED, DECLINED, CANCELLED, PENDING, ONGOING
     }
@@ -174,5 +176,13 @@ public class TransactionsEntity {
 
     public void setTransactionNote(String transactionNote) {
         this.transactionNote = transactionNote;
+    }
+
+    public int getProgress() {
+        return progress;
+    }
+
+    public void setProgress(int progress) {
+        this.progress = progress;
     }
 }

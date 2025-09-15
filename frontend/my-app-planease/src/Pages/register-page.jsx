@@ -1132,7 +1132,6 @@ export default function SignUpPage() {
                                 // Optionally handle error, but do not block navigation
                               }
                               setShowOTPModal(false)
-                              alert("Registration Successful! Redirecting to login...")
                               navigate("/login")
                             }
                           } catch (error) {
