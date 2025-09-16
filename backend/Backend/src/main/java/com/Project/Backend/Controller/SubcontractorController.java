@@ -87,22 +87,46 @@ public class SubcontractorController {
 
         //create object for package service -> what package of tulip, cherry blossom, he's available
 
-        subcontractor.setEventName(null);
-        subcontractor.setShowcase(null);
+        // subcontractor.setEventName(null);
+        // subcontractor.setShowcase(null);
         SubcontractorEntity savedSubcontractor = subcontractorService.saveSubcontractor(subcontractor);
         return ResponseEntity.ok(savedSubcontractor);
     }
 
     // New simplified creation endpoint: business name, contact person, and services
     @PostMapping("/create-basic")
-    public ResponseEntity<SubcontractorEntity> createBasic(@RequestBody CreateBasicSubcontractorRequest request) {
-        SubcontractorEntity saved;
-        if (request.getFirstname() != null && request.getLastname() != null && request.getEmail() != null && request.getPhoneNumber() != null) {
-            saved = subcontractorService.createSubcontractorWithUser(request);
-        } else {
-            saved = subcontractorService.createBasicSubcontractor(request);
+    public ResponseEntity<?> createBasic(@RequestBody CreateBasicSubcontractorRequest request) {
+        if (request.getFirstname() == null || request.getFirstname().trim().isEmpty() ||
+            request.getLastname() == null || request.getLastname().trim().isEmpty() ||
+            request.getEmail() == null || request.getEmail().trim().isEmpty() ||
+            request.getPhoneNumber() == null || request.getPhoneNumber().trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "success", false,
+                "message", "User information (firstname, lastname, email, phone number) is required to create a subcontractor"
+            ));
         }
-        return ResponseEntity.ok(saved);
+
+        if (request.getBusinessName() == null || request.getBusinessName().trim().isEmpty() ||
+            request.getContactPerson() == null || request.getContactPerson().trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "success", false,
+                "message", "Business name and contact person are required"
+            ));
+        }
+
+        try {
+            SubcontractorEntity saved = subcontractorService.createSubcontractorWithUser(request);
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Subcontractor created successfully",
+                "subcontractor", saved
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "success", false,
+                "message", "Failed to create subcontractor: " + e.getMessage()
+            ));
+        }
     }
 
     @DeleteMapping("/{id}")

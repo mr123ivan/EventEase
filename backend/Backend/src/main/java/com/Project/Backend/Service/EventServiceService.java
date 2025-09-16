@@ -2,9 +2,11 @@ package com.Project.Backend.Service;
 
 import com.Project.Backend.Entity.EventServiceEntity;
 import com.Project.Backend.Entity.SubcontractorEntity;
+import com.Project.Backend.Entity.SubcontractorServiceEntity;
 import com.Project.Backend.Entity.TransactionsEntity;
 import com.Project.Backend.Repository.EventServiceRepository;
 import com.Project.Backend.Repository.SubContractorRepository;
+import com.Project.Backend.Repository.SubcontractorServiceRepository;
 import com.Project.Backend.Repository.TransactionRepo;
 import com.Project.Backend.DTO.GetTransactionDTO;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +32,9 @@ public class EventServiceService {
 
     @Autowired
     private TransactionRepo transactionRepository;
+
+    @Autowired
+    private SubcontractorServiceRepository subcontractorServiceRepository;
 
     public EventServiceEntity create(EventServiceEntity eventService) {
         return eventServiceRepository.save(eventService);
@@ -63,16 +68,19 @@ public class EventServiceService {
 
     // Get all unassigned event services
     public List<EventServiceEntity> getUnassignedEventServices() {
-        return eventServiceRepository.findBySubcontractorIsNull();
+        return eventServiceRepository.findBySubcontractorServiceIsNull();
     }
 
-    // Assign subcontractor to event service
-    public EventServiceEntity assignSubcontractor(int eventServiceId, int subcontractorId) {
+    // Assign subcontractor service to event service
+    public EventServiceEntity assignSubcontractorService(int eventServiceId, int subcontractorServiceId) {
         EventServiceEntity eventService = eventServiceRepository.findById(eventServiceId)
             .orElseThrow(() -> new RuntimeException("Event service not found with ID: " + eventServiceId));
 
-        SubcontractorEntity subcontractor = subcontractorRepository.findById(subcontractorId)
-            .orElseThrow(() -> new RuntimeException("Subcontractor not found with ID: " + subcontractorId));
+        // Find the subcontractor service entity
+        SubcontractorServiceEntity subcontractorService = subcontractorServiceRepository.findById(subcontractorServiceId)
+            .orElseThrow(() -> new RuntimeException("SubcontractorService not found with ID: " + subcontractorServiceId));
+
+        SubcontractorEntity subcontractor = subcontractorService.getSubcontractor();
 
         // Check if subcontractor is available for the event date
         Date eventDate = eventService.getTransactionsId().getTransactionDate();
@@ -80,16 +88,16 @@ public class EventServiceService {
             throw new RuntimeException("Subcontractor is not available on the event date");
         }
 
-        eventService.setSubcontractor(subcontractor);
+        eventService.setSubcontractorService(subcontractorService);
         return eventServiceRepository.save(eventService);
     }
 
-    // Remove subcontractor from event service
-    public EventServiceEntity removeSubcontractor(int eventServiceId) {
+    // Remove subcontractor service from event service
+    public EventServiceEntity removeSubcontractorService(int eventServiceId) {
         EventServiceEntity eventService = eventServiceRepository.findById(eventServiceId)
             .orElseThrow(() -> new RuntimeException("Event service not found with ID: " + eventServiceId));
 
-        eventService.setSubcontractor(null);
+        eventService.setSubcontractorService(null);
         return eventServiceRepository.save(eventService);
     }
 
@@ -108,18 +116,18 @@ public class EventServiceService {
         return availableSubcontractors;
     }
 
-    // Bulk assign subcontractors
-    public List<EventServiceEntity> bulkAssignSubcontractors(Map<Integer, Integer> assignments) {
+    // Bulk assign subcontractor services
+    public List<EventServiceEntity> bulkAssignSubcontractorServices(Map<Integer, Integer> assignments) {
         List<EventServiceEntity> updatedServices = new ArrayList<>();
-        
+
         for (Map.Entry<Integer, Integer> assignment : assignments.entrySet()) {
             int eventServiceId = assignment.getKey();
-            int subcontractorId = assignment.getValue();
-            
-            EventServiceEntity updatedService = assignSubcontractor(eventServiceId, subcontractorId);
+            int subcontractorServiceId = assignment.getValue();
+
+            EventServiceEntity updatedService = assignSubcontractorService(eventServiceId, subcontractorServiceId);
             updatedServices.add(updatedService);
         }
-        
+
         return updatedServices;
     }
 

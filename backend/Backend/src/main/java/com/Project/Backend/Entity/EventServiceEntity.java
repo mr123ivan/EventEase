@@ -15,9 +15,9 @@ public class EventServiceEntity {
     private int eventServices_id;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JsonBackReference("subcontractor-eventservice")
-    @JoinColumn(name = "subcontractor_id", nullable = true)
-    private SubcontractorEntity subcontractor;
+    @JsonBackReference("subcontractor-service-eventservice")
+    @JoinColumn(name = "subcontractor_service_id", nullable = true)
+    private SubcontractorServiceEntity subcontractorService;
 
 
     @ManyToOne()
@@ -33,12 +33,12 @@ public class EventServiceEntity {
         this.eventServices_id = eventServices_id;
     }
 
-    public SubcontractorEntity getSubcontractor() {
-        return subcontractor;
+    public SubcontractorServiceEntity getSubcontractorService() {
+        return subcontractorService;
     }
 
-    public void setSubcontractor(SubcontractorEntity subcontractor) {
-        this.subcontractor = subcontractor;
+    public void setSubcontractorService(SubcontractorServiceEntity subcontractorService) {
+        this.subcontractorService = subcontractorService;
     }
 
     public TransactionsEntity getTransactionsId() {

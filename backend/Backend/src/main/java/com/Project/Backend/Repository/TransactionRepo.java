@@ -27,7 +27,8 @@ public interface TransactionRepo extends JpaRepository<TransactionsEntity, Integ
             "JOIN FETCH t.user u " +
             "JOIN FETCH t.event e " +
             "LEFT JOIN FETCH t.eventServices es " +
-            "LEFT JOIN FETCH es.subcontractor")
+            "LEFT JOIN FETCH es.subcontractorService sc " +
+            "LEFT JOIN FETCH sc.subcontractor")
     List<TransactionsEntity> findAllWithRelations();
 
     @org.springframework.data.jpa.repository.Query("SELECT t FROM TransactionsEntity t WHERE t.user.userId = :userId")
@@ -38,7 +39,7 @@ public interface TransactionRepo extends JpaRepository<TransactionsEntity, Integ
     @Query("SELECT t FROM TransactionsEntity t WHERE t.user.email = :email")
     List<TransactionsEntity> findByUserEmail(@Param("email") String email);
     
-    @Query("SELECT t FROM TransactionsEntity t JOIN t.eventServices es WHERE es.subcontractor.user.email = :email")
+    @Query("SELECT t FROM TransactionsEntity t JOIN t.eventServices es WHERE es.subcontractorService.subcontractor.user.email = :email")
     List<TransactionsEntity> getAllTransactionsByEventService(@Param("email") String email);
 
     @Query("""
@@ -68,7 +69,8 @@ public interface TransactionRepo extends JpaRepository<TransactionsEntity, Integ
     FROM TransactionsEntity t
     LEFT JOIN t.payment p
     LEFT JOIN t.eventServices e
-    LEFT JOIN e.subcontractor s
+    LEFT JOIN e.subcontractorService sc
+    LEFT JOIN sc.subcontractor s
     WHERE t.transaction_Id = :transactionId
 """)
     TransactionPaymentAndSubcontractorsDTO findAllJoinedWIthPaymentAndSubcontractorsByTransactionId(@Param("transactionId") int transactionId);
@@ -76,7 +78,7 @@ public interface TransactionRepo extends JpaRepository<TransactionsEntity, Integ
     @Query("SELECT t FROM TransactionsEntity t")
     TransactionsEntity getAllTransactionsDate();
 
-    @Query("SELECT t FROM TransactionsEntity t JOIN t.eventServices es WHERE es.subcontractor.subcontractor_Id = :subcontractorId")
+    @Query("SELECT t FROM TransactionsEntity t JOIN t.eventServices es WHERE es.subcontractorService.subcontractor.subcontractor_Id = :subcontractorId")
     List<TransactionsEntity> findTransactionsBySubcontractorId(@Param("subcontractorId") int subcontractorId);
 
 }

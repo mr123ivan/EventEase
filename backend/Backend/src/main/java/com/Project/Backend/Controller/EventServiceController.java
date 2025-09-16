@@ -38,16 +38,16 @@ public class EventServiceController {
         return ResponseEntity.ok(unassignedServices);
     }
 
-    // Assign subcontractor to event service
-    @PutMapping("/{eventServiceId}/assign-subcontractor")
-    public ResponseEntity<?> assignSubcontractor(
+    // Assign subcontractor service to event service
+    @PutMapping("/{eventServiceId}/assign-subcontractor-service")
+    public ResponseEntity<?> assignSubcontractorService(
             @PathVariable int eventServiceId,
-            @RequestParam int subcontractorId) {
+            @RequestParam int subcontractorServiceId) {
         try {
-            EventServiceEntity updatedEventService = eventServiceService.assignSubcontractor(eventServiceId, subcontractorId);
+            EventServiceEntity updatedEventService = eventServiceService.assignSubcontractorService(eventServiceId, subcontractorServiceId);
             return ResponseEntity.ok(Map.of(
                 "success", true,
-                "message", "Subcontractor assigned successfully",
+                "message", "Subcontractor service assigned successfully",
                 "eventService", updatedEventService
             ));
         } catch (RuntimeException e) {
@@ -58,14 +58,14 @@ public class EventServiceController {
         }
     }
 
-    // Remove subcontractor from event service
-    @PutMapping("/{eventServiceId}/remove-subcontractor")
-    public ResponseEntity<?> removeSubcontractor(@PathVariable int eventServiceId) {
+    // Remove subcontractor service from event service
+    @PutMapping("/{eventServiceId}/remove-subcontractor-service")
+    public ResponseEntity<?> removeSubcontractorService(@PathVariable int eventServiceId) {
         try {
-            EventServiceEntity updatedEventService = eventServiceService.removeSubcontractor(eventServiceId);
+            EventServiceEntity updatedEventService = eventServiceService.removeSubcontractorService(eventServiceId);
             return ResponseEntity.ok(Map.of(
                 "success", true,
-                "message", "Subcontractor removed successfully",
+                "message", "Subcontractor service removed successfully",
                 "eventService", updatedEventService
             ));
         } catch (RuntimeException e) {
@@ -90,15 +90,15 @@ public class EventServiceController {
         }
     }
 
-    // Bulk assign subcontractors to multiple event services
-    @PutMapping("/bulk-assign")
-    public ResponseEntity<?> bulkAssignSubcontractors(@RequestBody Map<Integer, Integer> assignments) {
+    // Bulk assign subcontractor services to multiple event services
+    @PutMapping("/bulk-assign-services")
+    public ResponseEntity<?> bulkAssignSubcontractorServices(@RequestBody Map<Integer, Integer> assignments) {
         try {
-            // assignments is a map of eventServiceId -> subcontractorId
-            List<EventServiceEntity> updatedServices = eventServiceService.bulkAssignSubcontractors(assignments);
+            // assignments is a map of eventServiceId -> subcontractorServiceId
+            List<EventServiceEntity> updatedServices = eventServiceService.bulkAssignSubcontractorServices(assignments);
             return ResponseEntity.ok(Map.of(
                 "success", true,
-                "message", "Subcontractors assigned successfully",
+                "message", "Subcontractor services assigned successfully",
                 "updatedServices", updatedServices
             ));
         } catch (RuntimeException e) {
