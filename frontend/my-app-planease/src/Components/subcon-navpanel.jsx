@@ -16,6 +16,17 @@ const NavPanel = () => {
           <LayoutDashboard size={20} />
           Dashboard
         </NavLink>
+        
+                  <NavLink
+          to="/subcontractor/progress"
+          className={({ isActive }) =>
+            `flex items-center gap-3 px-3 py-2 rounded-md transition 
+            ${isActive ? "text-blue-600 font-semibold" : "text-gray-600 hover:text-blue-500"}`
+          }
+        >
+          <LayoutDashboard size={20} />
+          Event Assigned
+        </NavLink>
 
         <NavLink
           to="/subcontractor/transactions"

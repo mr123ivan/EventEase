@@ -4,6 +4,7 @@ import com.Project.Backend.Entity.TransactionProgressEntity;
 import com.Project.Backend.Entity.TransactionsEntity;
 import com.Project.Backend.Entity.SubcontractorProgressEntity;
 import com.Project.Backend.Entity.SubcontractorEntity;
+import com.Project.Backend.Entity.SubcontractorServiceEntity;
 import com.Project.Backend.Entity.EventServiceEntity;
 import com.Project.Backend.Repository.TransactionProgressRepository;
 import com.Project.Backend.Repository.SubcontractorProgressRepository;
@@ -167,8 +168,9 @@ public class TransactionProgressService {
         List<EventServiceEntity> eventServices = eventServiceRepository.findByTransactionId(transaction.getTransaction_Id());
 
         for (EventServiceEntity eventService : eventServices) {
-            SubcontractorEntity subcontractor = eventService.getSubcontractor();
-            if (subcontractor != null) {
+            SubcontractorServiceEntity subcontractorService = eventService.getSubcontractorService();
+            if (subcontractorService != null) {
+                SubcontractorEntity subcontractor = subcontractorService.getSubcontractor();
                 // Check if progress already exists
                 Optional<SubcontractorProgressEntity> existingProgress =
                     subcontractorProgressRepository.findByTransactionIdAndSubcontractorId(

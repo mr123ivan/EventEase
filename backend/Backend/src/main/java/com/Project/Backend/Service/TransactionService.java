@@ -7,6 +7,7 @@ import com.Project.Backend.Repository.EventServiceRepository;
 import com.Project.Backend.Repository.PackageServicesRepository;
 import com.Project.Backend.Repository.PackagesRepository;
 import com.Project.Backend.Repository.PaymentRepository;
+import com.Project.Backend.Repository.SubcontractorServiceRepository;
 import com.Project.Backend.Repository.TransactionRepo;
 import com.Project.Backend.Repository.UserRepository;
 
@@ -69,6 +70,9 @@ public class TransactionService {
     @Autowired
     private TransactionProgressService transactionProgressService;
 
+    @Autowired
+    private SubcontractorServiceRepository subcontractorServiceRepository;
+
 
     public TransactionsEntity create(CreateTransactionDTO createTransactionDTO) {
         try{
@@ -96,19 +100,17 @@ public class TransactionService {
     }
 
     //connecting the transactions and the chosen services of subcontractors in event_service table;
-    public List<SubcontractorEntity> assignedEventService(List<Integer> subcontractorsId, TransactionsEntity transactions){
+    public List<SubcontractorEntity> assignedEventService(List<Integer> subcontractorServiceIds, TransactionsEntity transactions){
         List<SubcontractorEntity> subcontractors = new ArrayList<>();
 
-        for(int subcontractorid: subcontractorsId){
-            SubcontractorEntity subcontractorEntity = subcontractorService.getSubcontractorById(subcontractorid);
-            if(subcontractorEntity == null){
-                throw new RuntimeException("Subcontractor with id " + subcontractorid + " not found");
-            }
+        for(int subcontractorServiceId: subcontractorServiceIds){
+            SubcontractorServiceEntity subcontractorServiceEntity = subcontractorServiceRepository.findById(subcontractorServiceId)
+                .orElseThrow(() -> new RuntimeException("SubcontractorService with id " + subcontractorServiceId + " not found"));
             EventServiceEntity eventServiceEntity = new EventServiceEntity();
             eventServiceEntity.setTransactionsId(transactions);
-            eventServiceEntity.setSubcontractor(subcontractorEntity);
+            eventServiceEntity.setSubcontractorService(subcontractorServiceEntity);
             eventServiceService.create(eventServiceEntity);
-            subcontractors.add(subcontractorService.getSubcontractorById(subcontractorid));
+            subcontractors.add(subcontractorServiceEntity.getSubcontractor());
         }
         return subcontractors;
     };
@@ -198,11 +200,10 @@ public class TransactionService {
     //helper function for the eventService entity
     private List<Map<String, Object>>  getSubcontractorsOfEvent(List<EventServiceEntity> eventServices){
        return eventServices.stream()
-               .filter(eventService -> eventService.getSubcontractor() != null) // Filter out null subcontractors
+               .filter(eventService -> eventService.getSubcontractorService() != null) // Filter out null subcontractor services
                .map(eventService -> {
-                   SubcontractorEntity subcontractor = subcontractorService.getSubcontractorById(
-                           eventService.getSubcontractor().getSubcontractor_Id()
-                   );
+                   SubcontractorServiceEntity subcontractorServiceEntity = eventService.getSubcontractorService();
+                   SubcontractorEntity subcontractor = subcontractorServiceEntity.getSubcontractor();
 
                    Map<String, Object> subcontractorDetails = new HashMap<>();
                    subcontractorDetails.put("subcontractorUserId", subcontractor.getUser() != null ? subcontractor.getUser().getUserId() : 0);
@@ -211,8 +212,8 @@ public class TransactionService {
                        subcontractor.getUser().getFirstname() + " " + subcontractor.getUser().getLastname() :
                        subcontractor.getSubcontractor_serviceName());
                    subcontractorDetails.put("subcontractorEmail", subcontractor.getUser() != null ? subcontractor.getUser().getEmail() : "N/A");
-                   subcontractorDetails.put("serviceName", subcontractor.getSubcontractor_serviceName());
-                   subcontractorDetails.put("serviceCategory", subcontractor.getSubcontractor_serviceCategory());
+                   subcontractorDetails.put("serviceName", subcontractorServiceEntity.getName());
+                   subcontractorDetails.put("serviceCategory", ""); // No serviceCategory field in SubcontractorServiceEntity
                    //add the category here
                    return subcontractorDetails;
                })
@@ -410,20 +411,21 @@ public class TransactionService {
                     System.out.println("Creating EventService for service ID: " + serviceId);
                     EventServiceEntity eventService = new EventServiceEntity();
                     eventService.setTransactionsId(savedTransaction);
-                    
-                    // Try to find the subcontractor by ID
+
+                    // Try to find the subcontractor service by ID
                     try {
-                        SubcontractorEntity subcontractor = subcontractorService.getSubcontractorById(serviceId);
-                        eventService.setSubcontractor(subcontractor);
-                        System.out.println("Assigned subcontractor: " + subcontractor.getSubcontractor_serviceName());
+                        SubcontractorServiceEntity subcontractorServiceEntity = subcontractorServiceRepository.findById(serviceId)
+                            .orElseThrow(() -> new RuntimeException("SubcontractorService with id " + serviceId + " not found"));
+                        eventService.setSubcontractorService(subcontractorServiceEntity);
+                        System.out.println("Assigned subcontractor service: " + subcontractorServiceEntity.getName());
                     } catch (Exception e) {
-                        System.out.println("WARNING: Subcontractor not found for ID " + serviceId + ", will be assigned later by admin");
-                        eventService.setSubcontractor(null); // Will be assigned later by admin
+                        System.out.println("WARNING: SubcontractorService not found for ID " + serviceId + ", will be assigned later by admin");
+                        eventService.setSubcontractorService(null); // Will be assigned later by admin
                     }
-                    
+
                     eventServices.add(eventService);
                 }
-                
+
                 // Save the EventService records
                 eventServices = EventServiceRepository.saveAll(eventServices);
                 savedTransaction.setEventServices(eventServices);

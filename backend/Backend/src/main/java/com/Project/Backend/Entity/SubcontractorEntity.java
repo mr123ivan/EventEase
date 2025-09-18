@@ -37,9 +37,8 @@ public class SubcontractorEntity {
     @JsonManagedReference(value = "subcontractor-unavailable-dates")
     private List<UnavailableDatesEntity> unavailableDates;
 
-    @OneToMany(mappedBy = "subcontractor", cascade = CascadeType.REMOVE)
-    @JsonManagedReference("subcontractor-eventservice")
-    private List<EventServiceEntity> eventName;
+    // Removed: EventServiceEntity doesn't have direct relationship with SubcontractorEntity
+    // The relationship is: EventServiceEntity -> SubcontractorServiceEntity -> SubcontractorEntity
 
     @OneToMany(mappedBy = "subcontractor", cascade = CascadeType.REMOVE)
     @JsonManagedReference("subcontractor-package-service")
@@ -91,13 +90,7 @@ public class SubcontractorEntity {
         this.unavailableDates = unavailableDates;
     }
 
-    public List<EventServiceEntity> getEventName() {
-        return eventName;
-    }
-
-    public void setEventName(List<EventServiceEntity> eventName) {
-        this.eventName = eventName;
-    }
+    // Removed getter and setter for eventName field
 
     public List<PackageServicesEntity> getPackageServices() {
         return packageServices;

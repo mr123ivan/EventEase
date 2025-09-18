@@ -216,13 +216,19 @@ const AdminSubContractors = () => {
     try {
       setIsSubmitting(true)
       const token = getAuthToken()
-      await axios.post(`${API_BASE_URL}/subcontractor/create-basic`, payload, {
+      const response = await axios.post(`${API_BASE_URL}/subcontractor/create-basic`, payload, {
         headers: { Authorization: `Bearer ${token}` },
       })
 
-      setSnackbar({ open: true, message: "Subcontractor created successfully.", severity: "success" })
-      handleClose()
-      await fetchSubcontractors()
+      // Handle success response
+      if (response.data.success) {
+        setSnackbar({ open: true, message: response.data.message || "Subcontractor created successfully.", severity: "success" })
+        handleClose()
+        await fetchSubcontractors()
+      } else {
+        // Handle backend validation errors
+        setSnackbar({ open: true, message: response.data.message || "Failed to create subcontractor.", severity: "error" })
+      }
     } catch (error) {
       console.error("Error creating subcontractor:", error)
       const message = error?.response?.data?.message || "Failed to create subcontractor."

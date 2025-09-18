@@ -51,23 +51,25 @@ public class GetTransactionDTO {
         }
 
         this.subcontractors = transaction.getEventServices().stream()
-            .filter(eventService -> eventService.getSubcontractor() != null) // Filter out null subcontractors
+            .filter(eventService -> eventService.getSubcontractorService() != null) // Filter out null subcontractor services
             .map(eventService -> {
+                SubcontractorServiceEntity subcontractorService = eventService.getSubcontractorService();
+                SubcontractorEntity subcontractor = subcontractorService.getSubcontractor();
                 Map<String, Object> subcontractorMap = new HashMap<>();
-                subcontractorMap.put("subcontractorUserId", eventService.getSubcontractor().getUser() != null ? eventService.getSubcontractor().getUser().getUserId() : 0);
-                subcontractorMap.put("subcontractorEntityId", eventService.getSubcontractor().getSubcontractor_Id()); // Add the correct subcontractor entity ID
-                subcontractorMap.put("subcontractorName", eventService.getSubcontractor().getUser() != null ?
-                    eventService.getSubcontractor().getUser().getFirstname() + " " + eventService.getSubcontractor().getUser().getLastname() :
-                    eventService.getSubcontractor().getSubcontractor_serviceName());
-                subcontractorMap.put("subcontractorEmail", eventService.getSubcontractor().getUser() != null ? eventService.getSubcontractor().getUser().getEmail() : "N/A");
-                subcontractorMap.put("subcontractorPhone", eventService.getSubcontractor().getUser() != null ? eventService.getSubcontractor().getUser().getPhoneNumber() : "N/A");
-                subcontractorMap.put("subcontractorAddress", eventService.getSubcontractor().getUser() != null ?
-                    eventService.getSubcontractor().getUser().getRegion() + ", " + eventService.getSubcontractor().getUser().getCityAndMul() + ", " + eventService.getSubcontractor().getUser().getBarangay() :
+                subcontractorMap.put("subcontractorUserId", subcontractor.getUser() != null ? subcontractor.getUser().getUserId() : 0);
+                subcontractorMap.put("subcontractorEntityId", subcontractor.getSubcontractor_Id()); // Add the correct subcontractor entity ID
+                subcontractorMap.put("subcontractorName", subcontractor.getUser() != null ?
+                    subcontractor.getUser().getFirstname() + " " + subcontractor.getUser().getLastname() :
+                    subcontractor.getSubcontractor_serviceName());
+                subcontractorMap.put("subcontractorEmail", subcontractor.getUser() != null ? subcontractor.getUser().getEmail() : "N/A");
+                subcontractorMap.put("subcontractorPhone", subcontractor.getUser() != null ? subcontractor.getUser().getPhoneNumber() : "N/A");
+                subcontractorMap.put("subcontractorAddress", subcontractor.getUser() != null ?
+                    subcontractor.getUser().getRegion() + ", " + subcontractor.getUser().getCityAndMul() + ", " + subcontractor.getUser().getBarangay() :
                     "N/A");
-                subcontractorMap.put("serviceName", eventService.getSubcontractor().getSubcontractor_serviceName());
-                subcontractorMap.put("serviceCategory", eventService.getSubcontractor().getSubcontractor_serviceCategory());
-                subcontractorMap.put("subcontractor_service_description", eventService.getSubcontractor().getSubcontractor_description());
-                subcontractorMap.put("subcontractor_service_price", eventService.getSubcontractor().getSubcontractor_service_price());
+                subcontractorMap.put("serviceName", subcontractorService.getName());
+                subcontractorMap.put("serviceCategory", ""); // No serviceCategory field in SubcontractorServiceEntity
+                subcontractorMap.put("subcontractor_service_description", ""); // No description field in SubcontractorServiceEntity
+                subcontractorMap.put("subcontractor_service_price", subcontractorService.getPrice());
                 return subcontractorMap;
             })
             .collect(Collectors.toList());
