@@ -41,6 +41,7 @@ public class TransactionProgressService {
     private TransactionRepo transactionRepo;
 
     /**
+     * v
      * Create initial progress record when transaction is created
      */
     public TransactionProgressEntity createInitialProgress(TransactionsEntity transaction) {
@@ -255,7 +256,12 @@ public class TransactionProgressService {
                 entity.getSubcontractor().getSubcontractor_Id(),
                 entity.getSubcontractor().getUser() != null ?
                     entity.getSubcontractor().getUser().getUserId() : 0,
-                entity.getSubcontractor().getSubcontractor_serviceName(),
+                // Use businessName if available, otherwise fallback to serviceName or contactPerson
+                entity.getSubcontractor().getBusinessName() != null && !entity.getSubcontractor().getBusinessName().trim().isEmpty() ?
+                    entity.getSubcontractor().getBusinessName() :
+                    (entity.getSubcontractor().getContactPerson() != null && !entity.getSubcontractor().getContactPerson().trim().isEmpty() ?
+                        entity.getSubcontractor().getContactPerson() :
+                        entity.getSubcontractor().getSubcontractor_serviceName()),
                 entity.getSubcontractor().getSubcontractor_serviceCategory(),
                 entity.getSubcontractor().getUser() != null ?
                     entity.getSubcontractor().getUser().getProfilePicture() : null,
@@ -345,11 +351,16 @@ public class TransactionProgressService {
                 entity.getTransactionProgress().getTransaction().getTransaction_Id(),
                 entity.getSubcontractor().getSubcontractor_Id(),
                 entity.getSubcontractor().getUser() != null ?
-                    entity.getSubcontractor().getUser().getFirstname() + " " +
-                    entity.getSubcontractor().getUser().getLastname() :
-                    entity.getSubcontractor().getSubcontractor_serviceName(),
+                    entity.getSubcontractor().getUser().getUserId() : 0,
+                // Use businessName if available, otherwise fallback to contactPerson or serviceName
+                entity.getSubcontractor().getBusinessName() != null && !entity.getSubcontractor().getBusinessName().trim().isEmpty() ?
+                    entity.getSubcontractor().getBusinessName() :
+                    (entity.getSubcontractor().getContactPerson() != null && !entity.getSubcontractor().getContactPerson().trim().isEmpty() ?
+                        entity.getSubcontractor().getContactPerson() :
+                        entity.getSubcontractor().getSubcontractor_serviceName()),
                 entity.getSubcontractor().getSubcontractor_serviceCategory(),
-                "/placeholder.svg", // Default avatar
+                entity.getSubcontractor().getUser() != null ?
+                    entity.getSubcontractor().getUser().getProfilePicture() : "/placeholder.svg",
                 entity.getProgressPercentage(),
                 entity.getCheckInStatus().toString(),
                 entity.getProgressNotes(),

@@ -113,13 +113,17 @@ const EventTrackingAdmin = () => {
                   subcontractorEntityId: sub.subcontractorEntityId || sub.subcontractorUserId, // Add subcontractorEntityId for API calls
                   progressId: progressData?.subcontractorProgressId, // Store the subcontractor progress ID for individual endpoint
                   name: progressData?.subcontractorName || sub.subcontractorName,
-                  role: progressData?.subcontractorServiceCategory || sub.serviceCategory,
+                  serviceName: progressData?.subcontractorRole || sub.serviceName,
                   progressPercentage: progressData?.progressPercentage ?? sub.progressPercentage ?? 0,
                   checkInStatus: progressData?.checkInStatus?.toLowerCase() || sub.checkInStatus || "pending",
                   notes: progressData?.progressNotes || sub.notes || "",
                   progressImageUrl: progressData?.progressImageUrl || "",
                   lastUpdate: progressData?.updatedAt || sub.lastUpdate || "",
-                  avatar: progressData?.subcontractorAvatar || "/placeholder.svg?key=" + sub.subcontractorUserId, // Use avatar from progress data if available
+                  avatar: progressData?.subcontractorAvatar && progressData.subcontractorAvatar.trim() !== ""
+                    ? (progressData.subcontractorAvatar.startsWith('http')
+                        ? progressData.subcontractorAvatar
+                        : `http://localhost:8080/uploads/${progressData.subcontractorAvatar}`)
+                    : "/placeholder.svg?key=" + sub.subcontractorUserId, // Use avatar from progress data if available
                 }
               })
 
@@ -145,7 +149,7 @@ const EventTrackingAdmin = () => {
                 id: sub.subcontractorUserId.toString(),
                 subcontractorEntityId: sub.subcontractorEntityId || sub.subcontractorUserId, // Add subcontractorEntityId for API calls
                 name: sub.subcontractorName,
-                role: sub.serviceCategory,
+                serviceName: sub.serviceName,
                 progressPercentage: sub.progressPercentage || 0,
                 checkInStatus: sub.checkInStatus || "pending",
                 notes: sub.notes || "",
@@ -183,6 +187,25 @@ const EventTrackingAdmin = () => {
 
     if (allApproved) return "completed"
     return "pending"
+  }
+
+  const groupSubcontractorsByName = (subcontractors) => {
+    const grouped = subcontractors.reduce((acc, sub) => {
+      const key = sub.name
+      if (!acc[key]) {
+        acc[key] = []
+      }
+      acc[key].push(sub)
+      return acc
+    }, {})
+
+    return Object.entries(grouped).map(([name, subs]) => ({
+      name,
+      serviceName: subs[0].serviceName,
+      avatar: subs[0].avatar,
+      count: subs.length,
+      subcontractors: subs
+    }))
   }
 
   const handleUpdateEvent = (event) => {
@@ -260,9 +283,9 @@ const EventTrackingAdmin = () => {
     if (subcontractors.length === 1) {
       return (
         <Box className="flex items-center gap-2">
-          <Avatar src={subcontractors[0].avatar} alt={subcontractors[0].role} sx={{ width: 32, height: 32 }} />
+          <Avatar src={subcontractors[0].avatar} alt={subcontractors[0].name} sx={{ width: 32, height: 32 }} />
           <Typography variant="body2" className="text-[#667085]">
-            {subcontractors[0].role}
+            {subcontractors[0].name}
           </Typography>
         </Box>
       )
@@ -275,8 +298,8 @@ const EventTrackingAdmin = () => {
             <Box>
               {subcontractors.map((sub) => (
                 <Box key={sub.id} className="flex items-center gap-2 py-1">
-                  <Avatar src={sub.avatar} alt={sub.role} sx={{ width: 24, height: 24 }} />
-                  <Typography variant="body2">{sub.role}</Typography>
+                  <Avatar src={sub.avatar} alt={sub.name} sx={{ width: 24, height: 24 }} />
+                  <Typography variant="body2">{sub.name}</Typography>
                 </Box>
               ))}
             </Box>
@@ -286,7 +309,7 @@ const EventTrackingAdmin = () => {
           <Box className="flex items-center">
             <AvatarGroup max={3} sx={{ "& .MuiAvatar-root": { width: 32, height: 32 } }}>
               {subcontractors.map((sub) => (
-                <Avatar key={sub.id} src={sub.avatar} alt={sub.role} />
+                <Avatar key={sub.id} src={sub.avatar} alt={sub.name} />
               ))}
             </AvatarGroup>
           </Box>
@@ -300,8 +323,8 @@ const EventTrackingAdmin = () => {
           <Box>
             {subcontractors.map((sub) => (
               <Box key={sub.id} className="flex items-center gap-2 py-1">
-                <Avatar src={sub.avatar} alt={sub.role} sx={{ width: 24, height: 24 }} />
-                <Typography variant="body2">{sub.role}</Typography>
+                <Avatar src={sub.avatar} alt={sub.name} sx={{ width: 24, height: 24 }} />
+                <Typography variant="body2">{sub.name}</Typography>
               </Box>
             ))}
           </Box>
@@ -311,7 +334,7 @@ const EventTrackingAdmin = () => {
         <Box className="flex items-center">
           <AvatarGroup max={2} sx={{ "& .MuiAvatar-root": { width: 32, height: 32 } }}>
             {subcontractors.slice(0, 2).map((sub) => (
-              <Avatar key={sub.id} src={sub.avatar} alt={sub.role} />
+              <Avatar key={sub.id} src={sub.avatar} alt={sub.name} />
             ))}
             <Avatar sx={{ bgcolor: "#FFB22C", width: 32, height: 32, fontSize: "0.75rem" }}>
               +{subcontractors.length - 2}
@@ -349,14 +372,14 @@ const EventTrackingAdmin = () => {
       const detailedProgress = progressResponse.data
       setSelectedSubcontractor({
         ...subcontractor,
-        name: detailedProgress.subcontractorName,
-        role: detailedProgress.subcontractorServiceCategory,
-        progressPercentage: detailedProgress.progressPercentage,
-        checkInStatus: detailedProgress.checkInStatus?.toLowerCase(),
-        notes: detailedProgress.progressNotes,
-        progressImageUrl: detailedProgress.progressImageUrl,
-        lastUpdate: detailedProgress.updatedAt,
-        avatar: detailedProgress.subcontractorAvatar,
+        name: detailedProgress.subcontractorName || subcontractor.name,
+        serviceName: detailedProgress.subcontractorRole || subcontractor.serviceName,
+        progressPercentage: detailedProgress.progressPercentage ?? subcontractor.progressPercentage,
+        checkInStatus: detailedProgress.checkInStatus?.toLowerCase() || subcontractor.checkInStatus,
+        notes: detailedProgress.progressNotes || subcontractor.notes,
+        progressImageUrl: detailedProgress.progressImageUrl || subcontractor.progressImageUrl,
+        lastUpdate: detailedProgress.updatedAt || subcontractor.lastUpdate,
+        avatar: detailedProgress.subcontractorAvatar || subcontractor.avatar,
       })
 
       // Set images array for carousel
@@ -702,25 +725,25 @@ const EventTrackingAdmin = () => {
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      <Box className="flex items-center gap-2">
-                        {renderSubcontractorProfiles(event.subcontractors)}
-                        {event.subcontractors.length > 1 && (
-                          <Button
-                            size="small"
-                            onClick={() => handleViewSubcontractors(event)}
-                            sx={{
-                              color: "#FFB22C",
-                              textTransform: "none",
-                              fontSize: "0.75rem",
-                              "&:hover": {
-                                backgroundColor: "rgba(255, 178, 44, 0.1)",
-                              },
-                            }}
-                          >
-                            View All ({event.subcontractors.length})
-                          </Button>
-                        )}
-                      </Box>
+          <Box className="flex items-center gap-2">
+            {renderSubcontractorProfiles(groupSubcontractorsByName(event.subcontractors))}
+            {groupSubcontractorsByName(event.subcontractors).length > 1 && (
+              <Button
+                size="small"
+                onClick={() => handleViewSubcontractors(event)}
+                sx={{
+                  color: "#FFB22C",
+                  textTransform: "none",
+                  fontSize: "0.75rem",
+                  "&:hover": {
+                    backgroundColor: "rgba(255, 178, 44, 0.1)",
+                  },
+                }}
+              >
+                View All ({groupSubcontractorsByName(event.subcontractors).length})
+              </Button>
+            )}
+          </Box>
                     </TableCell>
                     <TableCell>
                       <Typography variant="body2" className="text-[#667085]" noWrap>
@@ -793,12 +816,18 @@ const EventTrackingAdmin = () => {
         <DialogTitle>Select Subcontractor to Review</DialogTitle>
         <DialogContent>
           {selectedEvent && selectedEvent.subcontractors.map((sub) => (
-            <Box key={sub.id} className="flex items-center justify-between p-3 border-b cursor-pointer hover:bg-gray-50" onClick={() => { handleUpdateSubcontractor(selectedEvent, sub); setShowSubcontractorSelectionModal(false); }}>
+            <Box
+              key={sub.id}
+              className="flex items-center justify-between p-3 border-b cursor-pointer hover:bg-gray-50"
+              onClick={() => {
+                handleUpdateSubcontractor(selectedEvent, sub);
+                setShowSubcontractorSelectionModal(false);
+              }}
+            >
               <Box className="flex items-center gap-3">
-                <Avatar src={sub.avatar} alt={sub.role} sx={{ width: 32, height: 32 }} />
+                <Avatar src={sub.avatar} alt={sub.name} sx={{ width: 32, height: 32 }} />
                 <Box>
-                  <Typography variant="body1" className="font-medium">{sub.name}</Typography>
-                  <Typography variant="body2" color="text.secondary">{sub.role}</Typography>
+                  <Typography variant="body1" className="font-medium">{sub.name} ({sub.serviceName})</Typography>
                 </Box>
               </Box>
               <Box className="flex items-center gap-2">
@@ -955,7 +984,7 @@ const EventTrackingAdmin = () => {
                         {selectedSubcontractor.name}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        {selectedSubcontractor.role}
+                        {selectedSubcontractor.serviceName}
                       </Typography>
                     </Box>
                   </Box>
@@ -1163,7 +1192,7 @@ const EventTrackingAdmin = () => {
                           {subcontractor.name}
                         </Typography>
                         <Chip
-                          label={subcontractor.role}
+                          label={subcontractor.serviceName}
                           size="small"
                           sx={{ backgroundColor: "#FFB22C", color: "white" }}
                         />
