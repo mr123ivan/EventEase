@@ -21,6 +21,10 @@ public class SubcontractorProgressEntity {
     @JoinColumn(name = "subcontractor_id", nullable = false)
     private SubcontractorEntity subcontractor;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "event_service_id", nullable = false)
+    private EventServiceEntity eventService;
+
     @Column(nullable = false)
     private int progressPercentage; // 0-100 percentage
 
@@ -78,6 +82,14 @@ public class SubcontractorProgressEntity {
     // Getters and Setters
     public int getSubcontractorProgressId() {
         return subcontractorProgressId;
+    }
+
+    public EventServiceEntity getEventService() {
+        return eventService;
+    }
+
+    public void setEventService(EventServiceEntity eventService) {
+        this.eventService = eventService;
     }
 
     public void setSubcontractorProgressId(int subcontractorProgressId) {

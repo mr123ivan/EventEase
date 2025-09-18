@@ -372,14 +372,14 @@ const EventTrackingAdmin = () => {
       const detailedProgress = progressResponse.data
       setSelectedSubcontractor({
         ...subcontractor,
-        name: detailedProgress.subcontractorName || subcontractor.name,
-        serviceName: detailedProgress.subcontractorRole || subcontractor.serviceName,
-        progressPercentage: detailedProgress.progressPercentage ?? subcontractor.progressPercentage,
-        checkInStatus: detailedProgress.checkInStatus?.toLowerCase() || subcontractor.checkInStatus,
-        notes: detailedProgress.progressNotes || subcontractor.notes,
-        progressImageUrl: detailedProgress.progressImageUrl || subcontractor.progressImageUrl,
-        lastUpdate: detailedProgress.updatedAt || subcontractor.lastUpdate,
-        avatar: detailedProgress.subcontractorAvatar || subcontractor.avatar,
+        name: detailedProgress.subcontractorName,
+        serviceName: detailedProgress.subcontractorRole,
+        progressPercentage: detailedProgress.progressPercentage,
+        checkInStatus: detailedProgress.checkInStatus?.toLowerCase(),
+        notes: detailedProgress.progressNotes,
+        progressImageUrl: detailedProgress.progressImageUrl,
+        lastUpdate: detailedProgress.updatedAt,
+        avatar: detailedProgress.subcontractorAvatar,
       })
 
       // Set images array for carousel

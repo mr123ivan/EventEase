@@ -172,22 +172,17 @@ public class TransactionProgressService {
             SubcontractorServiceEntity subcontractorService = eventService.getSubcontractorService();
             if (subcontractorService != null) {
                 SubcontractorEntity subcontractor = subcontractorService.getSubcontractor();
-                // Check if progress already exists
-                Optional<SubcontractorProgressEntity> existingProgress =
-                    subcontractorProgressRepository.findByTransactionIdAndSubcontractorId(
-                        transaction.getTransaction_Id(), subcontractor.getSubcontractor_Id());
-
-                if (existingProgress.isEmpty()) {
-                    SubcontractorProgressEntity progress = new SubcontractorProgressEntity(
-                        // Need to get TransactionProgressEntity for this transaction
-                        transactionProgressRepository.findByTransactionId(transaction.getTransaction_Id())
-                            .orElseThrow(() -> new RuntimeException("TransactionProgress not found for transaction ID: " + transaction.getTransaction_Id())),
-                        subcontractor,
-                        0, // Initial progress is 0%
-                        "Subcontractor assigned to event"
-                    );
-                    subcontractorProgressRepository.save(progress);
-                }
+                // Create progress for each service assignment, even if same subcontractor has multiple services
+                SubcontractorProgressEntity progress = new SubcontractorProgressEntity(
+                    // Need to get TransactionProgressEntity for this transaction
+                    transactionProgressRepository.findByTransactionId(transaction.getTransaction_Id())
+                        .orElseThrow(() -> new RuntimeException("TransactionProgress not found for transaction ID: " + transaction.getTransaction_Id())),
+                    subcontractor,
+                    0, // Initial progress is 0%
+                    "Subcontractor assigned to event service: " + subcontractorService.getName()
+                );
+                progress.setEventService(eventService);
+                subcontractorProgressRepository.save(progress);
             }
         }
     }
@@ -263,6 +258,8 @@ public class TransactionProgressService {
                         entity.getSubcontractor().getContactPerson() :
                         entity.getSubcontractor().getSubcontractor_serviceName()),
                 entity.getSubcontractor().getSubcontractor_serviceCategory(),
+                entity.getEventService() != null && entity.getEventService().getSubcontractorService() != null ?
+                    entity.getEventService().getSubcontractorService().getName() : "General Service",
                 entity.getSubcontractor().getUser() != null ?
                     entity.getSubcontractor().getUser().getProfilePicture() : null,
                 entity.getProgressPercentage(),
@@ -271,7 +268,12 @@ public class TransactionProgressService {
                 entity.getProgressImageUrl(),
                 entity.getComment(),
                 entity.getCreatedAt(),
-                entity.getUpdatedAt()
+                entity.getUpdatedAt(),
+                entity.getTransactionProgress().getTransaction().getEvent() != null ? entity.getTransactionProgress().getTransaction().getEvent().getEvent_name() : "Event " + entity.getTransactionProgress().getTransaction().getTransaction_Id(),
+                entity.getTransactionProgress().getTransaction().getUser() != null ? entity.getTransactionProgress().getTransaction().getUser().getFirstname() + " " + entity.getTransactionProgress().getTransaction().getUser().getLastname() : "N/A",
+                entity.getTransactionProgress().getTransaction().getTransactionVenue() != null ? entity.getTransactionProgress().getTransaction().getTransactionVenue() : "Location TBD",
+                entity.getTransactionProgress().getTransaction().getTransactionStatus() != null ? entity.getTransactionProgress().getTransaction().getTransactionStatus().toString() : "pending",
+                entity.getTransactionProgress().getTransaction().getTransactionDate() != null ? entity.getTransactionProgress().getTransaction().getTransactionDate().toString() : "2024-01-15"
             ))
             .collect(Collectors.toList());
     }
@@ -359,6 +361,8 @@ public class TransactionProgressService {
                         entity.getSubcontractor().getContactPerson() :
                         entity.getSubcontractor().getSubcontractor_serviceName()),
                 entity.getSubcontractor().getSubcontractor_serviceCategory(),
+                entity.getEventService() != null && entity.getEventService().getSubcontractorService() != null ?
+                    entity.getEventService().getSubcontractorService().getName() : "General Service",
                 entity.getSubcontractor().getUser() != null ?
                     entity.getSubcontractor().getUser().getProfilePicture() : "/placeholder.svg",
                 entity.getProgressPercentage(),
@@ -367,7 +371,18 @@ public class TransactionProgressService {
                 entity.getProgressImageUrl(),
                 entity.getComment(),
                 entity.getCreatedAt(),
-                entity.getUpdatedAt()
+                entity.getUpdatedAt(),
+                // Transaction details
+                entity.getTransactionProgress().getTransaction().getEvent() != null ?
+                    entity.getTransactionProgress().getTransaction().getEvent().getEvent_name() : "Event " + entity.getTransactionProgress().getTransaction().getTransaction_Id(),
+                entity.getTransactionProgress().getTransaction().getUser() != null ?
+                    entity.getTransactionProgress().getTransaction().getUser().getFirstname() + " " + entity.getTransactionProgress().getTransaction().getUser().getLastname() : "N/A",
+                entity.getTransactionProgress().getTransaction().getTransactionVenue() != null ?
+                    entity.getTransactionProgress().getTransaction().getTransactionVenue() : "Location TBD",
+                entity.getTransactionProgress().getTransaction().getTransactionStatus() != null ?
+                    entity.getTransactionProgress().getTransaction().getTransactionStatus().toString() : "pending",
+                entity.getTransactionProgress().getTransaction().getTransactionDate() != null ?
+                    entity.getTransactionProgress().getTransaction().getTransactionDate().toString() : "2024-01-15"
             ))
             .collect(Collectors.toList());
     }
@@ -407,7 +422,7 @@ public class TransactionProgressService {
     /**
      * Check if all subcontractors are approved and update transaction status to completed if so
      */
-    private void checkAndUpdateTransactionStatus(int transactionId) {
+    public void checkAndUpdateTransactionStatus(int transactionId) {
         List<SubcontractorProgressEntity> subcontractorProgresses = getSubcontractorProgressByTransactionId(transactionId);
 
         // Check if all subcontractors are approved
