@@ -214,6 +214,7 @@ public class TransactionService {
                    subcontractorDetails.put("subcontractorEmail", subcontractor.getUser() != null ? subcontractor.getUser().getEmail() : "N/A");
                    subcontractorDetails.put("serviceName", subcontractorServiceEntity.getName());
                    subcontractorDetails.put("serviceCategory", ""); // No serviceCategory field in SubcontractorServiceEntity
+                   subcontractorDetails.put("eventServiceId", eventService.getEventServices_id()); // Add the event service ID for unique identification
                    //add the category here
                    return subcontractorDetails;
                })

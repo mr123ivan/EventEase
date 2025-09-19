@@ -9,6 +9,7 @@ public class SubcontractorProgressDTO {
     private int userId;
     private String subcontractorName;
     private String subcontractorRole;
+    private String serviceName;
     private String subcontractorAvatar;
     private int progressPercentage;
     private String checkInStatus;
@@ -17,6 +18,13 @@ public class SubcontractorProgressDTO {
     private String comment;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private String eventName;
+    private String clientName;
+    private String userName;
+    private String transactionVenue;
+    private String transactionStatus;
+    private String transactionDate;
+    private int eventServiceId;
 
     // Constructor for full subcontractor progress data
     public SubcontractorProgressDTO(int subcontractorProgressId, int transactionId, int subcontractorId,
@@ -59,7 +67,7 @@ public class SubcontractorProgressDTO {
 
     // Constructor for full subcontractor progress data with userId and image URL
     public SubcontractorProgressDTO(int subcontractorProgressId, int transactionId, int subcontractorId, int userId,
-                                  String subcontractorName, String subcontractorRole, String subcontractorAvatar,
+                                  String subcontractorName, String subcontractorRole, String serviceName, String subcontractorAvatar,
                                   int progressPercentage, String checkInStatus, String progressNotes, String progressImageUrl, String comment,
                                   LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.subcontractorProgressId = subcontractorProgressId;
@@ -68,6 +76,7 @@ public class SubcontractorProgressDTO {
         this.userId = userId;
         this.subcontractorName = subcontractorName;
         this.subcontractorRole = subcontractorRole;
+        this.serviceName = serviceName;
         this.subcontractorAvatar = subcontractorAvatar;
         this.progressPercentage = progressPercentage;
         this.checkInStatus = checkInStatus;
@@ -76,6 +85,34 @@ public class SubcontractorProgressDTO {
         this.comment = comment;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+    }
+
+    // Constructor for full subcontractor progress data with all fields
+    public SubcontractorProgressDTO(int subcontractorProgressId, int transactionId, int subcontractorId, int userId,
+                                  String subcontractorName, String subcontractorRole, String serviceName, String subcontractorAvatar,
+                                  int progressPercentage, String checkInStatus, String progressNotes, String progressImageUrl, String comment,
+                                  LocalDateTime createdAt, LocalDateTime updatedAt, String eventName, String clientName,
+                                  String transactionVenue, String transactionStatus, String transactionDate) {
+        this.subcontractorProgressId = subcontractorProgressId;
+        this.transactionId = transactionId;
+        this.subcontractorId = subcontractorId;
+        this.userId = userId;
+        this.subcontractorName = subcontractorName;
+        this.subcontractorRole = subcontractorRole;
+        this.serviceName = serviceName;
+        this.subcontractorAvatar = subcontractorAvatar;
+        this.progressPercentage = progressPercentage;
+        this.checkInStatus = checkInStatus;
+        this.progressNotes = progressNotes;
+        this.progressImageUrl = progressImageUrl;
+        this.comment = comment;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+        this.eventName = eventName;
+        this.clientName = clientName;
+        this.transactionVenue = transactionVenue;
+        this.transactionStatus = transactionStatus;
+        this.transactionDate = transactionDate;
     }
 
     // Constructor for basic subcontractor progress data
@@ -149,6 +186,14 @@ public class SubcontractorProgressDTO {
         this.subcontractorRole = subcontractorRole;
     }
 
+    public String getServiceName() {
+        return serviceName;
+    }
+
+    public void setServiceName(String serviceName) {
+        this.serviceName = serviceName;
+    }
+
     public String getSubcontractorAvatar() {
         return subcontractorAvatar;
     }
@@ -205,6 +250,54 @@ public class SubcontractorProgressDTO {
         this.updatedAt = updatedAt;
     }
 
+    public String getEventName() {
+        return eventName;
+    }
+
+    public void setEventName(String eventName) {
+        this.eventName = eventName;
+    }
+
+    public String getClientName() {
+        return clientName;
+    }
+
+    public void setClientName(String clientName) {
+        this.clientName = clientName;
+    }
+
+    public String getTransactionVenue() {
+        return transactionVenue;
+    }
+
+    public void setTransactionVenue(String transactionVenue) {
+        this.transactionVenue = transactionVenue;
+    }
+
+    public String getTransactionStatus() {
+        return transactionStatus;
+    }
+
+    public void setTransactionStatus(String transactionStatus) {
+        this.transactionStatus = transactionStatus;
+    }
+
+    public String getTransactionDate() {
+        return transactionDate;
+    }
+
+    public void setTransactionDate(String transactionDate) {
+        this.transactionDate = transactionDate;
+    }
+
+    public int getEventServiceId() {
+        return eventServiceId;
+    }
+
+    public void setEventServiceId(int eventServiceId) {
+        this.eventServiceId = eventServiceId;
+    }
+
     @Override
     public String toString() {
         return "SubcontractorProgressDTO{" +
@@ -217,6 +310,11 @@ public class SubcontractorProgressDTO {
                 ", checkInStatus='" + checkInStatus + '\'' +
                 ", progressNotes='" + progressNotes + '\'' +
                 ", updatedAt=" + updatedAt +
+                ", eventName='" + eventName + '\'' +
+                ", clientName='" + clientName + '\'' +
+                ", transactionVenue='" + transactionVenue + '\'' +
+                ", transactionStatus='" + transactionStatus + '\'' +
+                ", transactionDate='" + transactionDate + '\'' +
                 '}';
     }
 }

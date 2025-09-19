@@ -37,6 +37,7 @@ public class TransactionController {
     @Autowired
     private TransactionService transactionService;
 
+    @Autowired
     private final TokenService tokenService;
 
     @Autowired
@@ -616,23 +617,41 @@ public ResponseEntity<?> getCurrentUserReservations(@RequestHeader("Authorizatio
             if (progress == null) {
                 return ResponseEntity.notFound().build();
             }
+        SubcontractorEntity subcontractor = progress.getSubcontractorService().getSubcontractor();
         SubcontractorProgressDTO dto = new SubcontractorProgressDTO(
             progress.getSubcontractorProgressId(),
             progress.getTransactionProgress().getTransaction().getTransaction_Id(),
-            progress.getSubcontractor().getSubcontractor_Id(),
-            progress.getSubcontractor().getUser() != null ?
-                progress.getSubcontractor().getUser().getUserId() : 0,
-            progress.getSubcontractor().getSubcontractor_serviceName(),
-            progress.getSubcontractor().getSubcontractor_serviceCategory(),
-            progress.getSubcontractor().getUser() != null ?
-                progress.getSubcontractor().getUser().getProfilePicture() : null,
+            subcontractor.getSubcontractor_Id(),
+            subcontractor.getUser() != null ?
+                subcontractor.getUser().getUserId() : 0,
+            subcontractor.getBusinessName() != null && !subcontractor.getBusinessName().trim().isEmpty() ?
+                subcontractor.getBusinessName() :
+                (subcontractor.getContactPerson() != null && !subcontractor.getContactPerson().trim().isEmpty() ?
+                    subcontractor.getContactPerson() :
+                    subcontractor.getSubcontractor_serviceName()),
+            subcontractor.getSubcontractor_serviceCategory(),
+            progress.getSubcontractorService().getName(),
+            subcontractor.getUser() != null ?
+                subcontractor.getUser().getProfilePicture() : "/placeholder.svg",
             progress.getProgressPercentage(),
             progress.getCheckInStatus().toString(),
             progress.getProgressNotes(),
             progress.getProgressImageUrl(),
             progress.getComment(),
             progress.getCreatedAt(),
-            progress.getUpdatedAt()
+            progress.getUpdatedAt(),
+            progress.getTransactionProgress().getTransaction().getEvent() != null ?
+                progress.getTransactionProgress().getTransaction().getEvent().getEvent_name() :
+                "Event " + progress.getTransactionProgress().getTransaction().getTransaction_Id(),
+            progress.getTransactionProgress().getTransaction().getUser() != null ?
+                progress.getTransactionProgress().getTransaction().getUser().getFirstname() + " " +
+                progress.getTransactionProgress().getTransaction().getUser().getLastname() : "N/A",
+            progress.getTransactionProgress().getTransaction().getTransactionVenue() != null ?
+                progress.getTransactionProgress().getTransaction().getTransactionVenue() : "Location TBD",
+            progress.getTransactionProgress().getTransaction().getTransactionStatus() != null ?
+                progress.getTransactionProgress().getTransaction().getTransactionStatus().toString() : "pending",
+            progress.getTransactionProgress().getTransaction().getTransactionDate() != null ?
+                progress.getTransactionProgress().getTransaction().getTransactionDate().toString() : "2024-01-15"
         );
             return ResponseEntity.ok(dto);
         } catch (Exception e) {
@@ -765,6 +784,56 @@ public ResponseEntity<?> getCurrentUserReservations(@RequestHeader("Authorizatio
     }
 
     /**
+     * Update subcontractor progress by subcontractorProgressId
+     */
+    @PutMapping("/subcontractor-progress/id/{subcontractorProgressId}")
+    public ResponseEntity<?> updateSubcontractorProgressById(
+            @PathVariable int subcontractorProgressId,
+            @RequestParam int progressPercentage,
+            @RequestParam String checkInStatus,
+            @RequestParam(required = false) String notes,
+            @RequestParam(required = false) String imageUrl,
+            @RequestParam(required = false) String comment) {
+        try {
+            SubcontractorProgressEntity progress = subcontractorProgressRepository.findById(subcontractorProgressId).orElse(null);
+            if (progress == null) {
+                return ResponseEntity.notFound().build();
+            }
+
+            progress.setProgressPercentage(Math.max(0, Math.min(100, progressPercentage)));
+
+            if (checkInStatus != null) {
+                try {
+                    progress.setCheckInStatus(SubcontractorProgressEntity.CheckInStatus.valueOf(checkInStatus.toUpperCase()));
+                } catch (IllegalArgumentException e) {
+                    throw new RuntimeException("Invalid check-in status: " + checkInStatus);
+                }
+            }
+
+            if (notes != null && !notes.trim().isEmpty()) {
+                progress.setProgressNotes(notes);
+            }
+
+            if (imageUrl != null && !imageUrl.trim().isEmpty()) {
+                progress.setProgressImageUrl(imageUrl);
+            }
+
+            if (comment != null && !comment.trim().isEmpty()) {
+                progress.setComment(comment);
+            }
+
+            SubcontractorProgressEntity savedProgress = subcontractorProgressRepository.save(progress);
+
+            // Check if all subcontractors are approved and update transaction status if needed
+            transactionProgressService.checkAndUpdateTransactionStatus(progress.getTransactionProgress().getTransaction().getTransaction_Id());
+
+            return ResponseEntity.ok(savedProgress);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    /**
      * Update subcontractor progress by email (without image)
      */
     @PutMapping("/subcontractor-progress/{transactionId}/email/{userEmail}")
@@ -786,7 +855,98 @@ public ResponseEntity<?> getCurrentUserReservations(@RequestHeader("Authorizatio
     }
 
     /**
-     * Upload subcontractor progress image by email
+     * Upload subcontractor progress image by subcontractorProgressId
+     */
+    @PostMapping("/subcontractor-progress/id/{subcontractorProgressId}/upload-image")
+    public ResponseEntity<?> uploadSubcontractorProgressImageById(
+            @PathVariable int subcontractorProgressId,
+            @RequestParam("images") MultipartFile[] images,
+            @RequestParam int progressPercentage,
+            @RequestParam String checkInStatus,
+            @RequestParam(required = false) String notes,
+            @RequestParam(required = false) String comment) {
+        try {
+            if (images == null || images.length == 0) {
+                return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", "At least one image file is required"
+                ));
+            }
+
+            // Find the subcontractor progress record directly by ID
+            SubcontractorProgressEntity progress = subcontractorProgressRepository.findById(subcontractorProgressId).orElse(null);
+            if (progress == null) {
+                return ResponseEntity.notFound().build();
+            }
+
+            List<String> imageUrls = new ArrayList<>();
+            for (MultipartFile image : images) {
+                if (image == null || image.isEmpty()) {
+                    continue;
+                }
+                String contentType = image.getContentType();
+                if (contentType == null || !contentType.startsWith("image/")) {
+                    return ResponseEntity.badRequest().body(Map.of(
+                        "success", false,
+                        "message", "Only image files are allowed"
+                    ));
+                }
+                java.io.File tempFile = java.io.File.createTempFile("progress_", "_" + image.getOriginalFilename());
+                image.transferTo(tempFile);
+                String folderPath = "subcontractor-progress/" + progress.getTransactionProgress().getTransaction().getTransaction_Id() + "/" + progress.getSubcontractorService().getSubcontractor().getSubcontractor_Id() + "/";
+                String imageUrl = s3Service.upload(tempFile, folderPath, image.getOriginalFilename());
+                tempFile.delete();
+                imageUrls.add(imageUrl);
+            }
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            String imageUrlsJson = objectMapper.writeValueAsString(imageUrls);
+
+            // Update the progress record directly
+            progress.setProgressPercentage(Math.max(0, Math.min(100, progressPercentage)));
+
+            if (checkInStatus != null) {
+                try {
+                    progress.setCheckInStatus(SubcontractorProgressEntity.CheckInStatus.valueOf(checkInStatus.toUpperCase()));
+                } catch (IllegalArgumentException e) {
+                    throw new RuntimeException("Invalid check-in status: " + checkInStatus);
+                }
+            }
+
+            if (notes != null && !notes.trim().isEmpty()) {
+                progress.setProgressNotes(notes);
+            }
+
+            if (imageUrlsJson != null && !imageUrlsJson.trim().isEmpty()) {
+                progress.setProgressImageUrl(imageUrlsJson);
+            }
+
+            if (comment != null && !comment.trim().isEmpty()) {
+                progress.setComment(comment);
+            }
+
+            SubcontractorProgressEntity savedProgress = subcontractorProgressRepository.save(progress);
+
+            // Check if all subcontractors are approved and update transaction status if needed
+            transactionProgressService.checkAndUpdateTransactionStatus(progress.getTransactionProgress().getTransaction().getTransaction_Id());
+
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Progress images uploaded successfully",
+                "imageUrls", imageUrls,
+                "progress", savedProgress
+            ));
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                "success", false,
+                "message", "Failed to upload images: " + e.getMessage()
+            ));
+        }
+    }
+
+    /**
+     * Upload subcontractor progress image by email (legacy method - kept for backward compatibility)
      */
     @PostMapping("/subcontractor-progress/{transactionId}/email/{userEmail}/upload-image")
     public ResponseEntity<?> uploadSubcontractorProgressImageByEmail(
@@ -805,13 +965,27 @@ public ResponseEntity<?> getCurrentUserReservations(@RequestHeader("Authorizatio
                 ));
             }
 
-            SubcontractorEntity subcontractor = subContractorRepository.findByEmail(userEmail);
-            if (subcontractor == null) {
+            // Find subcontractor progress records for this transaction and email
+            List<SubcontractorProgressEntity> progressRecords = subcontractorProgressRepository.findByUserEmail(userEmail)
+                .stream()
+                .filter(sp -> sp.getTransactionProgress().getTransaction().getTransaction_Id() == transactionId)
+                .toList();
+
+            if (progressRecords.isEmpty()) {
                 return ResponseEntity.badRequest().body(Map.of(
                     "success", false,
-                    "message", "Subcontractor not found for email: " + userEmail
+                    "message", "Subcontractor progress not found for transaction ID: " + transactionId + " and email: " + userEmail
                 ));
             }
+
+            if (progressRecords.size() > 1) {
+                return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", "Multiple subcontractor progress records found. Please use the specific progress ID endpoint."
+                ));
+            }
+
+            SubcontractorProgressEntity progress = progressRecords.get(0);
 
             List<String> imageUrls = new ArrayList<>();
             for (MultipartFile image : images) {
@@ -827,7 +1001,7 @@ public ResponseEntity<?> getCurrentUserReservations(@RequestHeader("Authorizatio
                 }
                 java.io.File tempFile = java.io.File.createTempFile("progress_", "_" + image.getOriginalFilename());
                 image.transferTo(tempFile);
-                String folderPath = "subcontractor-progress/" + transactionId + "/" + subcontractor.getSubcontractor_Id() + "/";
+                String folderPath = "subcontractor-progress/" + transactionId + "/" + progress.getSubcontractorService().getSubcontractor().getSubcontractor_Id() + "/";
                 String imageUrl = s3Service.upload(tempFile, folderPath, image.getOriginalFilename());
                 tempFile.delete();
                 imageUrls.add(imageUrl);
@@ -836,14 +1010,39 @@ public ResponseEntity<?> getCurrentUserReservations(@RequestHeader("Authorizatio
             ObjectMapper objectMapper = new ObjectMapper();
             String imageUrlsJson = objectMapper.writeValueAsString(imageUrls);
 
-            SubcontractorProgressEntity updatedProgress = transactionProgressService.updateSubcontractorProgress(
-                transactionId, subcontractor.getSubcontractor_Id(), progressPercentage, checkInStatus, notes, imageUrlsJson, comment);
+            // Update the progress record directly
+            progress.setProgressPercentage(Math.max(0, Math.min(100, progressPercentage)));
+
+            if (checkInStatus != null) {
+                try {
+                    progress.setCheckInStatus(SubcontractorProgressEntity.CheckInStatus.valueOf(checkInStatus.toUpperCase()));
+                } catch (IllegalArgumentException e) {
+                    throw new RuntimeException("Invalid check-in status: " + checkInStatus);
+                }
+            }
+
+            if (notes != null && !notes.trim().isEmpty()) {
+                progress.setProgressNotes(notes);
+            }
+
+            if (imageUrlsJson != null && !imageUrlsJson.trim().isEmpty()) {
+                progress.setProgressImageUrl(imageUrlsJson);
+            }
+
+            if (comment != null && !comment.trim().isEmpty()) {
+                progress.setComment(comment);
+            }
+
+            SubcontractorProgressEntity savedProgress = subcontractorProgressRepository.save(progress);
+
+            // Check if all subcontractors are approved and update transaction status if needed
+            transactionProgressService.checkAndUpdateTransactionStatus(transactionId);
 
             return ResponseEntity.ok(Map.of(
                 "success", true,
                 "message", "Progress images uploaded successfully",
                 "imageUrls", imageUrls,
-                "progress", updatedProgress
+                "progress", savedProgress
             ));
 
         } catch (Exception e) {

@@ -64,25 +64,34 @@ const SubcontractorProgress = () => {
         headers: { Authorization: `Bearer ${token}` },
       })
 
-      const progressData = response.data.map((progress) => ({
-        id: progress.transactionId.toString(),
-        eventName: "Event " + progress.transactionId, // Since DTO doesn't have eventName, use transaction ID
-        clientName: progress.subcontractorName || "N/A",
-        location: "Location TBD", // DTO doesn't have location
-        eventDate: progress.updatedAt || "",
-        transactionStatus: "in-progress", // Default status
-        myProgress: {
-          progressPercentage: progress.progressPercentage || 0,
-          checkInStatus: progress.checkInStatus ? progress.checkInStatus.toLowerCase() : "pending",
-          notes: progress.progressNotes || "",
-          adminComment: progress.comment || "",
-          serviceCategory: progress.subcontractorRole || "General Service",
-          subcontractorProgressId: progress.subcontractorProgressId,
-          imageUrl: progress.progressImageUrl || null,
-        },
-        totalSubcontractors: 1, // Since this is per subcontractor
-        lastUpdate: progress.updatedAt || new Date().toLocaleString(),
-      }))
+      console.log("API Response:", response.data) // Debug log API response
+
+      const progressData = response.data.map((progress) => {
+        console.log("Progress item:", progress) // Debug log each progress item
+        return {
+          id: progress.subcontractorProgressId ? progress.subcontractorProgressId.toString() : progress.transaction_Id.toString(), // Use unique subcontractorProgressId as key, fallback to transaction_Id
+          transactionId: progress.transactionId ? progress.transactionId.toString() : progress.transaction_Id.toString(), // Keep transactionId for API calls, fallback to transaction_Id
+          eventName: progress.eventName || progress.eventName || ("Event " + (progress.transactionId || progress.transaction_Id)), // Use eventName if available
+          clientName: progress.userName || progress.clientName || "N/A", // Prefer userName from transaction data, fallback to clientName from DTO
+          subcontractorName: progress.subcontractorName || "N/A", // Add subcontractor name for modal display
+          location: progress.transactionVenue || "Location TBD", // Use transactionVenue if available
+          eventDate: progress.transactionDate || progress.transactionDate || "",
+          transactionStatus: progress.transactionStatus ? progress.transactionStatus.toLowerCase() : "in-progress", // Use actual status if available
+          myProgress: {
+            progressPercentage: progress.progressPercentage || 0,
+            checkInStatus: progress.checkInStatus ? progress.checkInStatus.toLowerCase() : "pending",
+            notes: progress.progressNotes || "",
+            adminComment: progress.comment || "",
+            serviceCategory: progress.subcontractorRole || progress.serviceName || "General Service",
+            serviceName: progress.serviceName || progress.serviceName || "General Service",
+            subcontractorProgressId: progress.subcontractorProgressId || null,
+            imageUrl: progress.progressImageUrl || null,
+          },
+          totalSubcontractors: 1, // Since this is per subcontractor
+          lastUpdate: progress.updatedAt || new Date().toLocaleString(),
+        }
+      })
+      console.log("Mapped progress data:", progressData) // Debug log mapped data
       setTransactions(progressData)
     } catch (error) {
       console.error("Failed to fetch subcontractor progress:", error)
@@ -130,25 +139,25 @@ const SubcontractorProgress = () => {
           updateData.images.forEach((image, index) => {
             formData.append("images", image)
           })
-          formData.append("progressPercentage", selectedTransaction.myProgress.progressPercentage.toString())
+          formData.append("progressPercentage", (selectedTransaction.myProgress.progressPercentage || 0).toString())
           formData.append("checkInStatus", "SUBMITTED_FOR_REVIEW")
           formData.append("notes", updateData.description)
           formData.append("comment", updateData.description) // Add comment parameter for backend compatibility
 
           await axios.post(
-            `http://localhost:8080/api/transactions/subcontractor-progress/${selectedTransaction.id}/email/${userEmail}/upload-image`,
+            `http://localhost:8080/api/transactions/subcontractor-progress/id/${selectedTransaction.id}/upload-image`,
             formData,
             {
               headers: {
                 Authorization: `Bearer ${token}`,
                 "Content-Type": "multipart/form-data",
-              }, 
+              },
             },
           )
         } else {
           // Use the regular update endpoint without image
           await axios.put(
-            `http://localhost:8080/api/transactions/subcontractor-progress/${selectedTransaction.id}/email/${userEmail}`,
+            `http://localhost:8080/api/transactions/subcontractor-progress/id/${selectedTransaction.id}`,
             null,
             {
               params: {
@@ -301,7 +310,7 @@ const SubcontractorProgress = () => {
                   <TableRow>
                     <TableCell>Event Details</TableCell>
                     <TableCell>Client</TableCell>
-                    <TableCell>My Role</TableCell>
+                    <TableCell>Service</TableCell>
                     <TableCell>My Progress</TableCell>
                     <TableCell>Check-in Status</TableCell>
                     <TableCell>Event Status</TableCell>
@@ -332,11 +341,11 @@ const SubcontractorProgress = () => {
                         </Typography>
                       </TableCell>
                       <TableCell>
-                        <Chip
-                          label={transaction.myProgress.serviceCategory}
-                          size="small"
-                          sx={{ backgroundColor: "#FFB22C", color: "white" }}
-                        />
+                          <Chip
+                            label={transaction.myProgress.serviceName || transaction.myProgress.serviceCategory}
+                            size="small"
+                            sx={{ backgroundColor: "#FFB22C", color: "white" }}
+                          />
                       </TableCell>
                       <TableCell>
                         <Box className="flex items-center gap-2">
@@ -413,18 +422,18 @@ const SubcontractorProgress = () => {
               <Grid container spacing={2}>
                 <Grid item xs={6}>
                   <Typography variant="body2" color="text.secondary">
-                    Event Name
+                    Business Name
                   </Typography>
                   <Typography variant="body2" className="mt-1">
-                    {selectedTransaction.eventName}
+                    {selectedTransaction.subcontractorName}
                   </Typography>
                 </Grid>
                 <Grid item xs={6}>
                   <Typography variant="body2" color="text.secondary">
-                    My Role
+                    Service Name
                   </Typography>
                   <Typography variant="body2" className="mt-1">
-                    {selectedTransaction.myProgress.serviceCategory}
+                    {selectedTransaction.myProgress.serviceName}
                   </Typography>
                 </Grid>
               </Grid>
