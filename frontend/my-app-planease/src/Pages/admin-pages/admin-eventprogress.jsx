@@ -417,17 +417,22 @@ const EventTrackingAdmin = () => {
   }
 
   const handleMarkComplete = async (event, subcontractor) => {
-    console.log("DEBUG: handleMarkComplete called with:", { event: event.id, subcontractor: subcontractor.name, subcontractorEntityId: subcontractor.subcontractorEntityId, subcontractorEmail: subcontractor.subcontractorEmail })
+    console.log("DEBUG: handleMarkComplete called with:", { event: event.id, subcontractor: subcontractor.name, progressId: subcontractor.progressId, subcontractorEntityId: subcontractor.subcontractorEntityId, subcontractorEmail: subcontractor.subcontractorEmail })
 
     setLoadingMarkComplete(true)
 
     try {
       const token = localStorage.getItem("token")
 
-      // Use email endpoint if subcontractorEntityId is undefined, otherwise use entity ID endpoint
-      const apiUrl = subcontractor.subcontractorEntityId
-        ? `http://localhost:8080/api/transactions/subcontractor-progress/${event.id}/${subcontractor.subcontractorEntityId}`
-        : `http://localhost:8080/api/transactions/subcontractor-progress/${event.id}/email/${subcontractor.subcontractorEmail}`
+      // Use progressId endpoint if available, otherwise fallback to entity ID or email
+      let apiUrl
+      if (subcontractor.progressId) {
+        apiUrl = `http://localhost:8080/api/transactions/subcontractor-progress/id/${subcontractor.progressId}`
+      } else if (subcontractor.subcontractorEntityId) {
+        apiUrl = `http://localhost:8080/api/transactions/subcontractor-progress/${event.id}/${subcontractor.subcontractorEntityId}`
+      } else {
+        apiUrl = `http://localhost:8080/api/transactions/subcontractor-progress/${event.id}/email/${subcontractor.subcontractorEmail}`
+      }
 
       console.log("DEBUG: API URL:", apiUrl)
 
@@ -502,17 +507,22 @@ const EventTrackingAdmin = () => {
   }
 
   const handleMarkIncomplete = async (event, subcontractor) => {
-    console.log("DEBUG: handleMarkIncomplete called with:", { event: event.id, subcontractor: subcontractor.name, subcontractorEntityId: subcontractor.subcontractorEntityId, subcontractorEmail: subcontractor.subcontractorEmail })
+    console.log("DEBUG: handleMarkIncomplete called with:", { event: event.id, subcontractor: subcontractor.name, progressId: subcontractor.progressId, subcontractorEntityId: subcontractor.subcontractorEntityId, subcontractorEmail: subcontractor.subcontractorEmail })
 
     setLoadingMarkComplete(true)
 
     try {
       const token = localStorage.getItem("token")
 
-      // Use email endpoint if subcontractorEntityId is undefined, otherwise use entity ID endpoint
-      const apiUrl = subcontractor.subcontractorEntityId
-        ? `http://localhost:8080/api/transactions/subcontractor-progress/${event.id}/${subcontractor.subcontractorEntityId}`
-        : `http://localhost:8080/api/transactions/subcontractor-progress/${event.id}/email/${subcontractor.subcontractorEmail}`
+      // Use progressId endpoint if available, otherwise fallback to entity ID or email
+      let apiUrl
+      if (subcontractor.progressId) {
+        apiUrl = `http://localhost:8080/api/transactions/subcontractor-progress/id/${subcontractor.progressId}`
+      } else if (subcontractor.subcontractorEntityId) {
+        apiUrl = `http://localhost:8080/api/transactions/subcontractor-progress/${event.id}/${subcontractor.subcontractorEntityId}`
+      } else {
+        apiUrl = `http://localhost:8080/api/transactions/subcontractor-progress/${event.id}/email/${subcontractor.subcontractorEmail}`
+      }
 
       console.log("DEBUG: API URL:", apiUrl)
 
