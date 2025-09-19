@@ -37,6 +37,7 @@ public class TransactionController {
     @Autowired
     private TransactionService transactionService;
 
+    @Autowired
     private final TokenService tokenService;
 
     @Autowired
@@ -616,18 +617,22 @@ public ResponseEntity<?> getCurrentUserReservations(@RequestHeader("Authorizatio
             if (progress == null) {
                 return ResponseEntity.notFound().build();
             }
+        SubcontractorEntity subcontractor = progress.getSubcontractorService().getSubcontractor();
         SubcontractorProgressDTO dto = new SubcontractorProgressDTO(
             progress.getSubcontractorProgressId(),
             progress.getTransactionProgress().getTransaction().getTransaction_Id(),
-            progress.getSubcontractor().getSubcontractor_Id(),
-            progress.getSubcontractor().getUser() != null ?
-                progress.getSubcontractor().getUser().getUserId() : 0,
-            progress.getSubcontractor().getSubcontractor_serviceName(),
-            progress.getSubcontractor().getSubcontractor_serviceCategory(),
-            progress.getEventService() != null && progress.getEventService().getSubcontractorService() != null ?
-                progress.getEventService().getSubcontractorService().getName() : "General Service",
-            progress.getSubcontractor().getUser() != null ?
-                progress.getSubcontractor().getUser().getProfilePicture() : "/placeholder.svg",
+            subcontractor.getSubcontractor_Id(),
+            subcontractor.getUser() != null ?
+                subcontractor.getUser().getUserId() : 0,
+            subcontractor.getBusinessName() != null && !subcontractor.getBusinessName().trim().isEmpty() ?
+                subcontractor.getBusinessName() :
+                (subcontractor.getContactPerson() != null && !subcontractor.getContactPerson().trim().isEmpty() ?
+                    subcontractor.getContactPerson() :
+                    subcontractor.getSubcontractor_serviceName()),
+            subcontractor.getSubcontractor_serviceCategory(),
+            progress.getSubcontractorService().getName(),
+            subcontractor.getUser() != null ?
+                subcontractor.getUser().getProfilePicture() : "/placeholder.svg",
             progress.getProgressPercentage(),
             progress.getCheckInStatus().toString(),
             progress.getProgressNotes(),
@@ -888,7 +893,7 @@ public ResponseEntity<?> getCurrentUserReservations(@RequestHeader("Authorizatio
                 }
                 java.io.File tempFile = java.io.File.createTempFile("progress_", "_" + image.getOriginalFilename());
                 image.transferTo(tempFile);
-                String folderPath = "subcontractor-progress/" + progress.getTransactionProgress().getTransaction().getTransaction_Id() + "/" + progress.getSubcontractor().getSubcontractor_Id() + "/";
+                String folderPath = "subcontractor-progress/" + progress.getTransactionProgress().getTransaction().getTransaction_Id() + "/" + progress.getSubcontractorService().getSubcontractor().getSubcontractor_Id() + "/";
                 String imageUrl = s3Service.upload(tempFile, folderPath, image.getOriginalFilename());
                 tempFile.delete();
                 imageUrls.add(imageUrl);
@@ -996,7 +1001,7 @@ public ResponseEntity<?> getCurrentUserReservations(@RequestHeader("Authorizatio
                 }
                 java.io.File tempFile = java.io.File.createTempFile("progress_", "_" + image.getOriginalFilename());
                 image.transferTo(tempFile);
-                String folderPath = "subcontractor-progress/" + transactionId + "/" + progress.getSubcontractor().getSubcontractor_Id() + "/";
+                String folderPath = "subcontractor-progress/" + transactionId + "/" + progress.getSubcontractorService().getSubcontractor().getSubcontractor_Id() + "/";
                 String imageUrl = s3Service.upload(tempFile, folderPath, image.getOriginalFilename());
                 tempFile.delete();
                 imageUrls.add(imageUrl);

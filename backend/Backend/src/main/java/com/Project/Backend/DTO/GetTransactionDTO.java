@@ -66,10 +66,14 @@ public class GetTransactionDTO {
                 subcontractorMap.put("subcontractorAddress", subcontractor.getUser() != null ?
                     subcontractor.getUser().getRegion() + ", " + subcontractor.getUser().getCityAndMul() + ", " + subcontractor.getUser().getBarangay() :
                     "N/A");
+                subcontractorMap.put("eventServiceId", eventService.getEventServices_id());
                 subcontractorMap.put("serviceName", subcontractorService.getName());
                 subcontractorMap.put("serviceCategory", ""); // No serviceCategory field in SubcontractorServiceEntity
                 subcontractorMap.put("subcontractor_service_description", ""); // No description field in SubcontractorServiceEntity
                 subcontractorMap.put("subcontractor_service_price", subcontractorService.getPrice());
+                subcontractorMap.put("checkInStatus", "pending");
+                subcontractorMap.put("progressPercentage", 0);
+                subcontractorMap.put("notes", "");
                 return subcontractorMap;
             })
             .collect(Collectors.toList());

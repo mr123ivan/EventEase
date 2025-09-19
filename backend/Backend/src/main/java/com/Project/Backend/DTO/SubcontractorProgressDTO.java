@@ -24,6 +24,7 @@ public class SubcontractorProgressDTO {
     private String transactionVenue;
     private String transactionStatus;
     private String transactionDate;
+    private int eventServiceId;
 
     // Constructor for full subcontractor progress data
     public SubcontractorProgressDTO(int subcontractorProgressId, int transactionId, int subcontractorId,
@@ -287,6 +288,14 @@ public class SubcontractorProgressDTO {
 
     public void setTransactionDate(String transactionDate) {
         this.transactionDate = transactionDate;
+    }
+
+    public int getEventServiceId() {
+        return eventServiceId;
+    }
+
+    public void setEventServiceId(int eventServiceId) {
+        this.eventServiceId = eventServiceId;
     }
 
     @Override

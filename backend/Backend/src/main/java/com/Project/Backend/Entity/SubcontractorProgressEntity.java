@@ -18,8 +18,8 @@ public class SubcontractorProgressEntity {
     private TransactionProgressEntity transactionProgress;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "subcontractor_id", nullable = false)
-    private SubcontractorEntity subcontractor;
+    @JoinColumn(name = "subcontractor_service_id", nullable = false)
+    private SubcontractorServiceEntity subcontractorService;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "event_service_id", nullable = false)
@@ -71,10 +71,10 @@ public class SubcontractorProgressEntity {
     // Constructors
     public SubcontractorProgressEntity() {}
 
-    public SubcontractorProgressEntity(TransactionProgressEntity transactionProgress, SubcontractorEntity subcontractor,
+    public SubcontractorProgressEntity(TransactionProgressEntity transactionProgress, SubcontractorServiceEntity subcontractorService,
                                      int progressPercentage, String progressNotes) {
         this.transactionProgress = transactionProgress;
-        this.subcontractor = subcontractor;
+        this.subcontractorService = subcontractorService;
         this.progressPercentage = progressPercentage;
         this.progressNotes = progressNotes;
     }
@@ -104,12 +104,12 @@ public class SubcontractorProgressEntity {
         this.transactionProgress = transactionProgress;
     }
 
-    public SubcontractorEntity getSubcontractor() {
-        return subcontractor;
+    public SubcontractorServiceEntity getSubcontractorService() {
+        return subcontractorService;
     }
 
-    public void setSubcontractor(SubcontractorEntity subcontractor) {
-        this.subcontractor = subcontractor;
+    public void setSubcontractorService(SubcontractorServiceEntity subcontractorService) {
+        this.subcontractorService = subcontractorService;
     }
 
     public int getProgressPercentage() {

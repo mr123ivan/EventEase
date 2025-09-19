@@ -104,9 +104,10 @@ const EventTrackingAdmin = () => {
             // Merge subcontractor data with progress data
             const subcontractors = transaction.subcontractors.map((sub) => {
                 const progressData = subcontractorProgressData.find(
-                  (progress) => progress.userId === parseInt(sub.subcontractorUserId)
+                  (progress) => progress.userId === parseInt(sub.subcontractorUserId) &&
+                               progress.eventServiceId === sub.eventServiceId
                 )
-                console.log(`DEBUG: For subcontractor ${sub.subcontractorUserId} (${sub.subcontractorName}), progressData found:`, progressData)
+                console.log(`DEBUG: For subcontractor ${sub.subcontractorUserId} (${sub.subcontractorName}), service ${sub.serviceName}, eventServiceId ${sub.eventServiceId}, progressData found:`, progressData)
 
                 return {
                   id: sub.subcontractorUserId.toString(),
@@ -1343,7 +1344,7 @@ const EventTrackingAdmin = () => {
                   Close
                 </Button>
               </Box>
-            </Box>
+            </Box>  
           )}
         </DialogContent>
       </Dialog>

@@ -29,7 +29,7 @@ public interface SubcontractorProgressRepository extends JpaRepository<Subcontra
     /**
      * Find subcontractor progress by transaction ID and subcontractor ID
      */
-    @Query("SELECT sp FROM SubcontractorProgressEntity sp WHERE sp.transactionProgress.transaction.transaction_Id = :transactionId AND sp.subcontractor.subcontractor_Id = :subcontractorId")
+    @Query("SELECT sp FROM SubcontractorProgressEntity sp WHERE sp.transactionProgress.transaction.transaction_Id = :transactionId AND sp.subcontractorService.subcontractor.subcontractor_Id = :subcontractorId")
     Optional<SubcontractorProgressEntity> findByTransactionIdAndSubcontractorId(@Param("transactionId") int transactionId, @Param("subcontractorId") int subcontractorId);
 
     /**
@@ -37,20 +37,17 @@ public interface SubcontractorProgressRepository extends JpaRepository<Subcontra
      */
     boolean existsByTransactionProgress(TransactionProgressEntity transactionProgress);
 
-    /**
-     * Find all subcontractor progress for a specific subcontractor
-     */
-    List<SubcontractorProgressEntity> findBySubcontractor(SubcontractorEntity subcontractor);
+
 
     /**
      * Find subcontractor progress by subcontractor ID
      */
-    @Query("SELECT sp FROM SubcontractorProgressEntity sp WHERE sp.subcontractor.subcontractor_Id = :subcontractorId")
+    @Query("SELECT sp FROM SubcontractorProgressEntity sp WHERE sp.subcontractorService.subcontractor.subcontractor_Id = :subcontractorId")
     List<SubcontractorProgressEntity> findBySubcontractorId(@Param("subcontractorId") int subcontractorId);
 
     /**
      * Find subcontractor progress by user email
      */
-    @Query("SELECT sp FROM SubcontractorProgressEntity sp WHERE sp.subcontractor.user.email = :userEmail")
+    @Query("SELECT sp FROM SubcontractorProgressEntity sp WHERE sp.subcontractorService.subcontractor.user.email = :userEmail")
     List<SubcontractorProgressEntity> findByUserEmail(@Param("userEmail") String userEmail);
 }
