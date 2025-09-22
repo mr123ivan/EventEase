@@ -85,12 +85,9 @@ public class TransactionController {
     }
 
     @GetMapping("/getAllPendingTransactions")
-    public ResponseEntity<?> getAllTransactions() {
+    public ResponseEntity<List<GetTransactionDTO>> getAllTransactions() {
         List<GetTransactionDTO> transactions = transactionService.getAllPendingTransactions();
-        if(transactions.isEmpty()){
-            return ResponseEntity.status(404).body(Map.of("error", "No Transactions Found"));
-        }
-        return ResponseEntity.ok(transactions);
+        return ResponseEntity.ok(transactions); // Always return 200 with empty array if no transactions
     }
 
    
@@ -120,12 +117,9 @@ public class TransactionController {
     }
 
     @GetMapping("/getAllTransactions")
-    public ResponseEntity<?> getAllTranscations() {
+    public ResponseEntity<List<GetTransactionDTO>> getAllTranscations() {
         List<GetTransactionDTO> transactions = transactionService.getAllTransactions();
-        if (transactions.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-        }
-        return ResponseEntity.ok(transactions);
+        return ResponseEntity.ok(transactions); // Always return 200 with empty array if no transactions
     }
 
     @GetMapping("/findAllJoinedWithUserAndEvent")

@@ -9,6 +9,7 @@ public class CreateBasicSubcontractorRequest {
     private String phoneNumber;
     private String businessName;
     private String contactPerson;
+    private String password;
     private List<ServiceItem> services;
 
     public String getFirstname() { return firstname; }
@@ -28,6 +29,9 @@ public class CreateBasicSubcontractorRequest {
 
     public String getContactPerson() { return contactPerson; }
     public void setContactPerson(String contactPerson) { this.contactPerson = contactPerson; }
+
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
 
     public List<ServiceItem> getServices() { return services; }
     public void setServices(List<ServiceItem> services) { this.services = services; }

@@ -67,7 +67,7 @@ public class SubcontractorService {
     public List<SubcontractorEntity> getSubcontractorByPackageName(String packageName) {
         return subContractorRepository.getSubcontractorsByPackageName(packageName);
     }
-    
+
     public SubcontractorEntity getSubcontractorById(int id) {
         Optional<SubcontractorEntity> result = subContractorRepository.findById(id);
         return result.orElse(null);
@@ -81,18 +81,20 @@ public class SubcontractorService {
 
     @Autowired
     private UserService userService;
+    @Autowired
+    private PasswordEmailService passwordEmailService;
 
     public void deleteSubcontractor(int id) {
         // First get the subcontractor to access its associated user
         SubcontractorEntity subcontractor = subContractorRepository.findById(id).orElse(null);
-        
+
         if (subcontractor != null && subcontractor.getUser() != null) {
             // Get the user ID before deleting the subcontractor
             int userId = subcontractor.getUser().getUserId();
-            
+
             // Delete the subcontractor first
             subContractorRepository.deleteById(id);
-            
+
             // Then delete the associated user
             userService.deleteUser(userId);
         } else {
@@ -148,8 +150,11 @@ public class SubcontractorService {
         user.setEmail(req.getEmail());
         user.setPhoneNumber(req.getPhoneNumber());
         user.setRole("SubContractor");
-        // Set default password "Welcome1!" encoded
-        user.setPassword(userService.encodePassword("Welcome1!"));
+        // Use password from request, or default to "Welcome1!" if not provided
+        String passwordToUse = req.getPassword() != null && !req.getPassword().trim().isEmpty()
+            ? req.getPassword()
+            : "Welcome1!";
+        user.setPassword(userService.encodePassword(passwordToUse));
 
         // Save user
         UserEntity savedUser = userService.saveUser(user);
@@ -176,6 +181,15 @@ public class SubcontractorService {
                 subcontractorServiceRepository.save(s);
             }
         }
+
+        // Send password email
+        try {
+            passwordEmailService.sendPasswordEmail(req.getEmail(), passwordToUse);
+        } catch (Exception e) {
+            // Log the error but don't fail the subcontractor creation
+            System.err.println("Failed to send password email to " + req.getEmail() + ": " + e.getMessage());
+        }
+
         // Reload to include services
         return subContractorRepository.findById(savedSubcontractor.getSubcontractor_Id()).orElse(savedSubcontractor);
     }
