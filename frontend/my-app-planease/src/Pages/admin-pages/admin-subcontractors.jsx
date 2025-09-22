@@ -200,12 +200,40 @@ const AdminSubContractors = () => {
     setServiceItems([{ name: "", price: "" }])
   }
 
+  // Check if email already exists in database
+  const checkEmailExists = async (email) => {
+    try {
+      const token = getAuthToken()
+      const response = await axios.get(`${API_BASE_URL}/subcontractor/check-email/${email}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      return response.data.exists
+    } catch (error) {
+      console.error("Error checking email:", error)
+      // If we can't check, assume it doesn't exist to allow the creation attempt
+      return false
+    }
+  }
+
   // Create subcontractor with simplified model
   const handleAddSubcontractor = async () => {
     // Basic validation
     if (!businessName.trim() || !contactPerson.trim()) {
       setSnackbar({ open: true, message: "Please provide Business Name and Contact Person.", severity: "warning" })
       return
+    }
+
+    // Check if email already exists
+    if (email.trim()) {
+      const emailExists = await checkEmailExists(email.trim())
+      if (emailExists) {
+        setSnackbar({
+          open: true,
+          message: "An account with this email already exists. Please use a different email address.",
+          severity: "error"
+        })
+        return
+      }
     }
     const cleanedServices = serviceItems
       .map((s) => ({ name: s.name.trim(), price: s.price.toString().trim() }))
@@ -957,12 +985,14 @@ const AdminSubContractors = () => {
           <DialogContentText id="delete-dialog-description">
             Are you sure you want to delete this subcontractor? This action cannot be undone.
             {selectedSubcontractor && (
-              <Typography variant="subtitle2" color="error" sx={{ mt: 1, fontWeight: "bold" }}>
-                {selectedSubcontractor.user
-                  ? `${selectedSubcontractor.user.firstname} ${selectedSubcontractor.user.lastname}`
-                  : "This subcontractor"}{" "}
-                will be permanently removed as a subcontractor.
-              </Typography>
+              <Box sx={{ mt: 1 }}>
+                <Typography variant="subtitle2" color="error" sx={{ fontWeight: "bold" }}>
+                  {selectedSubcontractor.user
+                    ? `${selectedSubcontractor.user.firstname} ${selectedSubcontractor.user.lastname}`
+                    : "This subcontractor"}{" "}
+                  will be permanently removed as a subcontractor.
+                </Typography>
+              </Box>
             )}
           </DialogContentText>
         </DialogContent>
