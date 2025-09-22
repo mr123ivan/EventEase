@@ -780,7 +780,6 @@ const AdminPendingRequest = () => {
                 <table className="min-w-full table-auto text-sm text-left">
                   <thead className="bg-indigo-50">
                     <tr>
-                      <th className="p-3 text-[#667085] font-semibold">Service Type</th>
                       <th className="p-3 text-[#667085] font-semibold">Subcontractor</th>
                       <th className="p-3 text-[#667085] font-semibold">Representative</th>
                     </tr>
@@ -788,7 +787,6 @@ const AdminPendingRequest = () => {
                   <tbody>
                     {selectedRequest?.subcontractors?.map((service, index) => (
                       <tr key={index} className="border-t">
-                        <td className="p-3 text-[#667085]">{service.serviceCategory}</td>
                         <td className="p-3 text-[#667085]">{service.serviceName}</td>
                         <td className="p-3 text-[#667085]">{service.subcontractorName}</td>
                       </tr>
