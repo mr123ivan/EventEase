@@ -162,6 +162,31 @@ const AdminSubContractors = () => {
     return num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
   }
 
+  // Generate random password function
+  const generateRandomPassword = () => {
+    const uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    const lowercase = "abcdefghijklmnopqrstuvwxyz"
+    const numbers = "0123456789"
+    const symbols = "!@#$%^&*"
+
+    let password = ""
+
+    // Ensure at least one character from each category
+    password += uppercase[Math.floor(Math.random() * uppercase.length)]
+    password += lowercase[Math.floor(Math.random() * lowercase.length)]
+    password += numbers[Math.floor(Math.random() * numbers.length)]
+    password += symbols[Math.floor(Math.random() * symbols.length)]
+
+    // Fill remaining 4 characters randomly
+    const allChars = uppercase + lowercase + numbers + symbols
+    for (let i = 4; i < 8; i++) {
+      password += allChars[Math.floor(Math.random() * allChars.length)]
+    }
+
+    // Shuffle the password
+    return password.split('').sort(() => Math.random() - 0.5).join('')
+  }
+
   // Reset form fields to initial state
   const resetForm = () => {
     setFirstname("")
@@ -202,6 +227,9 @@ const AdminSubContractors = () => {
       svc.price = Number(num.toFixed(2))
     }
 
+    // Generate random password
+    const randomPassword = generateRandomPassword()
+
     const payload = {
       firstname: firstname.trim(),
       lastname: lastname.trim(),
@@ -210,6 +238,7 @@ const AdminSubContractors = () => {
       businessName: businessName.trim(),
       contactPerson: contactPerson.trim(),
       services: cleanedServices,
+      password: randomPassword, // Add the generated password
     }
 
     try {
@@ -221,11 +250,37 @@ const AdminSubContractors = () => {
 
       // Handle success response
       if (response.data.success) {
-        setSnackbar({
-          open: true,
-          message: response.data.message || "Subcontractor created successfully.",
-          severity: "success",
-        })
+        // Send password via email after successful creation
+        try {
+          const emailResponse = await axios.post(`${API_BASE_URL}/email/send-password`, {
+            email: email.trim(),
+            password: randomPassword,
+            firstname: firstname.trim(),
+            lastname: lastname.trim(),
+          })
+
+          if (emailResponse.data.success) {
+            setSnackbar({
+              open: true,
+              message: `${response.data.message || "Subcontractor created successfully."} Password has been sent to their email.`,
+              severity: "success",
+            })
+          } else {
+            setSnackbar({
+              open: true,
+              message: `${response.data.message || "Subcontractor created successfully."} However, failed to send password email.`,
+              severity: "warning",
+            })
+          }
+        } catch (emailError) {
+          console.error("Error sending password email:", emailError)
+          setSnackbar({
+            open: true,
+            message: `${response.data.message || "Subcontractor created successfully."} However, failed to send password email.`,
+            severity: "warning",
+          })
+        }
+
         handleClose()
         await fetchSubcontractors()
       } else {
