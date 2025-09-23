@@ -554,6 +554,12 @@ const PaymentProofPage = () => {
         transactionVenue: bookingData.eventDetails.location,
         transactionDate: convertToSqlDate(bookingData.eventDetails.eventDate),
         transactionNote: bookingData.eventDetails.note || "",
+        
+        // Additional Event Details
+        celebrantName: bookingData.eventDetails.celebrantName || "",
+        additionalCelebrants: bookingData.eventDetails.celebrantNameOptional || "",
+        projectedAttendees: Number(bookingData.eventDetails.projectedAttendees) || 0,
+        budget: Number(bookingData.eventDetails.budget) || 0,
 
         // Services - Use serviceIds (subcontractor IDs) for custom services
         serviceType: bookingData.servicesData.selectedPackage ? "PACKAGE" : "CUSTOM",

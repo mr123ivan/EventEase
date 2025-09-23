@@ -52,6 +52,12 @@ public class TransactionsEntity {
     @Column(columnDefinition = "TEXT")
     private String transactionNote;
 
+    // New fields for event details
+    private String celebrantName;
+    private String additionalCelebrants;
+    private Integer projectedAttendees;
+    private Double budget;
+
     private int progress; // 0-100 percentage
 
     public enum Status {
@@ -184,5 +190,37 @@ public class TransactionsEntity {
 
     public void setProgress(int progress) {
         this.progress = progress;
+    }
+    
+    public String getCelebrantName() {
+        return celebrantName;
+    }
+    
+    public void setCelebrantName(String celebrantName) {
+        this.celebrantName = celebrantName;
+    }
+    
+    public String getAdditionalCelebrants() {
+        return additionalCelebrants;
+    }
+    
+    public void setAdditionalCelebrants(String additionalCelebrants) {
+        this.additionalCelebrants = additionalCelebrants;
+    }
+    
+    public Integer getProjectedAttendees() {
+        return projectedAttendees;
+    }
+    
+    public void setProjectedAttendees(Integer projectedAttendees) {
+        this.projectedAttendees = projectedAttendees;
+    }
+    
+    public Double getBudget() {
+        return budget;
+    }
+    
+    public void setBudget(Double budget) {
+        this.budget = budget;
     }
 }

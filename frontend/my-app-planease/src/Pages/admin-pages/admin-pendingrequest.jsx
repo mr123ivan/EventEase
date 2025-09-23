@@ -11,6 +11,17 @@ const AdminPendingRequest = () => {
     const [selectedRequest, setSelectedRequest] = useState(null);
     const [viewServicesModal, setViewServicesModal] = useState(false);
     const [viewPaymentModal, setViewPaymentModal] = useState(false);
+    
+    // Debug logging for selectedRequest data
+    useEffect(() => {
+        if (selectedRequest) {
+            console.log("Selected request data:", selectedRequest);
+            console.log("Celebrant name:", selectedRequest.celebrantName);
+            console.log("Additional celebrants:", selectedRequest.additionalCelebrants);
+            console.log("Projected attendees:", selectedRequest.projectedAttendees);
+            console.log("Budget:", selectedRequest.budget);
+        }
+    }, [selectedRequest]);
     const [transactions, setTransactions] = useState([]);
     
     // Decline booking modal states
@@ -34,10 +45,20 @@ const AdminPendingRequest = () => {
         axios.get('http://localhost:8080/api/transactions/getAllPendingTransactions')
             .then((res) => {
                     setTransactions(res.data);
-                    console.log(res.data);
+                    console.log("All pending transactions:", res.data);
+                    
+                    // Check if we have any data with the new fields
+                    if (res.data && res.data.length > 0) {
+                        console.log("First transaction details:", {
+                            celebrantName: res.data[0].celebrantName,
+                            additionalCelebrants: res.data[0].additionalCelebrants,
+                            projectedAttendees: res.data[0].projectedAttendees,
+                            budget: res.data[0].budget
+                        });
+                    }
             })
             .catch((err) => {
-                console.log(err)
+                console.log("Error fetching transactions:", err);
             });
     }
     
@@ -348,6 +369,16 @@ const AdminPendingRequest = () => {
                                                     </div>
                                                 </>
                                             )}
+                                            <div>
+                                                <label className="text-sm font-medium text-gray-500 block mb-1">Name of Celebrant(s)</label>
+                                                <input type="text" className="border p-2 rounded w-full" 
+                                                       value={selectedRequest.celebrantName || "Not provided"} readOnly />
+                                            </div>
+                                            <div>
+                                                <label className="text-sm font-medium text-gray-500 block mb-1">Additional Celebrant(s)</label>
+                                                <input type="text" className="border p-2 rounded w-full" 
+                                                       value={selectedRequest.additionalCelebrants || "None"} readOnly />
+                                            </div>
                                         </div>
                                         <div className="flex flex-col gap-2 w-auto">
                                             <div>
@@ -357,6 +388,16 @@ const AdminPendingRequest = () => {
                                             <div>
                                                 <label className="text-sm font-medium text-gray-500 block mb-1">Date</label>
                                                 <input type="text" className="border p-2 rounded w-full" value={selectedRequest.transactionDate} readOnly />
+                                            </div>
+                                            <div>
+                                                <label className="text-sm font-medium text-gray-500 block mb-1">Projected Attendees</label>
+                                                <input type="text" className="border p-2 rounded w-full" 
+                                                       value={selectedRequest.projectedAttendees || "Not specified"} readOnly />
+                                            </div>
+                                            <div>
+                                                <label className="text-sm font-medium text-gray-500 block mb-1">Budget</label>
+                                                <input type="text" className="border p-2 rounded w-full" 
+                                                       value={selectedRequest.budget ? `₱${selectedRequest.budget.toLocaleString()}` : "Not specified"} readOnly />
                                             </div>
                                         </div>
                                     </div>
