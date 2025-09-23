@@ -10,6 +10,37 @@ import { getCompleteBookingData, clearBookingData, PACKAGES } from "./utils/book
 import axios from "axios"
 import MessageModal from "../../Components/MessageModal"
 
+// Create an axios instance with default configurations
+const api = axios.create({
+  baseURL: "http://localhost:8080",
+  withCredentials: true,
+  headers: {
+    "Content-Type": "application/json",
+    "Access-Control-Allow-Origin": "*"
+  }
+});
+
+// Add a request interceptor to always include auth token when available
+api.interceptors.request.use(config => {
+  const token = localStorage.getItem("token");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// Add response interceptor to handle common errors
+api.interceptors.response.use(
+  response => response,
+  error => {
+    if (error.response && error.response.status === 401) {
+      console.log("Authentication error - You might need to log in again");
+      // You could redirect to login here if needed
+    }
+    return Promise.reject(error);
+  }
+);
+
 const PaymentProofPage = () => {
   const navigate = useNavigate()
   const { eventName } = useParams()
@@ -46,7 +77,7 @@ const PaymentProofPage = () => {
     const fetchEventSections = async () => {
       if (!currentEventName) return
       try {
-        const res = await axios.get(`http://localhost:8080/api/events/event-details/${encodeURIComponent(currentEventName)}`)
+        const res = await api.get(`/api/events/event-details/${encodeURIComponent(currentEventName)}`)
         const ev = res?.data
         const raw = ev?.event_sections
         const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw
@@ -64,7 +95,7 @@ const PaymentProofPage = () => {
   useEffect(() => {
     const fetchServices = async () => {
       try {
-        const resp = await axios.get('http://localhost:8080/subcontractor/getall')
+        const resp = await api.get('/subcontractor/getall')
         const arr = Array.isArray(resp.data) ? resp.data : []
         const map = {}
         arr.forEach(sc => {
@@ -91,7 +122,7 @@ const PaymentProofPage = () => {
   useEffect(() => {
     const fetchPackages = async () => {
       try {
-        const resp = await axios.get('http://localhost:8080/package/getall')
+        const resp = await api.get('/package/getall')
         const arr = Array.isArray(resp.data) ? resp.data : []
         const map = {}
         arr.forEach(pkg => {
@@ -488,15 +519,11 @@ const PaymentProofPage = () => {
   }
 
   const handleDeleteFormDraft = async () => {
-    const token = localStorage.getItem("token")
     try {
-      const response = await axios.delete(`http://localhost:8080/form-draft/delete/${currentEmail}/${currentEventName}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      const response = await api.delete(`/form-draft/delete/${currentEmail}/${currentEventName}`)
     } catch (error) {
-      console.error("Error fetching form progress:", error);
+      console.error("Error deleting form draft:", error);
     }
-
   }
 
   // Handle form submission
@@ -531,14 +558,21 @@ const PaymentProofPage = () => {
         return
       }
 
-      // Get user email from token
-      const userResponse = await axios.get("http://localhost:8080/user/getuser", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      const userEmail = userResponse.data.email
+      // Get user email
+      let userEmail;
+      try {
+        // Try to get user information from API
+        const userResponse = await api.get("/user/getuser");
+        userEmail = userResponse.data.email;
+      } catch (userError) {
+        console.error("Error fetching user from API:", userError);
+        // Fall back to the email from booking data
+        userEmail = bookingData.personalInfo.email;
+        console.log("Using email from booking data:", userEmail);
+      }
 
-      console.log("User email:", userEmail)
-      console.log("Booking data:", bookingData)
+      console.log("User email for submission:", userEmail);
+      console.log("Booking data:", bookingData);
 
       // Prepare booking transaction data matching the exact DTO structure
       const transactionData = {
@@ -610,13 +644,19 @@ const PaymentProofPage = () => {
       console.log("- paymentProof file:", uploadedFile.name, uploadedFile.type, uploadedFile.size)
       console.log("- bookingData JSON:", JSON.stringify(transactionData))
 
-      // Submit to backend
-      const response = await axios.post("http://localhost:8080/api/transactions/createBookingTransaction", formData, {
+      console.log("Submitting form data to backend...");
+      
+      // Create a new custom axios instance for multipart form data
+      const formApi = axios.create({
+        baseURL: "http://localhost:8080",
         headers: {
           "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${token}`,
-        },
-      })
+          "Authorization": `Bearer ${token}`
+        }
+      });
+      
+      // Submit to backend with modified headers for multipart data
+      const response = await formApi.post("/api/transactions/createBookingTransaction", formData)
 
       console.log("Response:", response.data)
 
@@ -627,14 +667,18 @@ const PaymentProofPage = () => {
         clearBookingData()
 
         // Send notification to admins using new endpoint
-        await axios.post(
-          "http://localhost:8080/api/notifications/notify-admins",
-          null,
-          {
-            params: { message: `New event booking submitted: ${currentEventName}` },
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        )
+        try {
+          await api.post(
+            "/api/notifications/notify-admins",
+            null,
+            {
+              params: { message: `New event booking submitted: ${currentEventName}` }
+            }
+          )
+        } catch (notifyError) {
+          console.log("Could not notify admins, but booking was successful:", notifyError.message)
+          // Continue since this is optional
+        }
         handleDeleteFormDraft()
 
         // Show success message and redirect
@@ -644,13 +688,51 @@ const PaymentProofPage = () => {
       }
     } catch (error) {
       console.error("Error submitting booking:", error)
-      console.error("Error response:", error.response?.data)
-      console.error("Error status:", error.response?.status)
-
-      // Show more specific error message
-      const errorMessage =
-        error.response?.data?.message || error.response?.data || "Failed to submit booking. Please try again."
-      showModal(`Error: ${errorMessage}`)
+      
+      // Enhanced error logging
+      console.group('Booking Submission Error')
+      console.error("Error object:", error)
+      
+      // Try to get detailed error info
+      if (error.response) {
+        console.error("Response status:", error.response.status)
+        console.error("Response headers:", error.response.headers)
+        console.error("Response data:", error.response.data)
+        
+        // Handle specific status codes
+        let errorMessage = "";
+        switch(error.response.status) {
+          case 400:
+            errorMessage = "The server couldn't process your submission. Please check the data and try again.";
+            break;
+          case 401:
+            errorMessage = "Authentication error. Please log in again and retry.";
+            break;
+          case 404:
+            errorMessage = "Booking endpoint not found. Please contact support.";
+            break;
+          case 500:
+            errorMessage = "Server error while processing your booking. Please try again later.";
+            break;
+          default:
+            // Extract message from response data if available
+            errorMessage = error.response.data?.message || 
+                         error.response.data?.error || 
+                         JSON.stringify(error.response.data) || 
+                         "Failed to submit booking. Please try again.";
+        }
+        showModal(`Error: ${errorMessage}`);
+      } else if (error.request) {
+        // The request was made but no response was received
+        console.error("No response received:", error.request)
+        showModal("Error: Server did not respond. Please check your internet connection and try again.");
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        console.error("Error setting up request:", error.message)
+        showModal(`Error: ${error.message || "Unknown error occurred"}`);
+      }
+      
+      console.groupEnd()
     } finally {
       setIsSubmitting(false)
     }
