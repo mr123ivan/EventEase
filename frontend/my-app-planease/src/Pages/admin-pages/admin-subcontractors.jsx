@@ -1,18 +1,17 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import Dialog from '@mui/material/Dialog';
-import DialogTitle from '@mui/material/DialogTitle';
-import DialogContent from '@mui/material/DialogContent';
-import DialogActions from '@mui/material/DialogActions';
-import DialogContentText from '@mui/material/DialogContentText';
+import Dialog from "@mui/material/Dialog"
+import DialogTitle from "@mui/material/DialogTitle"
+import DialogContent from "@mui/material/DialogContent"
+import DialogActions from "@mui/material/DialogActions"
+import DialogContentText from "@mui/material/DialogContentText"
 import Divider from "@mui/material/Divider"
 import Navbar from "../../Components/Navbar"
 import Typography from "@mui/material/Typography"
 import AddIcon from "@mui/icons-material/Add"
 import CloseIcon from "@mui/icons-material/Close"
-import EditIcon from "@mui/icons-material/Edit"
-import AdminSideBar from '../../Components/admin-sidebar.jsx';
+import AdminSideBar from "../../Components/admin-sidebar.jsx"
 import "../../index.css"
 import {
   Box,
@@ -23,13 +22,11 @@ import {
   Button,
   Grid,
   Card,
-  CardContent,
   Avatar,
   CircularProgress,
   Snackbar,
   Alert,
   FormControl,
-  InputLabel,
   Select,
   MenuItem,
   InputAdornment,
@@ -41,7 +38,6 @@ import { KeyboardArrowDown } from "@mui/icons-material"
 import RestaurantIcon from "@mui/icons-material/Restaurant"
 import CameraAltIcon from "@mui/icons-material/CameraAlt"
 import VideocamIcon from "@mui/icons-material/Videocam"
-import TheaterComedyIcon from "@mui/icons-material/TheaterComedy"
 import MusicNoteIcon from "@mui/icons-material/MusicNote"
 import LocationOnIcon from "@mui/icons-material/LocationOn"
 import DirectionsCarIcon from "@mui/icons-material/DirectionsCar"
@@ -62,7 +58,7 @@ const API_BASE_URL = "http://localhost:8080"
 // Service categories for the dropdown
 const SERVICE_CATEGORIES = [
   "Food & Catering",
-  "Photography & Videography", 
+  "Photography & Videography",
   "Entertainment & Music",
   "Decoration & Styling",
   "Venue & Location",
@@ -72,7 +68,7 @@ const SERVICE_CATEGORIES = [
   "Event Planning & Coordination",
   "Security Services",
   "Cleaning Services",
-  "Other Services"
+  "Other Services",
 ]
 
 const getAuthToken = () => {
@@ -102,7 +98,6 @@ const AdminSubContractors = () => {
   const [firstname, setFirstname] = useState("")
   const [lastname, setLastname] = useState("")
   const [email, setEmail] = useState("")
-  
 
   // Phone number fields
   const [phoneNumber, setPhoneNumber] = useState("")
@@ -137,13 +132,17 @@ const AdminSubContractors = () => {
   const [contactPerson, setContactPerson] = useState("")
   const [serviceItems, setServiceItems] = useState([{ name: "", price: "" }])
 
+  // Loading states for delete and view profile operations
+  const [isDeletingSubcontractor, setIsDeletingSubcontractor] = useState(false)
+  const [isViewingProfile, setIsViewingProfile] = useState(false)
+
   // Helpers for dynamic services list
   const handleServiceItemChange = (index, field, value) => {
     setServiceItems((prev) => {
       const next = [...prev]
-      if (field === 'price') {
-        const numeric = value.replace(/[^0-9.]/g, '')
-        const parts = numeric.split('.')
+      if (field === "price") {
+        const numeric = value.replace(/[^0-9.]/g, "")
+        const parts = numeric.split(".")
         if (parts.length > 2) return prev
         if (parts[1] && parts[1].length > 2) return prev
         next[index] = { ...next[index], price: numeric }
@@ -163,6 +162,31 @@ const AdminSubContractors = () => {
     return num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
   }
 
+  // Generate random password function
+  const generateRandomPassword = () => {
+    const uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    const lowercase = "abcdefghijklmnopqrstuvwxyz"
+    const numbers = "0123456789"
+    const symbols = "!@#$%^&*"
+
+    let password = ""
+
+    // Ensure at least one character from each category
+    password += uppercase[Math.floor(Math.random() * uppercase.length)]
+    password += lowercase[Math.floor(Math.random() * lowercase.length)]
+    password += numbers[Math.floor(Math.random() * numbers.length)]
+    password += symbols[Math.floor(Math.random() * symbols.length)]
+
+    // Fill remaining 4 characters randomly
+    const allChars = uppercase + lowercase + numbers + symbols
+    for (let i = 4; i < 8; i++) {
+      password += allChars[Math.floor(Math.random() * allChars.length)]
+    }
+
+    // Shuffle the password
+    return password.split('').sort(() => Math.random() - 0.5).join('')
+  }
+
   // Reset form fields to initial state
   const resetForm = () => {
     setFirstname("")
@@ -176,12 +200,40 @@ const AdminSubContractors = () => {
     setServiceItems([{ name: "", price: "" }])
   }
 
+  // Check if email already exists in database
+  const checkEmailExists = async (email) => {
+    try {
+      const token = getAuthToken()
+      const response = await axios.get(`${API_BASE_URL}/subcontractor/check-email/${email}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      return response.data.exists
+    } catch (error) {
+      console.error("Error checking email:", error)
+      // If we can't check, assume it doesn't exist to allow the creation attempt
+      return false
+    }
+  }
+
   // Create subcontractor with simplified model
   const handleAddSubcontractor = async () => {
     // Basic validation
     if (!businessName.trim() || !contactPerson.trim()) {
       setSnackbar({ open: true, message: "Please provide Business Name and Contact Person.", severity: "warning" })
       return
+    }
+
+    // Check if email already exists
+    if (email.trim()) {
+      const emailExists = await checkEmailExists(email.trim())
+      if (emailExists) {
+        setSnackbar({
+          open: true,
+          message: "An account with this email already exists. Please use a different email address.",
+          severity: "error"
+        })
+        return
+      }
     }
     const cleanedServices = serviceItems
       .map((s) => ({ name: s.name.trim(), price: s.price.toString().trim() }))
@@ -203,6 +255,9 @@ const AdminSubContractors = () => {
       svc.price = Number(num.toFixed(2))
     }
 
+    // Generate random password
+    const randomPassword = generateRandomPassword()
+
     const payload = {
       firstname: firstname.trim(),
       lastname: lastname.trim(),
@@ -211,6 +266,7 @@ const AdminSubContractors = () => {
       businessName: businessName.trim(),
       contactPerson: contactPerson.trim(),
       services: cleanedServices,
+      password: randomPassword, // Add the generated password
     }
 
     try {
@@ -222,12 +278,46 @@ const AdminSubContractors = () => {
 
       // Handle success response
       if (response.data.success) {
-        setSnackbar({ open: true, message: response.data.message || "Subcontractor created successfully.", severity: "success" })
+        // Send password via email after successful creation
+        try {
+          const emailResponse = await axios.post(`${API_BASE_URL}/email/send-password`, {
+            email: email.trim(),
+            password: randomPassword,
+            firstname: firstname.trim(),
+            lastname: lastname.trim(),
+          })
+
+          if (emailResponse.data.success) {
+            setSnackbar({
+              open: true,
+              message: `${response.data.message || "Subcontractor created successfully."} Password has been sent to their email.`,
+              severity: "success",
+            })
+          } else {
+            setSnackbar({
+              open: true,
+              message: `${response.data.message || "Subcontractor created successfully."} However, failed to send password email.`,
+              severity: "warning",
+            })
+          }
+        } catch (emailError) {
+          console.error("Error sending password email:", emailError)
+          setSnackbar({
+            open: true,
+            message: `${response.data.message || "Subcontractor created successfully."} However, failed to send password email.`,
+            severity: "warning",
+          })
+        }
+
         handleClose()
         await fetchSubcontractors()
       } else {
         // Handle backend validation errors
-        setSnackbar({ open: true, message: response.data.message || "Failed to create subcontractor.", severity: "error" })
+        setSnackbar({
+          open: true,
+          message: response.data.message || "Failed to create subcontractor.",
+          severity: "error",
+        })
       }
     } catch (error) {
       console.error("Error creating subcontractor:", error)
@@ -241,6 +331,9 @@ const AdminSubContractors = () => {
   // Delete subcontractor by id
   const handleDeleteSubcontractor = async (subcontractorId) => {
     if (!subcontractorId) return
+
+    setIsDeletingSubcontractor(true)
+
     try {
       const token = getAuthToken()
       await axios.delete(`${API_BASE_URL}/subcontractor/${subcontractorId}`, {
@@ -252,6 +345,8 @@ const AdminSubContractors = () => {
       console.error("Error deleting subcontractor:", error)
       const message = error?.response?.data?.message || "Failed to delete subcontractor."
       setSnackbar({ open: true, message, severity: "error" })
+    } finally {
+      setIsDeletingSubcontractor(false)
     }
   }
 
@@ -317,7 +412,7 @@ const AdminSubContractors = () => {
           Authorization: `Bearer ${token}`,
         },
       })
-      console.log('Category counts:', response.data)
+      console.log("Category counts:", response.data)
       setCategoryCounts(response.data || [])
     } catch (err) {
       console.error("Error fetching category counts:", err)
@@ -356,8 +451,6 @@ const AdminSubContractors = () => {
 
   // Location-related code removed
 
-  
-
   const handleCloseSnackbar = () => {
     setSnackbar((prev) => ({ ...prev, open: false }))
   }
@@ -368,139 +461,139 @@ const AdminSubContractors = () => {
   const getSubcontractorsByCategory = () => {
     // If we have category counts from the API, use those
     if (categoryCounts) {
-      const categories = {};
-      
-      // Transform the API response to the format we need
-      categoryCounts.forEach(item => {
-        const category = item.category || 'Other';
-        categories[category] = Number(item.count);
-      });
-      
-      return categories;
-    }
-    
-    // Fallback to client-side counting if API data is not available
-    const categories = {};
-    
-    // Initialize with total count
-    categories['total'] = subcontractors.length;
-    
-    // Count by service category
-    subcontractors.forEach(subcontractor => {
-      const category = subcontractor.serviceCategory || 'Other';
-      if (!categories[category]) {
-        categories[category] = 0;
-      }
-      categories[category]++;
-    });
-    
-    return categories;
-  };
+      const categories = {}
 
-  const subcontractorCategories = getSubcontractorsByCategory();
-  
+      // Transform the API response to the format we need
+      categoryCounts.forEach((item) => {
+        const category = item.category || "Other"
+        categories[category] = Number(item.count)
+      })
+
+      return categories
+    }
+
+    // Fallback to client-side counting if API data is not available
+    const categories = {}
+
+    // Initialize with total count
+    categories["total"] = subcontractors.length
+
+    // Count by service category
+    subcontractors.forEach((subcontractor) => {
+      const category = subcontractor.serviceCategory || "Other"
+      if (!categories[category]) {
+        categories[category] = 0
+      }
+      categories[category]++
+    })
+
+    return categories
+  }
+
+  const subcontractorCategories = getSubcontractorsByCategory()
+
   // Get icon for each category
   const getCategoryIcon = (category) => {
     // Convert to lowercase and handle plurals by removing trailing 's'
-    const normalizedCategory = category.toLowerCase().replace(/s$/, '');
-    
-    switch(normalizedCategory) {
-      case 'food & catering':
-      case 'catering':
-      case 'food':
-        return <RestaurantIcon fontSize="large" />;
-      case 'photography':
-      case 'photo':
-        return <CameraAltIcon fontSize="large" />;
-      case 'videography':
-      case 'video':
-        return <VideocamIcon fontSize="large" />;
-      case 'decoration & styling':
-      case 'decoration':
-      case 'decorator':
-      case 'design':
-        return <DesignServicesIcon fontSize="large" />;
-      case 'transportation':
-      case 'car rental':
-      case 'car':
-        return <DirectionsCarIcon fontSize="large" />;
-      case 'venue & location':
-      case 'venue':
-      case 'location':
-        return <LocationOnIcon fontSize="large" />;
-      case 'entertainment & music':
-      case 'entertainment':
-      case 'music':
-        return <MusicNoteIcon fontSize="large" />;
-      case 'floral arrangements':
-      case 'floral':
-      case 'flower':
-        return <LocalFloristIcon fontSize="large" />;
-      case 'audio & visual equipment':
-      case 'audio':
-      case 'equipment':
-        return <SettingsIcon fontSize="large" />;
-      case 'event planning & coordination':
-      case 'event planning':
-      case 'event':
-      case 'planning':
-        return <EventIcon fontSize="large" />;
-      case 'security services':
-      case 'security':
-        return <SecurityIcon fontSize="large" />;
-      case 'cleaning services':
-      case 'cleaning':
-        return <CleaningServicesIcon fontSize="large" />;
-      case 'hosting':
-      case 'host':
-        return <MicIcon fontSize="large" />;
-      case 'total':
-        return <GroupsIcon fontSize="large" />;
+    const normalizedCategory = category.toLowerCase().replace(/s$/, "")
+
+    switch (normalizedCategory) {
+      case "food & catering":
+      case "catering":
+      case "food":
+        return <RestaurantIcon fontSize="large" />
+      case "photography":
+      case "photo":
+        return <CameraAltIcon fontSize="large" />
+      case "videography":
+      case "video":
+        return <VideocamIcon fontSize="large" />
+      case "decoration & styling":
+      case "decoration":
+      case "decorator":
+      case "design":
+        return <DesignServicesIcon fontSize="large" />
+      case "transportation":
+      case "car rental":
+      case "car":
+        return <DirectionsCarIcon fontSize="large" />
+      case "venue & location":
+      case "venue":
+      case "location":
+        return <LocationOnIcon fontSize="large" />
+      case "entertainment & music":
+      case "entertainment":
+      case "music":
+        return <MusicNoteIcon fontSize="large" />
+      case "floral arrangements":
+      case "floral":
+      case "flower":
+        return <LocalFloristIcon fontSize="large" />
+      case "audio & visual equipment":
+      case "audio":
+      case "equipment":
+        return <SettingsIcon fontSize="large" />
+      case "event planning & coordination":
+      case "event planning":
+      case "event":
+      case "planning":
+        return <EventIcon fontSize="large" />
+      case "security services":
+      case "security":
+        return <SecurityIcon fontSize="large" />
+      case "cleaning services":
+      case "cleaning":
+        return <CleaningServicesIcon fontSize="large" />
+      case "hosting":
+      case "host":
+        return <MicIcon fontSize="large" />
+      case "total":
+        return <GroupsIcon fontSize="large" />
       default:
-        return <SettingsIcon fontSize="large" />;
+        return <SettingsIcon fontSize="large" />
     }
-  };
+  }
 
   // For pagination
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(5);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('All Categories');
+  const [page, setPage] = useState(0)
+  const [rowsPerPage, setRowsPerPage] = useState(5)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [selectedCategory, setSelectedCategory] = useState("All Categories")
 
   const handleChangePage = (event, newPage) => {
-    setPage(newPage);
-  };
+    setPage(newPage)
+  }
 
   const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
+    setRowsPerPage(Number.parseInt(event.target.value, 10))
+    setPage(0)
+  }
 
   // Filter subcontractors based on search and category
-  const filteredSubcontractors = subcontractors.filter(subcontractor => {
-    const query = searchQuery.toLowerCase();
-    const legacyName = subcontractor.user ? `${subcontractor.user.firstname} ${subcontractor.user.lastname}`.toLowerCase() : '';
-    const business = (subcontractor.businessName || '').toLowerCase();
-    const contact = (subcontractor.contactPerson || '').toLowerCase();
+  const filteredSubcontractors = subcontractors.filter((subcontractor) => {
+    const query = searchQuery.toLowerCase()
+    const legacyName = subcontractor.user
+      ? `${subcontractor.user.firstname} ${subcontractor.user.lastname}`.toLowerCase()
+      : ""
+    const business = (subcontractor.businessName || "").toLowerCase()
+    const contact = (subcontractor.contactPerson || "").toLowerCase()
 
-    const nameMatch = legacyName.includes(query) || business.includes(query) || contact.includes(query);
+    const nameMatch = legacyName.includes(query) || business.includes(query) || contact.includes(query)
 
-    const categoryMatch = selectedCategory === 'All Categories' || 
-      subcontractor.serviceCategory === selectedCategory;
-    
-    return nameMatch && categoryMatch;
-  });
+    const categoryMatch = selectedCategory === "All Categories" || subcontractor.serviceCategory === selectedCategory
+
+    return nameMatch && categoryMatch
+  })
 
   // Get all unique categories for dropdown
-  const allCategories = ['All Categories', ...new Set(subcontractors
-    .map(s => s.serviceCategory)
-    .filter(Boolean))];
+  const allCategories = ["All Categories", ...new Set(subcontractors.map((s) => s.serviceCategory).filter(Boolean))]
 
   // Handle opening and closing the subcontractor details modal
   const handleOpenModal = async (subcontractorId) => {
+    setIsViewingProfile(true)
     setLoadingSubcontractorDetails(true)
     setOpenModal(true)
-    
+
     try {
       const response = await axios.get(`${API_BASE_URL}/subcontractor/${subcontractorId}`)
       setSelectedSubcontractor(response.data)
@@ -508,21 +601,22 @@ const AdminSubContractors = () => {
       console.error("Error fetching subcontractor details:", error)
     } finally {
       setLoadingSubcontractorDetails(false)
+      setIsViewingProfile(false)
     }
   }
-  
+
   const handleCloseModal = () => {
     setOpenModal(false)
     setSelectedSubcontractor(null)
-  };
+  }
 
   const handleOpenDeleteConfirmation = () => {
     setOpenDeleteConfirmation(true)
-  };
-  
+  }
+
   const handleCloseDeleteConfirmation = () => {
     setOpenDeleteConfirmation(false)
-  };
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -534,7 +628,7 @@ const AdminSubContractors = () => {
 
         <main className="flex-1 p-4 sm:p-6 md:p-10 bg-gray-50 overflow-auto">
           <h2 className="text-2xl font-bold mb-6">Create Account for Subcontractors</h2>
-          
+
           {/* Manage Subcontractors Section */}
           <div className="bg-white rounded-lg shadow-md p-6 mb-6">
             <div className="flex justify-between items-center mb-4">
@@ -546,18 +640,18 @@ const AdminSubContractors = () => {
                 variant="contained"
                 startIcon={<AddIcon />}
                 sx={{
-                  bgcolor: '#FFA500',
-                  '&:hover': { bgcolor: '#FF8C00' },
-                  borderRadius: '8px',
-                  boxShadow: 'none',
-                  fontWeight: 'bold'
+                  bgcolor: "#FFA500",
+                  "&:hover": { bgcolor: "#FF8C00" },
+                  borderRadius: "8px",
+                  boxShadow: "none",
+                  fontWeight: "bold",
                 }}
                 onClick={handleOpen}
               >
                 Add Subcontractor
               </Button>
             </div>
-            
+
             {/* Subcontractor Category Cards */}
             {loading || loadingCategoryCounts ? (
               <Box display="flex" justifyContent="center" alignItems="center" p={4}>
@@ -567,21 +661,21 @@ const AdminSubContractors = () => {
               <Grid container spacing={3} sx={{ mt: 2 }}>
                 {/* Total subcontractors card */}
                 <Grid item xs={12} sm={6} md={4} lg={4}>
-                  <Card 
-                    sx={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      borderLeft: '6px solid #3498db',
-                      height: '100%'
+                  <Card
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      borderLeft: "6px solid #3498db",
+                      height: "100%",
                     }}
                   >
-                    <Box sx={{ p: 2, display: 'flex', alignItems: 'center', width: '100%' }}>
-                      <Avatar sx={{ bgcolor: '#E3F2FD', color: '#3498db', width: 56, height: 56, mr: 2 }}>
-                        {getCategoryIcon('total')}
+                    <Box sx={{ p: 2, display: "flex", alignItems: "center", width: "100%" }}>
+                      <Avatar sx={{ bgcolor: "#E3F2FD", color: "#3498db", width: 56, height: 56, mr: 2 }}>
+                        {getCategoryIcon("total")}
                       </Avatar>
                       <Box>
                         <Typography variant="h4" fontWeight="bold">
-                          {subcontractorCategories['total'] || 0}
+                          {subcontractorCategories["total"] || 0}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
                           Total subcontractors
@@ -590,24 +684,24 @@ const AdminSubContractors = () => {
                     </Box>
                   </Card>
                 </Grid>
-                
+
                 {/* Category cards - display top 5 categories */}
                 {Object.entries(subcontractorCategories)
-                  .filter(([category]) => category !== 'total')
+                  .filter(([category]) => category !== "total")
                   .sort(([, countA], [, countB]) => countB - countA)
                   .slice(0, 5)
                   .map(([category, count]) => (
                     <Grid item xs={12} sm={6} md={4} lg={4} key={category}>
-                      <Card 
-                        sx={{ 
-                          display: 'flex', 
-                          alignItems: 'center', 
-                          borderLeft: '6px solid #FFA500',
-                          height: '100%'
+                      <Card
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          borderLeft: "6px solid #FFA500",
+                          height: "100%",
                         }}
                       >
-                        <Box sx={{ p: 2, display: 'flex', alignItems: 'center', width: '100%' }}>
-                          <Avatar sx={{ bgcolor: '#FFF3E0', color: '#FFA500', width: 56, height: 56, mr: 2 }}>
+                        <Box sx={{ p: 2, display: "flex", alignItems: "center", width: "100%" }}>
+                          <Avatar sx={{ bgcolor: "#FFF3E0", color: "#FFA500", width: 56, height: 56, mr: 2 }}>
                             {getCategoryIcon(category)}
                           </Avatar>
                           <Box>
@@ -621,16 +715,15 @@ const AdminSubContractors = () => {
                         </Box>
                       </Card>
                     </Grid>
-                  ))
-                }
+                  ))}
               </Grid>
             )}
           </div>
-          
+
           {/* Subcontractors List Section */}
           <div className="bg-white rounded-lg shadow-md p-6">
             <h3 className="text-xl font-semibold mb-4">List of subcontractors</h3>
-            
+
             {/* Search and Filter */}
             <Box display="flex" justifyContent="space-between" mb={3}>
               <TextField
@@ -640,23 +733,23 @@ const AdminSubContractors = () => {
                 sx={{ width: 250 }}
                 value={searchQuery}
                 onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setPage(0);
+                  setSearchQuery(e.target.value)
+                  setPage(0)
                 }}
                 InputProps={{
-                  sx: { borderRadius: '4px', bgcolor: '#f5f5f5' }
+                  sx: { borderRadius: "4px", bgcolor: "#f5f5f5" },
                 }}
               />
-              
+
               <FormControl size="small" sx={{ width: 180 }}>
                 <Select
                   value={selectedCategory}
                   onChange={(e) => {
-                    setSelectedCategory(e.target.value);
-                    setPage(0);
+                    setSelectedCategory(e.target.value)
+                    setPage(0)
                   }}
                   displayEmpty
-                  sx={{ borderRadius: '4px' }}
+                  sx={{ borderRadius: "4px" }}
                 >
                   {allCategories.map((category) => (
                     <MenuItem key={category} value={category}>
@@ -666,9 +759,8 @@ const AdminSubContractors = () => {
                 </Select>
               </FormControl>
             </Box>
-            
-          
-  {/* Subcontractors Table */}
+
+            {/* Subcontractors Table */}
             {loading ? (
               <Box display="flex" justifyContent="center" alignItems="center" p={4}>
                 <CircularProgress />
@@ -679,7 +771,7 @@ const AdminSubContractors = () => {
               </Box>
             ) : (
               <>
-                <div style={{ overflowX: 'auto' }}>
+                <div style={{ overflowX: "auto" }}>
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                       <tr>
@@ -701,16 +793,16 @@ const AdminSubContractors = () => {
                           <tr key={subcontractor.subcontractor_Id}>
                             <td className="px-6 py-4 whitespace-nowrap">
                               <div className="text-sm font-medium text-gray-900">
-                                {subcontractor.businessName || '—'}
+                                {subcontractor.businessName || "—"}
                               </div>
                               <div className="text-xs text-gray-500">
-                                {(subcontractor.services?.length || 0) > 0 ? `${subcontractor.services.length} service(s)` : 'No services'}
+                                {(subcontractor.services?.length || 0) > 0
+                                  ? `${subcontractor.services.length} service(s)`
+                                  : "No services"}
                               </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm text-gray-900">
-                                {subcontractor.contactPerson || '—'}
-                              </div>
+                              <div className="text-sm text-gray-900">{subcontractor.contactPerson || "—"}</div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                               <Button
@@ -718,8 +810,14 @@ const AdminSubContractors = () => {
                                 size="small"
                                 color="primary"
                                 onClick={() => handleOpenModal(subcontractor.subcontractor_Id)}
+                                disabled={isViewingProfile}
+                                startIcon={
+                                  isViewingProfile ? (
+                                    <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                                  ) : null
+                                }
                               >
-                                View Profile
+                                {isViewingProfile ? "Loading..." : "View Profile"}
                               </Button>
                             </td>
                           </tr>
@@ -730,23 +828,23 @@ const AdminSubContractors = () => {
                 {/* Pagination */}
                 <Box display="flex" justifyContent="center" mt={3}>
                   <div className="flex items-center space-x-1">
-                    <button 
+                    <button
                       className="px-3 py-1 rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50"
                       disabled={page === 0}
                       onClick={() => setPage(page - 1)}
                     >
                       &lt;
                     </button>
-                    {[...Array(Math.ceil(filteredSubcontractors.length / rowsPerPage)).keys()].map(number => (
+                    {[...Array(Math.ceil(filteredSubcontractors.length / rowsPerPage)).keys()].map((number) => (
                       <button
                         key={number}
-                        className={`px-3 py-1 rounded-md ${page === number ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                        className={`px-3 py-1 rounded-md ${page === number ? "bg-blue-500 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}
                         onClick={() => setPage(number)}
                       >
                         {number + 1}
                       </button>
                     ))}
-                    <button 
+                    <button
                       className="px-3 py-1 rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50"
                       disabled={page >= Math.ceil(filteredSubcontractors.length / rowsPerPage) - 1}
                       onClick={() => setPage(page + 1)}
@@ -762,13 +860,8 @@ const AdminSubContractors = () => {
       </div>
 
       {/* Subcontractor Details Modal */}
-      <Dialog
-        open={openModal}
-        onClose={handleCloseModal}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle sx={{ bgcolor: '#f5f5f5', pb: 1 }}>
+      <Dialog open={openModal} onClose={handleCloseModal} maxWidth="sm" fullWidth>
+        <DialogTitle sx={{ bgcolor: "#f5f5f5", pb: 1 }}>
           <Typography variant="h6" component="div" fontWeight="bold">
             Subcontractor Details
           </Typography>
@@ -783,7 +876,11 @@ const AdminSubContractors = () => {
               <Box display="flex" alignItems="center" mb={3}>
                 <Avatar
                   src={selectedSubcontractor.user?.profilePicture || "/placeholder.svg"}
-                  alt={selectedSubcontractor.user ? `${selectedSubcontractor.user.firstname} ${selectedSubcontractor.user.lastname}` : "Subcontractor"}
+                  alt={
+                    selectedSubcontractor.user
+                      ? `${selectedSubcontractor.user.firstname} ${selectedSubcontractor.user.lastname}`
+                      : "Subcontractor"
+                  }
                   sx={{ width: 80, height: 80, mr: 2 }}
                 />
                 <Box>
@@ -795,8 +892,8 @@ const AdminSubContractors = () => {
                   <Typography variant="body2" color="text.secondary">
                     {selectedSubcontractor.user?.email || "No email"}
                   </Typography>
-                  <Chip 
-                    icon={getCategoryIcon(selectedSubcontractor.subcontractor_serviceCategory || 'Other')}
+                  <Chip
+                    icon={getCategoryIcon(selectedSubcontractor.subcontractor_serviceCategory || "Other")}
                     label={selectedSubcontractor.subcontractor_serviceCategory || "Other"}
                     variant="outlined"
                     size="small"
@@ -804,25 +901,21 @@ const AdminSubContractors = () => {
                   />
                 </Box>
               </Box>
-              
+
               <Divider sx={{ my: 2 }} />
-              
+
               <Box mb={2}>
                 <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
                   Business Name
                 </Typography>
-                <Typography variant="body1">
-                  {selectedSubcontractor.businessName || "Not specified"}
-                </Typography>
+                <Typography variant="body1">{selectedSubcontractor.businessName || "Not specified"}</Typography>
               </Box>
-              
+
               <Box mb={2}>
                 <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
                   Contact Person
                 </Typography>
-                <Typography variant="body1">
-                  {selectedSubcontractor.contactPerson || "Not specified"}
-                </Typography>
+                <Typography variant="body1">{selectedSubcontractor.contactPerson || "Not specified"}</Typography>
               </Box>
 
               <Box>
@@ -834,13 +927,19 @@ const AdminSubContractors = () => {
                     {selectedSubcontractor.services.map((svc, idx) => (
                       <li key={idx} style={{ marginBottom: 6 }}>
                         <Typography variant="body2">
-                          {svc.name || 'Unnamed Service'} — ₱{Number(svc.price || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          {svc.name || "Unnamed Service"} — ₱
+                          {Number(svc.price || 0).toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}
                         </Typography>
                       </li>
                     ))}
                   </Box>
                 ) : (
-                  <Typography variant="body2" color="text.secondary">No services listed</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    No services listed
+                  </Typography>
                 )}
               </Box>
             </Box>
@@ -850,21 +949,23 @@ const AdminSubContractors = () => {
             </Typography>
           )}
         </DialogContent>
-        <DialogActions sx={{ display: 'flex', justifyContent: 'space-between', px: 3, pb: 2 }}>
-          <Button 
-            variant="contained" 
-            color="error" 
+        <DialogActions sx={{ display: "flex", justifyContent: "space-between", px: 3, pb: 2 }}>
+          <Button
+            variant="contained"
+            color="error"
             onClick={handleOpenDeleteConfirmation}
-            startIcon={<CloseIcon />}
-            disabled={loadingSubcontractorDetails || !selectedSubcontractor}
+            startIcon={
+              isDeletingSubcontractor ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                <CloseIcon />
+              )
+            }
+            disabled={loadingSubcontractorDetails || !selectedSubcontractor || isDeletingSubcontractor}
           >
-            Delete Subcontractor
+            {isDeletingSubcontractor ? "Deleting..." : "Delete Subcontractor"}
           </Button>
-          <Button 
-            variant="outlined" 
-            onClick={handleCloseModal} 
-            color="primary"
-          >
+          <Button variant="outlined" onClick={handleCloseModal} color="primary">
             Close
           </Button>
         </DialogActions>
@@ -877,18 +978,21 @@ const AdminSubContractors = () => {
         aria-labelledby="delete-dialog-title"
         aria-describedby="delete-dialog-description"
       >
-        <DialogTitle id="delete-dialog-title" sx={{ bgcolor: '#f5f5f5' }}>
+        <DialogTitle id="delete-dialog-title" sx={{ bgcolor: "#f5f5f5" }}>
           {"Confirm Delete"}
         </DialogTitle>
         <DialogContent>
           <DialogContentText id="delete-dialog-description">
             Are you sure you want to delete this subcontractor? This action cannot be undone.
             {selectedSubcontractor && (
-              <Typography variant="subtitle2" color="error" sx={{ mt: 1, fontWeight: 'bold' }}>
-                {selectedSubcontractor.user
-                  ? `${selectedSubcontractor.user.firstname} ${selectedSubcontractor.user.lastname}`
-                  : "This subcontractor"} will be permanently removed as a subcontractor.
-              </Typography>
+              <Box sx={{ mt: 1 }}>
+                <Typography variant="subtitle2" color="error" sx={{ fontWeight: "bold" }}>
+                  {selectedSubcontractor.user
+                    ? `${selectedSubcontractor.user.firstname} ${selectedSubcontractor.user.lastname}`
+                    : "This subcontractor"}{" "}
+                  will be permanently removed as a subcontractor.
+                </Typography>
+              </Box>
             )}
           </DialogContentText>
         </DialogContent>
@@ -896,19 +1000,25 @@ const AdminSubContractors = () => {
           <Button onClick={handleCloseDeleteConfirmation} color="primary">
             Cancel
           </Button>
-          <Button 
+          <Button
             onClick={() => {
               if (selectedSubcontractor) {
-                handleDeleteSubcontractor(selectedSubcontractor.subcontractor_Id);
-                handleCloseDeleteConfirmation();
-                handleCloseModal();
+                handleDeleteSubcontractor(selectedSubcontractor.subcontractor_Id)
+                handleCloseDeleteConfirmation()
+                handleCloseModal()
               }
-            }} 
-            color="error" 
-            variant="contained" 
+            }}
+            color="error"
+            variant="contained"
             autoFocus
+            disabled={isDeletingSubcontractor}
+            startIcon={
+              isDeletingSubcontractor ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : null
+            }
           >
-            Delete
+            {isDeletingSubcontractor ? "Deleting..." : "Delete"}
           </Button>
         </DialogActions>
       </Dialog>
@@ -1098,7 +1208,7 @@ const AdminSubContractors = () => {
                       label="Service Name"
                       fullWidth
                       value={item.name}
-                      onChange={(e) => handleServiceItemChange(idx, 'name', e.target.value)}
+                      onChange={(e) => handleServiceItemChange(idx, "name", e.target.value)}
                       placeholder="e.g., Wedding Catering, Portrait Photography"
                       required
                     />
@@ -1108,7 +1218,7 @@ const AdminSubContractors = () => {
                       label="Price"
                       fullWidth
                       value={item.price}
-                      onChange={(e) => handleServiceItemChange(idx, 'price', e.target.value)}
+                      onChange={(e) => handleServiceItemChange(idx, "price", e.target.value)}
                       placeholder="0.00"
                       required
                       InputProps={{ startAdornment: <InputAdornment position="start">₱</InputAdornment> }}

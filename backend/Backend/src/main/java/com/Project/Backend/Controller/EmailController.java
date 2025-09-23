@@ -1,6 +1,7 @@
 package com.Project.Backend.Controller;
 
 import com.Project.Backend.Service.OtpService;
+import com.Project.Backend.Service.PasswordEmailService;
 import jakarta.mail.internet.MimeMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
@@ -10,6 +11,8 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/email")
@@ -18,6 +21,8 @@ public class EmailController {
     private JavaMailSender mailSender;
     @Autowired
     private OtpService otpService;
+    @Autowired
+    private PasswordEmailService passwordEmailService;
 
     @RequestMapping("/send-email/{email}")
     public String sendHtmlEmail(@PathVariable("email") String recipient) {
@@ -60,6 +65,36 @@ public class EmailController {
             return "HTML email with logo sent successfully!";
         } catch (Exception e) {
             return "Failed to send email: " + e.getMessage();
+        }
+    }
+
+    @PostMapping("/send-password")
+    public ResponseEntity<Map<String, Object>> sendPasswordEmail(@RequestBody Map<String, String> request) {
+        try {
+            String email = request.get("email");
+            String password = request.get("password");
+            String firstname = request.get("firstname");
+            String lastname = request.get("lastname");
+
+            if (email == null || password == null) {
+                Map<String, Object> errorResponse = new HashMap<>();
+                errorResponse.put("success", false);
+                errorResponse.put("message", "Email and password are required");
+                return ResponseEntity.badRequest().body(errorResponse);
+            }
+
+            passwordEmailService.sendPasswordEmail(email, password);
+
+            Map<String, Object> successResponse = new HashMap<>();
+            successResponse.put("success", true);
+            successResponse.put("message", "Password email sent successfully");
+            return ResponseEntity.ok(successResponse);
+
+        } catch (Exception e) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("message", "Failed to send password email: " + e.getMessage());
+            return ResponseEntity.internalServerError().body(errorResponse);
         }
     }
 

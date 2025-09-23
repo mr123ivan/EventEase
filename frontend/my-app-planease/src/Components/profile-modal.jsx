@@ -33,7 +33,7 @@ export function ProfileModal({ open, onOpenChange }) {
     profilePicture: null,
     role: "",
   })
-  
+
   // State to track the display user info (what's shown in the header) separately from the form data
   const [displayUser, setDisplayUser] = useState({
     firstname: "",
@@ -43,7 +43,7 @@ export function ProfileModal({ open, onOpenChange }) {
     region: "",
     province: "",
     cityAndMul: "",
-    barangay: ""
+    barangay: "",
   })
   const [showPasswordModal, setShowPasswordModal] = useState(false)
   const [showNewPasswordModal, setShowNewPasswordModal] = useState(false)
@@ -51,11 +51,16 @@ export function ProfileModal({ open, onOpenChange }) {
   const [newPassword, setNewPassword] = useState("")
   const [confirmNewPassword, setConfirmNewPassword] = useState("")
   const [passwordError, setPasswordError] = useState("")
+  const [isCheckingPassword, setIsCheckingPassword] = useState(false)
+  const [isChangingPassword, setIsChangingPassword] = useState(false)
   const [passwordStrength, setPasswordStrength] = useState(0)
   const [passwordErrors, setPasswordErrors] = useState([])
   const [passwordsMatch, setPasswordsMatch] = useState(true)
-  const [isCheckingPassword, setIsCheckingPassword] = useState(false)
-  const [isChangingPassword, setIsChangingPassword] = useState(false)
+  const [showProfilePasswordModal, setShowProfilePasswordModal] = useState(false)
+  const [profilePassword, setProfilePassword] = useState("")
+  const [profilePasswordError, setProfilePasswordError] = useState("")
+  const [isVerifyingProfilePassword, setIsVerifyingProfilePassword] = useState(false)
+  const [pendingProfileUpdate, setPendingProfileUpdate] = useState(null)
   const [regions, setRegions] = useState([])
   const [provinces, setProvinces] = useState([])
   const [citiesMunicipalities, setCitiesMunicipalities] = useState([])
@@ -68,22 +73,12 @@ export function ProfileModal({ open, onOpenChange }) {
   const [selectedCountry, setSelectedCountry] = useState({ code: "PH", dialCode: "+63", flag: "🇵🇭" })
   const [showCountryList, setShowCountryList] = useState(false)
   const countryListRef = useRef(null)
-  const [countries, setCountries] = useState([
-    { code: "PH", dialCode: "+63", flag: "🇵🇭", name: "Philippines" },
-  ])
+  const [countries, setCountries] = useState([{ code: "PH", dialCode: "+63", flag: "🇵🇭", name: "Philippines" }])
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
     severity: "success",
   })
-  const [showOTPModal, setShowOTPModal] = useState(false)
-  const [otpValue, setOtpValue] = useState("")
-  const [otpError, setOtpError] = useState("")
-  const [otpTimer, setOtpTimer] = useState(300)
-  const [isResendingOTP, setIsResendingOTP] = useState(false)
-  const otpTimerRef = useRef(null)
-  const [isSendingOTP, setIsSendingOTP] = useState(false)
-  const [pendingProfileUpdate, setPendingProfileUpdate] = useState(null)
 
   // All useEffect hooks must also be at the top, before any return or conditional
   useEffect(() => {
@@ -147,8 +142,8 @@ export function ProfileModal({ open, onOpenChange }) {
           phone: userPhone,
           profilePicture: userData.profilePicture || null,
           role: userData.role || "",
-        };
-        setUser(userData2);
+        }
+        setUser(userData2)
         setDisplayUser({
           firstname: userData.firstname || "",
           lastname: userData.lastname || "",
@@ -157,7 +152,7 @@ export function ProfileModal({ open, onOpenChange }) {
           region: userData.region || "",
           province: userData.province || "",
           cityAndMul: userData.cityAndMul || "",
-          barangay: userData.barangay || ""
+          barangay: userData.barangay || "",
         })
         if (userPhone) {
           const phoneMatch = userPhone.match(/^\+(\d+)(\d{9,})$/)
@@ -255,34 +250,11 @@ export function ProfileModal({ open, onOpenChange }) {
 
   // Reset OTP input and error when modal opens
   useEffect(() => {
-    if (showOTPModal) {
-      setOtpValue("")
-      setOtpError("")
-      if (otpTimerRef.current) clearInterval(otpTimerRef.current)
+    if (showProfilePasswordModal) {
+      setProfilePassword("")
+      setProfilePasswordError("")
     }
-  }, [showOTPModal])
-
-  // Start timer only when modal is open and isSendingOTP becomes false
-  useEffect(() => {
-    if (showOTPModal && !isSendingOTP) {
-      setOtpTimer(300) // 5 minutes
-      if (otpTimerRef.current) clearInterval(otpTimerRef.current)
-      otpTimerRef.current = setInterval(() => {
-        setOtpTimer((prev) => {
-          if (prev <= 1) {
-            clearInterval(otpTimerRef.current)
-            return 0
-          }
-          return prev - 1
-        })
-      }, 1000)
-      return () => clearInterval(otpTimerRef.current)
-    }
-    // If modal closes or loading starts, clear timer
-    return () => {
-      if (otpTimerRef.current) clearInterval(otpTimerRef.current)
-    }
-  }, [showOTPModal, isSendingOTP])
+  }, [showProfilePasswordModal])
 
   if (!open) return null
 
@@ -460,7 +432,6 @@ export function ProfileModal({ open, onOpenChange }) {
   }
 
   const handleSaveChanges = async () => {
-    // Prepare the updated user data as before
     const updatedUser = {
       firstname: user.firstname,
       lastname: user.lastname,
@@ -471,18 +442,7 @@ export function ProfileModal({ open, onOpenChange }) {
       barangay: user.barangay,
     }
     setPendingProfileUpdate(updatedUser)
-    setShowOTPModal(true)
-    setIsSendingOTP(true)
-    try {
-      const response = await axios.get(`http://localhost:8080/email/send-email/${user.email}`)
-      if (response && response.data) {
-        console.log('OTP email response:', response.data)
-      }
-    } catch (err) {
-      console.error('Failed to send OTP:', err)
-    } finally {
-      setIsSendingOTP(false)
-    }
+    setShowProfilePasswordModal(true)
   }
 
   const handleCloseSnackbar = (event, reason) => {
@@ -591,34 +551,123 @@ export function ProfileModal({ open, onOpenChange }) {
     }
   }
 
-  const handleUpdatePassword = async () => {
-    if (passwordStrength < 3) {
-      setPasswordError("Password does not meet requirements")
+  const handleVerifyProfilePassword = async () => {
+    if (!profilePassword) {
+      setProfilePasswordError("Please enter your password")
       return
     }
 
-    if (!passwordsMatch) {
+    setIsVerifyingProfilePassword(true)
+    setProfilePasswordError("")
+
+    try {
+      const token = localStorage.getItem("token")
+      if (!token) {
+        setProfilePasswordError("You are not logged in")
+        setIsVerifyingProfilePassword(false)
+        return
+      }
+
+      const response = await axios.post(
+        `${API_BASE_URL}/user/check-password`,
+        { password: profilePassword },
+        { headers: { Authorization: `Bearer ${token}` } },
+      )
+
+      if (response.data.match) {
+        // Password is correct, proceed with profile update
+        try {
+          const resp = await axios.put(`${API_BASE_URL}/user/update`, pendingProfileUpdate, {
+            headers: { Authorization: `Bearer ${token}` },
+          })
+          if (resp.status === 200) {
+            setEditMode(false)
+            setDisplayUser({
+              firstname: pendingProfileUpdate.firstname,
+              lastname: pendingProfileUpdate.lastname,
+              email: user.email,
+              role: user.role,
+              region: pendingProfileUpdate.region,
+              province: pendingProfileUpdate.province,
+              cityAndMul: pendingProfileUpdate.cityAndMul,
+              barangay: pendingProfileUpdate.barangay,
+            })
+            setSnackbar({
+              open: true,
+              message: "Profile updated successfully",
+              severity: "success",
+            })
+            setShowProfilePasswordModal(false)
+            setProfilePassword("")
+            setPendingProfileUpdate(null)
+          }
+        } catch (error) {
+          setSnackbar({
+            open: true,
+            message: "Failed to update profile. Please try again.",
+            severity: "error",
+          })
+        }
+      } else {
+        setProfilePasswordError("Incorrect password")
+      }
+    } catch (error) {
+      console.error("Error checking password:", error)
+      setProfilePasswordError("Failed to verify password. Please try again.")
+    } finally {
+      setIsVerifyingProfilePassword(false)
+    }
+  }
+
+  const handleUpdatePassword = async () => {
+    if (!newPassword || !confirmNewPassword) {
+      setPasswordError("Please fill in all fields")
+      return
+    }
+
+    if (newPassword !== confirmNewPassword) {
       setPasswordError("Passwords do not match")
       return
     }
 
-    // Instead of updating password here, trigger OTP modal
-    setShowOTPModal(true)
+    if (passwordStrength < 3) {
+      setPasswordError("Password is too weak")
+      return
+    }
+
+    setIsChangingPassword(true)
     setPasswordError("")
-    // Send the OTP as soon as the modal opens
-    setIsSendingOTP(true)
+
     try {
-      const response = await axios.get(`http://localhost:8080/email/send-email/${user.email}`)
-      // Log backend message for confirmation
-      if (response && response.data) {
-        console.log('OTP email response:', response.data)
-      } else {
-        console.log('OTP email sent, but no message returned from backend.')
+      const token = localStorage.getItem("token")
+      if (!token) {
+        setPasswordError("You are not logged in")
+        setIsChangingPassword(false)
+        return
       }
-    } catch (err) {
-      console.error('Failed to send OTP:', err)
+
+      const resp = await axios.put(
+        `${API_BASE_URL}/user/update-password`,
+        { newPassword },
+        { headers: { Authorization: `Bearer ${token}` } },
+      )
+
+      if (resp.status === 200) {
+        setShowNewPasswordModal(false)
+        setNewPassword("")
+        setConfirmNewPassword("")
+        setPasswordStrength(0)
+        setPasswordErrors([])
+        setSnackbar({
+          open: true,
+          message: "Password updated successfully",
+          severity: "success",
+        })
+      }
+    } catch (error) {
+      setPasswordError("Failed to update password. Please try again.")
     } finally {
-      setIsSendingOTP(false)
+      setIsChangingPassword(false)
     }
   }
 
@@ -677,9 +726,9 @@ export function ProfileModal({ open, onOpenChange }) {
               {/* Profile Info */}
               <div>
                 <div className="text-xl font-semibold">
-                {displayUser.firstname} {displayUser.lastname}
-              </div>
-              <div className="text-sm text-gray-500 mb-1">{displayUser.role || "No Role"}</div>
+                  {displayUser.firstname} {displayUser.lastname}
+                </div>
+                <div className="text-sm text-gray-500 mb-1">{displayUser.role || "No Role"}</div>
                 <div className="flex items-center text-sm text-gray-600">
                   <MapPin size={14} className="mr-1" />
                   <span className="line-clamp-2">{getFullAddress()}</span>
@@ -1203,208 +1252,78 @@ export function ProfileModal({ open, onOpenChange }) {
           </div>
         </div>
       )}
-      {/* OTP Modal for password change */}
-      {showOTPModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-        >
+
+      {/* Profile Password Verification Modal */}
+      {showProfilePasswordModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div
             className="bg-white rounded-md shadow-lg w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-300 relative"
             onMouseDown={(e) => e.stopPropagation()}
           >
-            {/* Modal header */}
             <div className="bg-slate-900 h-12 relative flex items-center justify-between px-4">
-              <div className="text-white font-medium">Enter OTP</div>
+              <div className="text-white font-medium">Verify Password</div>
               <button
                 onClick={() => {
-                  setShowOTPModal(false)
-                  setIsResendingOTP(false)
+                  setShowProfilePasswordModal(false)
+                  setProfilePassword("")
+                  setProfilePasswordError("")
+                  setPendingProfileUpdate(null)
                 }}
-                className="text-white hover:text-gray-300"
+                className="text-white hover:text-gray-300 transition-colors"
               >
-                <X size={18} />
+                <X size={20} />
               </button>
             </div>
-            {/* Modal content */}
-            <div className="p-6 min-h-[200px] flex flex-col justify-center">
-              {isSendingOTP ? (
-                <div className="flex flex-col items-center justify-center h-full py-8">
-                  <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-                  <div className="text-gray-700 text-center font-medium">We are sending you an OTP to your email...</div>
+            <div className="p-6">
+              <p className="text-gray-600 mb-4">Please enter your current password to confirm the profile changes.</p>
+              {profilePasswordError && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-md">
+                  {profilePasswordError}
                 </div>
-              ) : (
-                <>
-                <p className="text-gray-600 mb-4">
-                  Please enter the 6-digit OTP sent to your email <span className="font-semibold">{user.email}</span>.
-                </p>
-                {otpError && (
-                  <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-md">{otpError}</div>
-                )}
-                <form
-                  onSubmit={async (e) => {
-                    e.preventDefault()
-                    setOtpError("")
-                    if (!otpValue || otpValue.length !== 6) {
-                      setOtpError("Please enter the 6-digit OTP.")
-                      return
-                    }
-                    try {
-                      const response = await axios.get(
-                        `http://localhost:8080/email/validate-otp`,
-                        { params: { email: user.email, OTP: otpValue } }
-                      )
-                      if (response.data === true) {
-                        setShowOTPModal(false)
-                        if (pendingProfileUpdate) {
-                          // Submit profile update
-                          try {
-                            const token = localStorage.getItem("token")
-                            if (!token) {
-                              setSnackbar({ open: true, message: "No authentication token found", severity: "error" })
-                              return
-                            }
-                            const resp = await axios.put(`${API_BASE_URL}/user/update`, pendingProfileUpdate, {
-                              headers: { Authorization: `Bearer ${token}` },
-                            })
-                            if (resp.status === 200) {
-                              setEditMode(false)
-                              // Update the display user with the new data
-                              setDisplayUser({
-                                firstname: pendingProfileUpdate.firstname,
-                                lastname: pendingProfileUpdate.lastname,
-                                email: user.email,
-                                role: user.role,
-                                region: pendingProfileUpdate.region,
-                                province: pendingProfileUpdate.province,
-                                cityAndMul: pendingProfileUpdate.cityAndMul,
-                                barangay: pendingProfileUpdate.barangay
-                              })
-                              setSnackbar({
-                                open: true,
-                                message: "Profile updated successfully",
-                                severity: "success",
-                              })
-                              setPendingProfileUpdate(null)
-                            }
-                          } catch (error) {
-                            setSnackbar({
-                              open: true,
-                              message: "Failed to update profile. Please try again.",
-                              severity: "error",
-                            })
-                          }
-                        } else {
-                          setIsChangingPassword(true)
-                          setPasswordError("")
-                          try {
-                            const token = localStorage.getItem("token")
-                            if (!token) {
-                              setPasswordError("You are not logged in")
-                              setIsChangingPassword(false)
-                              return
-                            }
-                            const resp = await axios.put(
-                              `${API_BASE_URL}/user/update-password`,
-                              { newPassword },
-                              { headers: { Authorization: `Bearer ${token}` } },
-                            )
-                            if (resp.status === 200) {
-                              setShowNewPasswordModal(false)
-                              setNewPassword("")
-                              setConfirmNewPassword("")
-                              setPasswordStrength(0)
-                              setPasswordErrors([])
-                              setSnackbar({
-                                open: true,
-                                message: "Password updated successfully",
-                                severity: "success",
-                              })
-                            }
-                          } catch (error) {
-                            setPasswordError("Failed to update password. Please try again.")
-                          } finally {
-                            setIsChangingPassword(false)
-                          }
-                        }
-                      } else {
-                        setOtpError("Invalid OTP. Please try again.")
-                      }
-                    } catch (err) {
-                      setOtpError("Failed to validate OTP. Please try again.")
-                    }
-                  }}
-                  className="space-y-4"
-                >
-                  <div className="space-y-2">
-                    <label htmlFor="otp" className="text-sm font-medium text-gray-700">
-                      OTP
-                    </label>
-                    <input
-                      id="otp"
-                      type="text"
-                      value={otpValue}
-                      onChange={(e) => setOtpValue(e.target.value.replace(/[^0-9]/g, "").slice(0, 6))}
-                      className="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-center tracking-widest text-lg"
-                      placeholder="------"
-                      maxLength={6}
-                      autoFocus
-                    />
-                  </div>
-                  <div className="flex items-center justify-between mt-2">
-                    <div className="text-sm text-gray-500">
-                      {otpTimer > 0 ? (
-                        <>Resend OTP in <span className="font-semibold">{otpTimer}s</span></>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={async () => {
-                            setIsResendingOTP(true)
-                            setIsSendingOTP(true)
-                            setOtpError("")
-                            setOtpValue("")
-                            try {
-                              const response = await axios.get(`http://localhost:8080/email/send-email/${user.email}`)
-                              // Log backend message for confirmation
-                              if (response && response.data) {
-                                console.log('OTP email response:', response.data)
-                              } else {
-                                console.log('OTP email sent, but no message returned from backend.')
-                              }
-                            } catch (err) {
-                              // Optionally handle resend error
-                            }
-                            setIsResendingOTP(false)
-                            setIsSendingOTP(false)
-                            setOtpTimer(300) // 5 minutes
-                            if (otpTimerRef.current) clearInterval(otpTimerRef.current)
-                            otpTimerRef.current = setInterval(() => {
-                              setOtpTimer((prev) => {
-                                if (prev <= 1) {
-                                  clearInterval(otpTimerRef.current)
-                                  return 0
-                                }
-                                return prev - 1
-                              })
-                            }, 1000)
-                          }}
-                          disabled={isResendingOTP}
-                          className="text-blue-600 hover:underline disabled:opacity-60"
-                        >
-                          {isResendingOTP ? "Resending..." : "Resend OTP"}
-                        </button>
-                      )}
-                    </div>
-                    <button
-                      type="submit"
-                      className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 disabled:opacity-70"
-                      disabled={otpValue.length !== 6}
-                    >
-                      Verify
-                    </button>
-                  </div>
-                </form>
-                </>
               )}
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  handleVerifyProfilePassword()
+                }}
+                className="space-y-4"
+              >
+                <div className="space-y-2">
+                  <label htmlFor="profilePassword" className="text-sm font-medium text-gray-700">
+                    Current Password
+                  </label>
+                  <input
+                    id="profilePassword"
+                    type="password"
+                    value={profilePassword}
+                    onChange={(e) => setProfilePassword(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Enter your current password"
+                    required
+                  />
+                </div>
+                <div className="flex gap-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowProfilePasswordModal(false)
+                      setProfilePassword("")
+                      setProfilePasswordError("")
+                      setPendingProfileUpdate(null)
+                    }}
+                    className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isVerifyingProfilePassword}
+                    className="flex-1 px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {isVerifyingProfilePassword ? "Verifying..." : "Confirm"}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         </div>

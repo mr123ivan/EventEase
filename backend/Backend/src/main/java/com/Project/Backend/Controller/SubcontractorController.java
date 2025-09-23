@@ -136,6 +136,23 @@ public class SubcontractorController {
     }
     
     /**
+     * Check if a subcontractor with the given email already exists
+     * Used by frontend to validate email uniqueness before creating new subcontractor
+     * @param email The email to check
+     * @return ResponseEntity with exists boolean
+     */
+    @GetMapping("/check-email/{email}")
+    public ResponseEntity<Map<String, Boolean>> checkEmailExists(@PathVariable String email) {
+        SubcontractorEntity existingSubcontractor = subcontractorService.getSubcontractorByEmail(email);
+        boolean exists = existingSubcontractor != null;
+
+        Map<String, Boolean> response = new HashMap<>();
+        response.put("exists", exists);
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
      * Get counts of subcontractors by service category
      * Used in the admin dashboard to display category statistics
      * @return List of maps with category and count
@@ -143,13 +160,13 @@ public class SubcontractorController {
     @GetMapping("/category-counts")
     public ResponseEntity<List<Map<String, Object>>> getSubcontractorCountsByCategory() {
         List<Map<String, Object>> categoryCounts = subcontractorService.getSubcontractorCountsByCategory();
-        
+
         // Add total count
         Map<String, Object> totalCount = new HashMap<>();
         totalCount.put("category", "total");
         totalCount.put("count", subcontractorService.getAllSubcontractors().size());
         categoryCounts.add(0, totalCount); // Add at the beginning of the list
-        
+
         return ResponseEntity.ok(categoryCounts);
     }
 }
