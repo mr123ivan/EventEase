@@ -63,6 +63,5 @@ hs_err_pid*
 #package json
 package-lock.json
 
-#
-application.properties
-S3Service.java
+
+
