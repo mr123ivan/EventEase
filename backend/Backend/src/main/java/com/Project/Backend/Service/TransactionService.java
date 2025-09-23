@@ -201,10 +201,19 @@ public class TransactionService {
                 getTransactionDTO.setTransactionNote(transaction.getTransactionNote());
                 getTransactionDTO.setPayment(transaction.getPayment());
 
-                result.add(getTransactionDTO);
+
+            getTransactionDTO.setCelebrantName(transaction.getCelebrantName());
+            getTransactionDTO.setAdditionalCelebrants(transaction.getAdditionalCelebrants());
+            getTransactionDTO.setProjectedAttendees(transaction.getProjectedAttendees());
+            getTransactionDTO.setBudget(transaction.getBudget());
+
+            result.add(getTransactionDTO);
+
+             
             } catch (Exception e) {
                 System.out.println("Error processing transaction " + transaction.getTransaction_Id() + ": " + e.getMessage());
             }
+
         }
         return result;
     }
@@ -290,6 +299,11 @@ public class TransactionService {
             getTransactionDTO.setTransactionDate(transaction.getTransactionDate());
             getTransactionDTO.setTransactionNote(transaction.getTransactionNote());
             getTransactionDTO.setPayment(transaction.getPayment());
+
+            getTransactionDTO.setCelebrantName(transaction.getCelebrantName());
+            getTransactionDTO.setAdditionalCelebrants(transaction.getAdditionalCelebrants());
+            getTransactionDTO.setProjectedAttendees(transaction.getProjectedAttendees());
+            getTransactionDTO.setBudget(transaction.getBudget());
 
             result.add(getTransactionDTO);
         }
@@ -393,7 +407,12 @@ public class TransactionService {
             transaction.setTransactionIsActive(true);
             transaction.setTransactionisApprove(false);
             
-
+            // Set the new fields
+            transaction.setCelebrantName(bookingData.getCelebrantName());
+            transaction.setAdditionalCelebrants(bookingData.getAdditionalCelebrants());
+            transaction.setProjectedAttendees(bookingData.getProjectedAttendees());
+            transaction.setBudget(bookingData.getBudget());
+            
             transaction.setPayment(null);
             
             // 6. Handle Package OR Custom Services (mutually exclusive)
@@ -522,6 +541,11 @@ public class TransactionService {
             getTransactionDTO.setTransactionDate(transaction.getTransactionDate());
             getTransactionDTO.setTransactionNote(transaction.getTransactionNote());
             getTransactionDTO.setPayment(transaction.getPayment());
+
+            getTransactionDTO.setCelebrantName(transaction.getCelebrantName());
+            getTransactionDTO.setAdditionalCelebrants(transaction.getAdditionalCelebrants());
+            getTransactionDTO.setProjectedAttendees(transaction.getProjectedAttendees());
+            getTransactionDTO.setBudget(transaction.getBudget());
 
             result.add(getTransactionDTO);
         }
