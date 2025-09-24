@@ -1,4 +1,4 @@
-import { useState, useRef,useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Divider from '@mui/material/Divider';
 import Navbar from "../../Components/Navbar";
 import Typography from '@mui/material/Typography';
@@ -61,6 +61,13 @@ const SubcontractorDashboard = () => {
         profile_image: ''
     });
     const [imageUrl, setImageUrl] = useState([]);
+
+    // Overview state variables
+    const [assignedEvents, setAssignedEvents] = useState(0);
+    const [activeTransactions, setActiveTransactions] = useState(0);
+    const [completedTransactions, setCompletedTransactions] = useState(0);
+    const [recentActivity, setRecentActivity] = useState([]);
+    const [isLoadingOverview, setIsLoadingOverview] = useState(false);
 
     useEffect(()=>{
         console.log("selectedImage", selectedImage);
@@ -168,10 +175,64 @@ const SubcontractorDashboard = () => {
                     service_name: response.data.subcontractor_serviceName,
                     profile_image: user.profilePicture
                 });
+
+                // After getting user details, fetch overview data
+                fetchOverviewData(user.email);
             })
             .catch((error) => {
                 console.log("Error fetching user details:", error);
             });
+    }
+    
+    // Fetch overview data for the subcontractor dashboard
+    const fetchOverviewData = (subcontractorEmail) => {
+        setIsLoadingOverview(true);
+        
+        // Get assigned events count and transactions
+        axios.get(`http://localhost:8080/api/transactions/getTransactionByEmail/${subcontractorEmail}`, {
+            headers: {
+                Authorization: `Bearer ${localStorage.getItem('token')}`
+            }
+        })
+        .then(response => {
+            console.log("Subcontractor transactions:", response.data);
+            
+            if (response.data) {
+                const transactions = response.data;
+                
+                // Count assigned events (unique events the subcontractor is assigned to)
+                // Using eventName since eventId is not available in the response
+                const uniqueEvents = [...new Set(transactions.map(t => t.eventName))];
+                console.log("Unique events:", uniqueEvents);
+                setAssignedEvents(uniqueEvents.length);
+                
+                // Count transactions by status
+                // Using transactionStatus field from backend
+                // Status enum in Java: COMPLETED, DECLINED, CANCELLED, PENDING, ONGOING
+                console.log("Transaction statuses:", transactions.map(t => t.transactionStatus));
+                
+                const active = transactions.filter(t => t.transactionStatus === "ONGOING" || t.transactionStatus === "PENDING").length;
+                const completed = transactions.filter(t => t.transactionStatus === "COMPLETED").length;
+                
+                console.log("Active transactions:", active);
+                console.log("Completed transactions:", completed);
+                
+                setActiveTransactions(active);
+                setCompletedTransactions(completed);
+                
+                // Get recent activity (latest 5 transactions)
+                // Using transactionDate field from backend for sorting
+                const sortedByDate = [...transactions].sort((a, b) => new Date(b.transactionDate) - new Date(a.transactionDate));
+                console.log("Sorted recent activity:", sortedByDate.slice(0, 5));
+                setRecentActivity(sortedByDate.slice(0, 5));
+            }
+            
+            setIsLoadingOverview(false);
+        })
+        .catch(error => {
+            console.error("Error fetching subcontractor overview data:", error);
+            setIsLoadingOverview(false);
+        });
     }
 
     const resizeImage = async (
@@ -574,27 +635,10 @@ const SubcontractorDashboard = () => {
                         </div>
                     </div>
 
-                    {/* Showcase Section */}
+                    {/* Overview Section */}
                     <div className="flex flex-col bg-white rounded-lg shadow-lg p-4 lg:p-15 gap-4">
                         <div className="flex flex-row w-full justify-between items-center md:p-4">
-                            <h1 className="md:text-xl font-poppins">Showcase</h1>
-                            <div className="flex items-center gap-2">
-                                <div className="hidden sm:flex items-center">
-                                    <button
-                                        className="rounded-xl font-poppins text-white bg-blue-500 md:text-lg px-4 py-1 hover:bg-blue-600 transition duration-200"
-                                        onClick={handleOpen}
-                                    >
-                                        Add showcase
-                                    </button>
-                                </div>
-                                <div className="block sm:hidden">
-                                    <AddIcon
-                                        className="bg-blue-500 text-white rounded-xl p-2"
-                                        sx={{ fontSize: 40 }}
-                                        onClick={handleOpen}
-                                    />
-                                </div>
-                            </div>
+                            <h1 className="md:text-xl font-poppins">Overview</h1>
                         </div>
                         <Divider />
                         <div className="md:p-4">
@@ -641,197 +685,81 @@ const SubcontractorDashboard = () => {
                                 </Box>
                             )}
                         </div>
-
+                        
                         <Divider />
-                        {/* Showcase Items */}
-                        {showcase?.map((item, index) => (
-                            <div key={index} className="py-6">
-                                {/* Title + Ellipsis */}
-                                <Box display="flex" justifyContent="space-between" alignItems="start">
-                                    <Typography
-                                        variant="h6"
-                                        fontWeight="bold"
-                                        className="font-poppins text-lg text-slate-800"
-                                    >
-                                        {item.showcase_title}
-                                    </Typography>
-                                    <Box sx={{ position: 'relative' }}>
-                                        <IconButton
-                                            size="small"
-                                            onClick={() => {
-                                                const menu = document.getElementById(`menu-${index}`);
-                                                menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-                                            }}
-                                        >
-                                            <Typography sx={{ fontSize: 24, fontWeight: 'bold', color: 'black' }}>
-                                                &#8942;
-                                            </Typography>
-                                        </IconButton>
-                                        <Box
-                                            id={`menu-${index}`}
-                                            sx={{
-                                                display: 'none',
-                                                position: 'absolute',
-                                                right: 0,
-                                                zIndex: 10,
-                                                mt: 1,
-                                                backgroundColor: 'white',
-                                                border: '1px solid #e5e7eb',
-                                                borderRadius: 1,
-                                                boxShadow: 3,
-                                                minWidth: 120,
-                                            }}
-                                        >
-                                            <Button
-                                                fullWidth
-                                                sx={{ justifyContent: 'flex-start', color: 'black' }}
-                                                startIcon={<EditIcon />}
-                                                onClick={() => handleEdit(item)}
-                                            >
-                                                Edit
-                                            </Button>
-                                            <Button
-                                                fullWidth
-                                                sx={{ justifyContent: 'flex-start', color: 'black' }}
-                                                startIcon={<CloseIcon />}
-                                                onClick={() => {
-                                                    setShowcaseToDelete(item.showcase_id);
-                                                    setConfirmDeleteOpen(true);
-                                                }}
-                                            >
-                                                Delete
-                                            </Button>
-                                        </Box>
-                                    </Box>
-                                </Box>
-                                <Modal
-                                    open={confirmDeleteOpen}
-                                    onClose={() => setConfirmDeleteOpen(false)}
-                                    BackdropProps={{
-                                        sx: {
-                                            backdropFilter: 'blur(10px)',              // 👈 Blur effect
-                                            WebkitBackdropFilter: 'blur(10px)',        // 👈 Safari support
-                                            backgroundColor: 'rgba(0, 0, 0, 0.4)',     // 👈 Dimmed overlay
-                                        },
-                                    }}
-                                >
-                                    <Box
-                                        sx={{
-                                            position: 'absolute',
-                                            top: '50%',
-                                            left: '50%',
-                                            transform: 'translate(-50%, -50%)',
-                                            width: 400,
-                                            bgcolor: 'background.paper',
-                                            boxShadow: 24,
-                                            p: 4,
-                                            borderRadius: 2,
-                                            textAlign: 'center',
-                                        }}
-                                    >
-                                        <Typography variant="h6" gutterBottom>Are you sure?</Typography>
-                                        <Typography variant="body1" sx={{ mb: 3 }}>
-                                            Do you really want to delete this showcase? This action cannot be undone.
-                                        </Typography>
-                                        <Box display="flex" justifyContent="space-between">
-                                            <Button
-                                                variant="outlined"
-                                                color="inherit"
-                                                onClick={() => setConfirmDeleteOpen(false)}
-                                            >
-                                                Cancel
-                                            </Button>
-                                            <Button
-                                                variant="contained"
-                                                color="error"
-                                                onClick={() => performDelete(showcaseToDelete)}
-                                            >
-                                                Delete
-                                            </Button>
-                                        </Box>
-                                    </Box>
-                                </Modal>
-
-                                {/* Description */}
-                                <Typography className="font-poppins text-gray-700 mt-2 mb-3 whitespace-pre-line">
-                                    {item.showcase_description}
+                        
+                        {/* Statistics Cards */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+                            {/* Assigned Events Card */}
+                            <Box className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-5 text-white shadow-lg">
+                                <Typography variant="h6" className="font-medium mb-1">Assigned Events</Typography>
+                                <Typography variant="h3" className="font-bold">{isLoadingOverview ? "..." : assignedEvents}</Typography>
+                                <Typography variant="body2" className="mt-2 opacity-80">
+                                    Total events you're assigned to
                                 </Typography>
-
-                                {/* Image Rendering Logic */}
-                                <Box
-                                    className={`gap-3 ${
-                                        item.showcaseMediaEntity.length === 1 ? 'flex justify-center' : 'flex flex-col md:flex-row'
-                                    }`}
-                                >
-                                    {item.showcaseMediaEntity.slice(0, 3).map((media, imgIndex) => {
-                                        const isVideo = /\.(mp4|mov|webm|ogg)$/i.test(media.showcaseMedia_imageurl);
-                                        const isSingle = item.showcaseMediaEntity.length === 1;
-
-                                        return (
-                                            <Box
-                                                key={media.showcaseMedia_id}
-                                                position="relative"
-                                                sx={{ flex: isSingle ? '0 1 600px' : '1', maxWidth: isSingle ? '100%' : undefined }}
-                                                onClick={() => {
-                                                    if (!isVideo) {
-                                                        setActiveGallery({
-                                                            images: item.showcaseMediaEntity.map((img) => ({
-                                                                image: img.showcaseMedia_imageurl,
-                                                                alt: img.showcaseMedia_fileName || 'Image',
-                                                            })),
-                                                            index: imgIndex,
-                                                        });
-                                                    }
-                                                }}
-                                                className={isVideo ? '' : 'cursor-pointer'}
-                                            >
-                                                {isVideo ? (
-                                                    <video
-                                                        controls
-                                                        src={media.showcaseMedia_imageurl}
-                                                        className="rounded-lg w-full max-h-[400px] object-contain"
-                                                    />
-                                                ) : (
-                                                    <img
-                                                        src={media.showcaseMedia_imageurl}
-                                                        alt={media.showcaseMedia_fileName || `Media ${imgIndex + 1}`}
-                                                        loading="lazy"
-                                                        className={`rounded-lg w-full ${isSingle ? 'max-h-[400px] object-contain' : 'h-[200px] object-cover'}`}
-                                                    />
-                                                )}
-
-                                                {imgIndex === 2 && item.showcaseMediaEntity.length > 3 && (
-                                                    <Box
-                                                        position="absolute"
-                                                        top={0}
-                                                        left={0}
-                                                        right={0}
-                                                        bottom={0}
-                                                        display="flex"
-                                                        alignItems="center"
-                                                        justifyContent="center"
-                                                        bgcolor="rgba(0, 0, 0, 0.5)"
-                                                        borderRadius="8px"
-                                                    >
-                                                        <Typography variant="h6" color="white" fontWeight="bold">
-                                                            +{item.showcaseMediaEntity.length - 3} more
-                                                        </Typography>
-                                                    </Box>
-                                                )}
-                                            </Box>
-                                        );
-                                    })}
-                                </Box>
-
-                                {/* Divider after each post */}
-                                <Divider sx={{ mt: 4 }} />
-                            </div>
-                        ))}
+                            </Box>
+                            
+                            {/* Active Transactions Card */}
+                            <Box className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-5 text-white shadow-lg">
+                                <Typography variant="h6" className="font-medium mb-1">Active Transactions</Typography>
+                                <Typography variant="h3" className="font-bold">{isLoadingOverview ? "..." : activeTransactions}</Typography>
+                                <Typography variant="body2" className="mt-2 opacity-80">
+                                    Ongoing transactions
+                                </Typography>
+                            </Box>
+                            
+                            {/* Completed Transactions Card */}
+                            <Box className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-5 text-white shadow-lg">
+                                <Typography variant="h6" className="font-medium mb-1">Completed</Typography>
+                                <Typography variant="h3" className="font-bold">{isLoadingOverview ? "..." : completedTransactions}</Typography>
+                                <Typography variant="body2" className="mt-2 opacity-80">
+                                    Completed transactions
+                                </Typography>
+                            </Box>
+                        </div>
+                        
+                        {/* Recent Activity Section */}
+                        <div className="p-4">
+                            <Typography variant="h6" className="font-medium mb-3">Recent Activity</Typography>
+                            {isLoadingOverview ? (
+                                <div className="bg-gray-50 rounded-lg p-5 text-center">
+                                    <Typography variant="body1" className="text-gray-500">
+                                        Loading activities...
+                                    </Typography>
+                                </div>
+                            ) : recentActivity.length > 0 ? (
+                                <div className="space-y-3">
+                                    {recentActivity.map((activity, index) => (
+                                        <div key={index} className="bg-gray-50 rounded-lg p-3 flex justify-between items-center">
+                                            <div>
+                                                <Typography variant="subtitle2" className="font-medium">
+                                                    {activity.eventName || `Event #${activity.transaction_Id || ''}`}
+                                                </Typography>
+                                                <Typography variant="body2" className="text-gray-500">
+                                                    Status: {activity.transactionStatus || 'N/A'}
+                                                </Typography>
+                                            </div>
+                                            <div className="text-right">
+                                                <Typography variant="caption" className="text-gray-600">
+                                                    {activity.transactionDate ? new Date(activity.transactionDate).toLocaleDateString() : 'No date'}
+                                                </Typography>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="bg-gray-50 rounded-lg p-5 text-center">
+                                    <Typography variant="body1" className="text-gray-500">
+                                        No recent activities to display
+                                    </Typography>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
-
-            {/* Upload Modal Form*/}
+            
+            {/* Modal for adding/editing showcase items */}
             <Modal open={open} onClose={handleClose}>
                 <Box
                     className="w-[90vw] max-w-3xl bg-white rounded-xl shadow-xl flex flex-col"
