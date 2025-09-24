@@ -13,6 +13,22 @@ const AdminPendingRequest = () => {
     const [selectedRequest, setSelectedRequest] = useState(null);
     const [viewServicesModal, setViewServicesModal] = useState(false);
     const [viewPaymentModal, setViewPaymentModal] = useState(false);
+
+    const [isApproving, setIsApproving] = useState(false);
+    const [isDeclining, setIsDeclining] = useState(false);
+
+    const handleDeclineClick = () => {
+      setShowDeclineModal(true);
+      setDeclineStep(1);
+    };
+    
+    const handleCloseDeclineModal = () => {
+      setShowDeclineModal(false);
+      setDeclineStep(1);
+    };
+    
+
+
     
     // Debug logging for selectedRequest data
     useEffect(() => {
@@ -64,9 +80,7 @@ const AdminPendingRequest = () => {
             });
 
     }
-    setShowDeclineModal(false)
-    setDeclineStep(1)
-  }
+
 
   // Function to handle file selection for refund receipt
   const handleFileChange = (e) => {
@@ -99,6 +113,7 @@ const AdminPendingRequest = () => {
         },
       })
 
+
       const presignedUrl = presignedResponse.data.presignedURL
       const baseUrl = presignedUrl.split("?")[0]
 
@@ -107,9 +122,12 @@ const AdminPendingRequest = () => {
       reason.append("imageUrl", baseUrl)
 
       try {
+
+        // small fix: refundReceipt.type instead of refundReceipt.file.type
         await axios.put(presignedUrl, refundReceipt, {
           headers: {
-            "Content-Type": refundReceipt.file.type,
+            "Content-Type": refundReceipt.type,
+
             Authorization: undefined,
           },
         })
@@ -165,6 +183,7 @@ const AdminPendingRequest = () => {
       })
   }
 
+
   const ValidateTransaction = (validate) => {
     if (validate === "DECLINED") {
       // Open the decline flow instead of immediate decline
@@ -175,6 +194,7 @@ const AdminPendingRequest = () => {
     setIsApproving(true)
 
     console.log(selectedRequest)
+
 
     // For approve or other actions, continue with the original flow
     axios
@@ -308,6 +328,9 @@ const AdminPendingRequest = () => {
         </main>
       </div>
 
+
+      {/* === Booking Details Modal (single, deduped) === */}
+
       <Dialog
         open={!!selectedRequest && !viewServicesModal && !viewPaymentModal}
         onClose={() => setSelectedRequest(null)}
@@ -323,130 +346,26 @@ const AdminPendingRequest = () => {
             </div>
 
 
-            <Dialog open={!!selectedRequest && !viewServicesModal && !viewPaymentModal} onClose={() => setSelectedRequest(null)} className="fixed z-1150 shadow-md inset-0 overflow-y-auto">
-                <div className="flex items-center justify-center min-h-screen px-4">
-                    <Dialog.Panel className="bg-white w-full max-w-3xl rounded-lg shadow-lg p-4 sm:p-6 space-y-6">
-                        <div className="flex justify-between items-center border-b pb-2">
-                            <h3 className="text-xl font-semibold">Booking Details</h3>
-                            <button onClick={() => setSelectedRequest(null)} className="text-xl hover:cursor-pointer">×</button>
-                        </div>
-
-                        {selectedRequest && (
-                            <>
-                                <div>
-                                    <h4 className="font-semibold mb-2 text-[#FFB22C]">Personal Detail</h4>
-                                    <div className="grid grid-cols-2 sm:grid-cols-2 gap-4">
-                                        <div className="flex flex-col gap-2 w-auto">
-                                            <div>
-                                                <label className="text-sm font-medium text-gray-500 block mb-1">Name</label>
-                                                <input type="text" className="border p-2 rounded w-full" value={selectedRequest.userName} readOnly />
-                                            </div>
-                                            <div className="col-span-1 sm:col-span-2">
-                                                <label className="text-sm font-medium text-gray-500 block mb-1">Contact</label>
-                                                <input type="text" className="border p-2 rounded w-auto" value={selectedRequest.phoneNumber} readOnly />
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <label className="text-sm font-medium text-gray-500 block mb-1">Email</label>
-                                            <input type="text" className="border p-2 rounded w-full" value={selectedRequest.userEmail} readOnly />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <h4 className="font-semibold mt-6 mb-2 text-[#FFB22C]">Event Detail</h4>
-                                    <div className="grid sm:grid-cols-1 md:grid-cols-2 gap-2 w-auto">
-                                        <div className="flex flex-col gap-2 w-auto">
-                                            {selectedRequest.packages != null ? (
-                                                <>
-                                                    <div>
-                                                        <label className="text-sm font-medium text-gray-500 block mb-1">Event
-                                                            Type</label>
-                                                        <input type="text" className="border p-2 rounded w-full"
-                                                               value={"Wedding"} readOnly/>
-                                                    </div>
-                                                    <div>
-                                                        <label className="text-sm font-medium text-gray-500 block mb-1">Package
-                                                            Type</label>
-                                                        <input type="text" className="border p-2 rounded w-full"
-                                                               value={selectedRequest.packages} readOnly/>
-                                                    </div>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <div>
-                                                        <label className="text-sm font-medium text-gray-500 block mb-1">Event
-                                                            Type</label>
-                                                        <input type="text" className="border p-2 rounded w-full"
-                                                               value={selectedRequest.eventName} readOnly/>
-                                                    </div>
-                                                    <div>
-                                                        <label className="text-sm font-medium text-gray-500 block mb-1">Package
-                                                            Type</label>
-                                                        <input type="text" className="border p-2 rounded w-full"
-                                                               value={"N/A"} readOnly/>
-                                                    </div>
-                                                </>
-                                            )}
-                                            <div>
-                                                <label className="text-sm font-medium text-gray-500 block mb-1">Name of Celebrant(s)</label>
-                                                <input type="text" className="border p-2 rounded w-full" 
-                                                       value={selectedRequest.celebrantName || "Not provided"} readOnly />
-                                            </div>
-                                            <div>
-                                                <label className="text-sm font-medium text-gray-500 block mb-1">Additional Celebrant(s)</label>
-                                                <input type="text" className="border p-2 rounded w-full" 
-                                                       value={selectedRequest.additionalCelebrants || "None"} readOnly />
-                                            </div>
-                                        </div>
-                                        <div className="flex flex-col gap-2 w-auto">
-                                            <div>
-                                                <label className="text-sm font-medium text-gray-500 block mb-1">Location</label>
-                                                <input type="text" className="border p-2 rounded w-full" value={selectedRequest.transactionVenue} readOnly />
-                                            </div>
-                                            <div>
-                                                <label className="text-sm font-medium text-gray-500 block mb-1">Date</label>
-                                                <input type="text" className="border p-2 rounded w-full" value={selectedRequest.transactionDate} readOnly />
-                                            </div>
-                                            <div>
-                                                <label className="text-sm font-medium text-gray-500 block mb-1">Projected Attendees</label>
-                                                <input type="text" className="border p-2 rounded w-full" 
-                                                       value={selectedRequest.projectedAttendees || "Not specified"} readOnly />
-                                            </div>
-                                            <div>
-                                                <label className="text-sm font-medium text-gray-500 block mb-1">Budget</label>
-                                                <input type="text" className="border p-2 rounded w-full" 
-                                                       value={selectedRequest.budget ? `₱${selectedRequest.budget.toLocaleString()}` : "Not specified"} readOnly />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="flex flex-col mt-2">
-                                    <div className="flex text-sm gap-2">
-                                        <div>
-                                            <label className="text-sm font-medium align-text-bottom text-gray-500 block mb-1">Note</label>
-                                        </div>
-                                        <div className="flex ml-auto gap-2">
-                                            <button className="text-[#FFB22C] hover:underline" onClick={() => setViewPaymentModal(true)}>View Payment</button>
-                                            <button className="text-[#FFB22C] hover:underline" onClick={() => setViewServicesModal(true)}>View Chosen Services</button>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <textarea readOnly className="w-full border p-3 rounded text-sm text-gray-600" value={selectedRequest.transactionNote}></textarea>
-                                    </div>
-                                </div>
-
-                                <div className="flex flex-col sm:flex-row justify-end gap-4 pt-4">
-                                    <button className="bg-red-500 text-white px-4 py-2 rounded w-full sm:w-auto"
-                                    onClick={()=> ValidateTransaction("DECLINED")}>Decline</button>
-                                    <button className="bg-green-500 text-white px-4 py-2 rounded w-full sm:w-auto"
-                                    onClick={()=> ValidateTransaction("APPROVED")}>Approve</button>
-                                </div>
-                            </>
-                        )}
-                    </Dialog.Panel>
-
+            {selectedRequest && (
+              <>
+                <div>
+                  <h4 className="font-semibold mb-2 text-[#FFB22C]">Personal Detail</h4>
+                  <div className="grid grid-cols-2 sm:grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-2 w-auto">
+                      <div>
+                        <label className="text-sm font-medium text-gray-500 block mb-1">Name</label>
+                        <input type="text" className="border p-2 rounded w-full" value={selectedRequest.userName} readOnly />
+                      </div>
+                      <div className="col-span-1 sm:col-span-2">
+                        <label className="text-sm font-medium text-gray-500 block mb-1">Contact</label>
+                        <input type="text" className="border p-2 rounded w-auto" value={selectedRequest.phoneNumber} readOnly />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 block mb-1">Email</label>
+                      <input type="text" className="border p-2 rounded w-full" value={selectedRequest.userEmail} readOnly />
+                    </div>
+                  </div>
                 </div>
 
                 <div>
@@ -457,54 +376,58 @@ const AdminPendingRequest = () => {
                         <>
                           <div>
                             <label className="text-sm font-medium text-gray-500 block mb-1">Event Type</label>
-                            <input type="text" className="border p-2 rounded w-full" value={"Wedding"} readOnly />
+                            <input type="text" className="border p-2 rounded w-full"
+                                   value={"Wedding"} readOnly/>
                           </div>
                           <div>
                             <label className="text-sm font-medium text-gray-500 block mb-1">Package Type</label>
-                            <input
-                              type="text"
-                              className="border p-2 rounded w-full"
-                              value={selectedRequest.packages}
-                              readOnly
-                            />
+                            <input type="text" className="border p-2 rounded w-full"
+                                   value={selectedRequest.packages} readOnly/>
                           </div>
                         </>
                       ) : (
                         <>
                           <div>
                             <label className="text-sm font-medium text-gray-500 block mb-1">Event Type</label>
-                            <input
-                              type="text"
-                              className="border p-2 rounded w-full"
-                              value={selectedRequest.eventName}
-                              readOnly
-                            />
+                            <input type="text" className="border p-2 rounded w-full"
+                                   value={selectedRequest.eventName} readOnly/>
                           </div>
                           <div>
                             <label className="text-sm font-medium text-gray-500 block mb-1">Package Type</label>
-                            <input type="text" className="border p-2 rounded w-full" value={"N/A"} readOnly />
+                            <input type="text" className="border p-2 rounded w-full"
+                                   value={"N/A"} readOnly/>
                           </div>
                         </>
                       )}
+                      <div>
+                        <label className="text-sm font-medium text-gray-500 block mb-1">Name of Celebrant(s)</label>
+                        <input type="text" className="border p-2 rounded w-full" 
+                               value={selectedRequest.celebrantName || "Not provided"} readOnly />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-500 block mb-1">Additional Celebrant(s)</label>
+                        <input type="text" className="border p-2 rounded w-full" 
+                               value={selectedRequest.additionalCelebrants || "None"} readOnly />
+                      </div>
                     </div>
                     <div className="flex flex-col gap-2 w-auto">
                       <div>
                         <label className="text-sm font-medium text-gray-500 block mb-1">Location</label>
-                        <input
-                          type="text"
-                          className="border p-2 rounded w-full"
-                          value={selectedRequest.transactionVenue}
-                          readOnly
-                        />
+                        <input type="text" className="border p-2 rounded w-full" value={selectedRequest.transactionVenue} readOnly />
                       </div>
                       <div>
                         <label className="text-sm font-medium text-gray-500 block mb-1">Date</label>
-                        <input
-                          type="text"
-                          className="border p-2 rounded w-full"
-                          value={selectedRequest.transactionDate}
-                          readOnly
-                        />
+                        <input type="text" className="border p-2 rounded w-full" value={selectedRequest.transactionDate} readOnly />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-500 block mb-1">Projected Attendees</label>
+                        <input type="text" className="border p-2 rounded w-full" 
+                               value={selectedRequest.projectedAttendees || "Not specified"} readOnly />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-500 block mb-1">Budget</label>
+                        <input type="text" className="border p-2 rounded w-full" 
+                               value={selectedRequest.budget ? `₱${selectedRequest.budget.toLocaleString()}` : "Not specified"} readOnly />
                       </div>
                     </div>
                   </div>
@@ -516,20 +439,12 @@ const AdminPendingRequest = () => {
                       <label className="text-sm font-medium align-text-bottom text-gray-500 block mb-1">Note</label>
                     </div>
                     <div className="flex ml-auto gap-2">
-                      <button className="text-[#FFB22C] hover:underline" onClick={() => setViewPaymentModal(true)}>
-                        View Payment
-                      </button>
-                      <button className="text-[#FFB22C] hover:underline" onClick={() => setViewServicesModal(true)}>
-                        View Chosen Services
-                      </button>
+                      <button className="text-[#FFB22C] hover:underline" onClick={() => setViewPaymentModal(true)}>View Payment</button>
+                      <button className="text-[#FFB22C] hover:underline" onClick={() => setViewServicesModal(true)}>View Chosen Services</button>
                     </div>
                   </div>
                   <div>
-                    <textarea
-                      readOnly
-                      className="w-full border p-3 rounded text-sm text-gray-600"
-                      value={selectedRequest.transactionNote}
-                    ></textarea>
+                    <textarea readOnly className="w-full border p-3 rounded text-sm text-gray-600" value={selectedRequest.transactionNote}></textarea>
                   </div>
                 </div>
 
@@ -607,7 +522,7 @@ const AdminPendingRequest = () => {
         </div>
       </Dialog>
 
-      {/* Multi-Step Decline Booking Modal */}
+      {/* Multi-Step Decline Booking Modal (unchanged) */}
       <Dialog
         open={showDeclineModal}
         onClose={handleCloseDeclineModal}
@@ -720,6 +635,7 @@ const AdminPendingRequest = () => {
                     Next
                   </button>
                 </div>
+
               </>
             )}
 
