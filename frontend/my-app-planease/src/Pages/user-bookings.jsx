@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useAuth } from "../Components/AuthProvider";
-import { AlertCircle, CheckCircle, Clock, Calendar, ChevronLeft, Loader2 } from "lucide-react";
+import { AlertCircle, CheckCircle, Clock, Calendar, ChevronLeft, Loader2, MapPin, User, Package } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-
+import { Dialog } from "@headlessui/react"
 const API_BASE_URL = "http://localhost:8080";
 
 const UserBookingsPage = () => {
@@ -15,9 +15,40 @@ const UserBookingsPage = () => {
   });
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("all"); // all, pending, ongoing, completed
+  const [selectedBooking, setSelectedBooking] = useState(null);
+  const [eventDetails, setEventDetails] = useState(null);
+  const [loadingDetails, setLoadingDetails] = useState(false);
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [userEmail, setUserEmail] = useState(null);
+  
+  // Function to handle booking selection and load additional details if needed
+  const handleBookingSelect = async (booking) => {
+    setSelectedBooking(booking);
+    setLoadingDetails(true);
+    
+    try {
+      // If the booking has a transaction ID, fetch complete details
+      if (booking.transaction_Id) {
+        const token = localStorage.getItem("token");
+        const response = await axios.get(
+          `${API_BASE_URL}/api/transactions/getTransactionById/${booking.transaction_Id}`,
+          { headers: token ? { Authorization: `Bearer ${token}` } : {} }
+        );
+        
+        console.log("Fetched detailed booking info:", response.data);
+        
+        // Merge the details with existing booking data
+        // This ensures we don't lose any data that might only exist in one place
+        setSelectedBooking({...booking, ...response.data});
+      }
+    } catch (error) {
+      console.error("Failed to fetch booking details:", error);
+    } finally {
+      setLoadingDetails(false);
+    }
+  };
+  
 
   // Check for authentication and redirect if not logged in
   useEffect(() => {
@@ -36,7 +67,7 @@ const UserBookingsPage = () => {
     } else {
       // If no user in context but we're authenticated, try to get email from local storage token
       if (isAuthenticated && localStorage.getItem('token')) {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('token') || localStorage.getItem("token");
         // Use a fallback if you can access the token directly
         console.log("User Bookings Page - Trying to fetch user data directly");
         
@@ -63,7 +94,7 @@ const UserBookingsPage = () => {
   useEffect(() => {
     if (userEmail) {
       console.log("User Bookings Page - Fetching with email:", userEmail);
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("token") || localStorage.getItem("token");
       console.log("User Bookings Page - Token exists:", !!token);
       fetchUserBookings(token, userEmail);
     }
@@ -370,7 +401,7 @@ const UserBookingsPage = () => {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {displayedBookings.map((booking) => (
-                <tr key={booking.id} className="hover:bg-gray-50">
+                <tr key={booking.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => handleBookingSelect(booking)}>
                   <td className="px-6 py-4">
                     <div className="flex items-center">
                       <div className="h-10 w-10 flex-shrink-0 bg-gray-200 rounded-md flex items-center justify-center text-gray-500">
@@ -406,8 +437,187 @@ const UserBookingsPage = () => {
           </table>
         </div>
       )}
-    </div>
-  );
-};
+      <Dialog
+  open={!!selectedBooking}
+  onClose={() => setSelectedBooking(null)}
+  className="fixed z-50 inset-0 overflow-y-auto"
+>
+  <div className="flex items-center justify-center min-h-screen px-4">
+    <Dialog.Panel className="bg-white w-full max-w-3xl rounded-lg shadow-lg p-6 space-y-6">
+      {/* Header */}
+      <div className="flex justify-between items-center border-b pb-2">
+        <h3 className="text-xl font-semibold">Booking Details</h3>
+        <button
+          onClick={() => setSelectedBooking(null)}
+          className="text-xl hover:cursor-pointer"
+        >
+          ×
+        </button>
+      </div>
+
+      {/* Body */}
+      {loadingDetails ? (
+        <div className="flex justify-center items-center py-12">
+          <Loader2 className="animate-spin h-8 w-8 text-blue-500" />
+          <span className="ml-2 text-gray-600">Loading event details...</span>
+        </div>
+      ) : selectedBooking && (
+        <>
+          {/* Personal Details */}
+          <div>
+            <h4 className="font-semibold mb-2 text-[#FFB22C]">Personal Details</h4>
+            <div className="grid sm:grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium text-gray-500 block mb-1">Name</label>
+                <div className="flex items-center border p-2 rounded bg-gray-50">
+                  <User size={16} className="text-gray-500 mr-2" />
+                  <span>{selectedBooking.userName || "N/A"}</span>
+                </div>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-500 block mb-1">Email</label>
+                <div className="flex items-center border p-2 rounded bg-gray-50">
+                  <span>{selectedBooking.userEmail || "N/A"}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Event Info */}
+          <div>
+            <h4 className="font-semibold mb-2 text-[#FFB22C]">Event Details</h4>
+            <div className="grid sm:grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium text-gray-500 block mb-1">Event Type</label>
+                <div className="flex items-center border p-2 rounded bg-gray-50">
+                  <Calendar size={16} className="text-gray-500 mr-2" />
+                  <span>{selectedBooking.eventName || "Wedding"}</span>
+                </div>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-500 block mb-1">Package</label>
+                <div className="flex items-center border p-2 rounded bg-gray-50">
+                  <Package size={16} className="text-gray-500 mr-2" />
+                  <span>{selectedBooking.packages || selectedBooking.packageName || "N/A"}</span>
+                </div>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-500 block mb-1">Venue</label>
+                <div className="flex items-center border p-2 rounded bg-gray-50">
+                  <MapPin size={16} className="text-gray-500 mr-2" />
+                  <span>{selectedBooking.transactionVenue || "N/A"}</span>
+                </div>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-500 block mb-1">Date</label>
+                <div className="flex items-center border p-2 rounded bg-gray-50">
+                  <Calendar size={16} className="text-gray-500 mr-2" />
+                  <span>{selectedBooking.transactionDate || "N/A"}</span>
+                </div>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-500 block mb-1">Celebrant Name</label>
+                <div className="flex items-center border p-2 rounded bg-gray-50">
+                  <User size={16} className="text-gray-500 mr-2" />
+                  <span>{selectedBooking.celebrantName || "Not provided"}</span>
+                </div>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-500 block mb-1">Additional Celebrants</label>
+                <div className="flex items-center border p-2 rounded bg-gray-50">
+                  <span>{selectedBooking.additionalCelebrants || "None"}</span>
+                </div>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-500 block mb-1">Projected Attendees</label>
+                <div className="flex items-center border p-2 rounded bg-gray-50">
+                  <span>{selectedBooking.projectedAttendees || "Not specified"}</span>
+                </div>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-500 block mb-1">Budget</label>
+                <div className="flex items-center border p-2 rounded bg-gray-50">
+                  <span>{selectedBooking.budget ? `₱${selectedBooking.budget.toLocaleString()}` : "Not specified"}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Payment Info - If available */}
+          {selectedBooking?.payment?.paymentReferenceNumber && (
+            <div>
+              <h4 className="font-semibold mb-2 text-[#FFB22C]">Payment Details</h4>
+              <div className="grid sm:grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-500 block mb-1">Reference Number</label>
+                  <div className="flex items-center border p-2 rounded bg-gray-50">
+                    <span>{selectedBooking?.payment?.paymentReferenceNumber || "N/A"}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* Services/Subcontractors - If available */}
+          {selectedBooking.subcontractors && selectedBooking.subcontractors.length > 0 && (
+            <div>
+              <h4 className="font-semibold mb-2 text-[#FFB22C]">Chosen Services</h4>
+              <div className="overflow-x-auto border rounded">
+                <table className="min-w-full table-auto text-sm text-left">
+                  <thead className="bg-indigo-50">
+                    <tr>
+                      <th className="p-3 text-gray-700 font-semibold">Service</th>
+                      <th className="p-3 text-gray-700 font-semibold">Provider</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selectedBooking.subcontractors.map((service, index) => (
+                      <tr key={index} className="border-t">
+                        <td className="p-3 text-gray-700">{service.serviceName}</td>
+                        <td className="p-3 text-gray-700">{service.subcontractorName}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+          
+          {/* Notes - If available */}
+          {selectedBooking.transactionNote && (
+            <div>
+              <h4 className="font-semibold mb-2 text-[#FFB22C]">Notes</h4>
+              <div className="border p-3 rounded bg-gray-50 text-gray-700">
+                {selectedBooking.transactionNote}
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Footer */}
+      <div className="flex justify-end pt-4">
+        <button
+          onClick={() => setSelectedBooking(null)}
+          className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded"
+        >
+          Close
+        </button>
+      </div>
+    </Dialog.Panel>
+  </div>
+</Dialog>
+
+        </div>
+        
+          
+        );
+
+      };
+
+
+
 
 export default UserBookingsPage;
+
+
