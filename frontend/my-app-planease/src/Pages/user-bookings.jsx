@@ -3,7 +3,7 @@ import axios from "axios";
 import { useAuth } from "../Components/AuthProvider";
 import { AlertCircle, CheckCircle, Clock, Calendar, ChevronLeft, Loader2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-
+import { Dialog } from "@headlessui/react"
 const API_BASE_URL = "http://localhost:8080";
 
 const UserBookingsPage = () => {
@@ -15,9 +15,11 @@ const UserBookingsPage = () => {
   });
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("all"); // all, pending, ongoing, completed
+  const [selectedBooking, setSelectedBooking] = useState(null);
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [userEmail, setUserEmail] = useState(null);
+  
 
   // Check for authentication and redirect if not logged in
   useEffect(() => {
@@ -36,7 +38,7 @@ const UserBookingsPage = () => {
     } else {
       // If no user in context but we're authenticated, try to get email from local storage token
       if (isAuthenticated && localStorage.getItem('token')) {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('token') || localStorage.getItem("token");
         // Use a fallback if you can access the token directly
         console.log("User Bookings Page - Trying to fetch user data directly");
         
@@ -63,7 +65,7 @@ const UserBookingsPage = () => {
   useEffect(() => {
     if (userEmail) {
       console.log("User Bookings Page - Fetching with email:", userEmail);
-      const token = localStorage.getItem("token");
+      const token = localStorage.getItem("token") || localStorage.getItem("token");
       console.log("User Bookings Page - Token exists:", !!token);
       fetchUserBookings(token, userEmail);
     }
@@ -370,7 +372,7 @@ const UserBookingsPage = () => {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {displayedBookings.map((booking) => (
-                <tr key={booking.id} className="hover:bg-gray-50">
+                <tr key={booking.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => setSelectedBooking(booking)}>
                   <td className="px-6 py-4">
                     <div className="flex items-center">
                       <div className="h-10 w-10 flex-shrink-0 bg-gray-200 rounded-md flex items-center justify-center text-gray-500">
@@ -406,8 +408,94 @@ const UserBookingsPage = () => {
           </table>
         </div>
       )}
-    </div>
-  );
-};
+      <Dialog
+  open={!!selectedBooking}
+  onClose={() => setSelectedBooking(null)}
+  className="fixed z-50 inset-0 overflow-y-auto"
+>
+  <div className="flex items-center justify-center min-h-screen px-4">
+    <Dialog.Panel className="bg-white w-full max-w-3xl rounded-lg shadow-lg p-6 space-y-6">
+      {/* Header */}
+      <div className="flex justify-between items-center border-b pb-2">
+        <h3 className="text-xl font-semibold">Booking Details</h3>
+        <button
+          onClick={() => setSelectedBooking(null)}
+          className="text-xl hover:cursor-pointer"
+        >
+          ×
+        </button>
+      </div>
+
+      {/* Body */}
+      {selectedBooking && (
+        <>
+          {/* Event Info */}
+          <div>
+            <h4 className="font-semibold mb-2 text-[#FFB22C]">Event Details</h4>
+            <div className="grid sm:grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium text-gray-500 block mb-1">Event Type</label>
+                <input
+                  type="text"
+                  className="border p-2 rounded w-full"
+                  value={selectedBooking.eventName || "N/A"}
+                  readOnly
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-500 block mb-1">Package</label>
+                <input
+                  type="text"
+                  className="border p-2 rounded w-full"
+                  value={selectedBooking.packageName || "N/A"}
+                  readOnly
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-500 block mb-1">Venue</label>
+                <input
+                  type="text"
+                  className="border p-2 rounded w-full"
+                  value={selectedBooking.transactionVenue || "N/A"}
+                  readOnly
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-500 block mb-1">Date</label>
+                <input
+                  type="text"
+                  className="border p-2 rounded w-full"
+                  value={selectedBooking.transactionDate || "N/A"}
+                  readOnly
+                />
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Footer */}
+      <div className="flex justify-end pt-4">
+        <button
+          onClick={() => setSelectedBooking(null)}
+          className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded"
+        >
+          Close
+        </button>
+      </div>
+    </Dialog.Panel>
+  </div>
+</Dialog>
+
+        </div>
+        
+          
+        );
+
+      };
+
+
 
 export default UserBookingsPage;
+
+
