@@ -18,6 +18,12 @@ public class BookingTransactionDTO {
     private Date transactionDate;
     private String transactionNote;
     
+    // Additional Event Details
+    private String celebrantName;
+    private String additionalCelebrants;
+    private Integer projectedAttendees;
+    private Double budget;
+    
     // Services
     private String serviceType; // "PACKAGE" or "CUSTOM"
     private Integer packageId; // if package selected
@@ -161,5 +167,37 @@ public class BookingTransactionDTO {
 
     public void setPaymentReferenceNumber(String paymentReferenceNumber) {
         this.paymentReferenceNumber = paymentReferenceNumber;
+    }
+    
+    public String getCelebrantName() {
+        return celebrantName;
+    }
+
+    public void setCelebrantName(String celebrantName) {
+        this.celebrantName = celebrantName;
+    }
+
+    public String getAdditionalCelebrants() {
+        return additionalCelebrants;
+    }
+
+    public void setAdditionalCelebrants(String additionalCelebrants) {
+        this.additionalCelebrants = additionalCelebrants;
+    }
+
+    public Integer getProjectedAttendees() {
+        return projectedAttendees;
+    }
+
+    public void setProjectedAttendees(Integer projectedAttendees) {
+        this.projectedAttendees = projectedAttendees;
+    }
+
+    public Double getBudget() {
+        return budget;
+    }
+
+    public void setBudget(Double budget) {
+        this.budget = budget;
     }
 }

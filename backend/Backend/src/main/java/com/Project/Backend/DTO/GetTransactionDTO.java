@@ -24,6 +24,12 @@ public class GetTransactionDTO {
     private PaymentEntity payment;
     private List<Map<String, Object>>subcontractors;
     private RejectNoteDTO rejectedNote;
+    
+    // Additional event details fields
+    private String celebrantName;
+    private String additionalCelebrants;
+    private Integer projectedAttendees;
+    private Double budget;
 
     public GetTransactionDTO() {
         this.subcontractors = new ArrayList<>();
@@ -41,6 +47,12 @@ public class GetTransactionDTO {
         this.transactionStatus = transaction.getTransactionStatus().toString();
         this.transactionDate = transaction.getTransactionDate();
         this.transactionNote = transaction.getTransactionNote();
+        
+        // Set additional event details
+        this.celebrantName = transaction.getCelebrantName();
+        this.additionalCelebrants = transaction.getAdditionalCelebrants();
+        this.projectedAttendees = transaction.getProjectedAttendees();
+        this.budget = transaction.getBudget();
         
         if(transaction.getPackages() != null) {
             this.packages = transaction.getPackages().getPackageName();
@@ -189,5 +201,37 @@ public class GetTransactionDTO {
 
     public void setTransaction_Id(int transaction_Id) {
         this.transaction_Id = transaction_Id;
+    }
+    
+    public String getCelebrantName() {
+        return celebrantName;
+    }
+
+    public void setCelebrantName(String celebrantName) {
+        this.celebrantName = celebrantName;
+    }
+
+    public String getAdditionalCelebrants() {
+        return additionalCelebrants;
+    }
+
+    public void setAdditionalCelebrants(String additionalCelebrants) {
+        this.additionalCelebrants = additionalCelebrants;
+    }
+
+    public Integer getProjectedAttendees() {
+        return projectedAttendees;
+    }
+
+    public void setProjectedAttendees(Integer projectedAttendees) {
+        this.projectedAttendees = projectedAttendees;
+    }
+
+    public Double getBudget() {
+        return budget;
+    }
+
+    public void setBudget(Double budget) {
+        this.budget = budget;
     }
 }

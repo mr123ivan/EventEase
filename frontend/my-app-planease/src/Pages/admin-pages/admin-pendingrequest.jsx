@@ -13,6 +13,7 @@ const AdminPendingRequest = () => {
     const [selectedRequest, setSelectedRequest] = useState(null);
     const [viewServicesModal, setViewServicesModal] = useState(false);
     const [viewPaymentModal, setViewPaymentModal] = useState(false);
+
     const [isApproving, setIsApproving] = useState(false);
     const [isDeclining, setIsDeclining] = useState(false);
 
@@ -26,6 +27,7 @@ const AdminPendingRequest = () => {
       setDeclineStep(1);
     };
     
+
 
     
     // Debug logging for selectedRequest data
@@ -79,6 +81,7 @@ const AdminPendingRequest = () => {
 
     }
 
+
   // Function to handle file selection for refund receipt
   const handleFileChange = (e) => {
     const file = e.target.files[0]
@@ -110,6 +113,7 @@ const AdminPendingRequest = () => {
         },
       })
 
+
       const presignedUrl = presignedResponse.data.presignedURL
       const baseUrl = presignedUrl.split("?")[0]
 
@@ -118,10 +122,12 @@ const AdminPendingRequest = () => {
       reason.append("imageUrl", baseUrl)
 
       try {
+
         // small fix: refundReceipt.type instead of refundReceipt.file.type
         await axios.put(presignedUrl, refundReceipt, {
           headers: {
             "Content-Type": refundReceipt.type,
+
             Authorization: undefined,
           },
         })
@@ -177,6 +183,7 @@ const AdminPendingRequest = () => {
       })
   }
 
+
   const ValidateTransaction = (validate) => {
     if (validate === "DECLINED") {
       // Open the decline flow instead of immediate decline
@@ -187,6 +194,7 @@ const AdminPendingRequest = () => {
     setIsApproving(true)
 
     console.log(selectedRequest)
+
 
     // For approve or other actions, continue with the original flow
     axios
@@ -320,7 +328,9 @@ const AdminPendingRequest = () => {
         </main>
       </div>
 
+
       {/* === Booking Details Modal (single, deduped) === */}
+
       <Dialog
         open={!!selectedRequest && !viewServicesModal && !viewPaymentModal}
         onClose={() => setSelectedRequest(null)}
@@ -334,6 +344,7 @@ const AdminPendingRequest = () => {
                 ×
               </button>
             </div>
+
 
             {selectedRequest && (
               <>
@@ -624,6 +635,7 @@ const AdminPendingRequest = () => {
                     Next
                   </button>
                 </div>
+
               </>
             )}
 

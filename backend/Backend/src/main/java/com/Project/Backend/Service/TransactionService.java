@@ -162,37 +162,58 @@ public class TransactionService {
 
     // Get all transactions.findAll();
     public List<GetTransactionDTO> getAllPendingTransactions() {
+        System.out.println("=== GETTING ALL PENDING TRANSACTIONS ===");
         List<TransactionsEntity> existingTransactions = transactionRepo.findByTransactionStatusAndIsActive(TransactionsEntity.Status.PENDING, true);
+        System.out.println("Found " + existingTransactions.size() + " pending transactions");
+
+        // Also check for inactive pending transactions for debugging
+        List<TransactionsEntity> inactivePending = transactionRepo.findByTransactionStatusAndIsActive(TransactionsEntity.Status.PENDING, false);
+        System.out.println("Found " + inactivePending.size() + " inactive pending transactions");
+
         List<GetTransactionDTO> result = new ArrayList<>();
 
         for(TransactionsEntity transaction : existingTransactions){
-            GetTransactionDTO getTransactionDTO = new GetTransactionDTO();
-            getTransactionDTO.setTransaction_Id(transaction.getTransaction_Id());
-            getTransactionDTO.setUserEmail(transaction.getUser().getEmail());
-            getTransactionDTO.setUserName(transaction.getUser().getFirstname() + " " + transaction.getUser().getLastname());
-            getTransactionDTO.setPhoneNumber(transaction.getUser().getPhoneNumber());
-            getTransactionDTO.setUserAddress(transaction.getUser().getProvince() + " " + transaction.getUser().getBarangay());
+            try {
+                GetTransactionDTO getTransactionDTO = new GetTransactionDTO();
+                getTransactionDTO.setTransaction_Id(transaction.getTransaction_Id());
 
-            //true if its a custom
-            if (transaction.getEventServices() != null && transaction.getEvent() != null) {
-                System.out.println("EVENT SERVICES: " + transaction.getEventServices().size());
-                System.out.println("EVENT: " + transaction.getEvent().getEvent_name());
-                getTransactionDTO.setEventName(transaction.getEvent().getEvent_name());
-                getTransactionDTO.setSubcontractors(getSubcontractorsOfEvent(transaction.getEventServices()));
-            }else{
-                List<SubcontractorEntity> subcontractor = subcontractorService.getSubcontractorByPackageName(transaction.getPackages().getPackageName());
-                System.out.println("SUBCONTRACTORS: " + subcontractor.size());
-                getTransactionDTO.setPackages(transaction.getPackages().getPackageName());
-                getTransactionDTO.setSubcontractors(getSubcontractorsOfPackages(subcontractor));
-            }
+                // Add null checks for user
+                if (transaction.getUser() != null) {
+                    getTransactionDTO.setUserEmail(transaction.getUser().getEmail());
+                    getTransactionDTO.setUserName(transaction.getUser().getFirstname() + " " + transaction.getUser().getLastname());
+                    getTransactionDTO.setPhoneNumber(transaction.getUser().getPhoneNumber());
+                    getTransactionDTO.setUserAddress(transaction.getUser().getProvince() + " " + transaction.getUser().getBarangay());
+                }
 
-            getTransactionDTO.setTransactionVenue(transaction.getTransactionVenue());
-            getTransactionDTO.setTransactionStatus(transaction.getTransactionStatus().toString());
-            getTransactionDTO.setTransactionDate(transaction.getTransactionDate());
-            getTransactionDTO.setTransactionNote(transaction.getTransactionNote());
-            getTransactionDTO.setPayment(transaction.getPayment());
+                // Handle event vs package logic with null checks
+                if (transaction.getEventServices() != null && transaction.getEvent() != null) {
+                    getTransactionDTO.setEventName(transaction.getEvent().getEvent_name());
+                    getTransactionDTO.setSubcontractors(getSubcontractorsOfEvent(transaction.getEventServices()));
+                } else if (transaction.getPackages() != null) {
+                    List<SubcontractorEntity> subcontractor = subcontractorService.getSubcontractorByPackageName(transaction.getPackages().getPackageName());
+                    getTransactionDTO.setPackages(transaction.getPackages().getPackageName());
+                    getTransactionDTO.setSubcontractors(getSubcontractorsOfPackages(subcontractor));
+                }
+
+                getTransactionDTO.setTransactionVenue(transaction.getTransactionVenue());
+                getTransactionDTO.setTransactionStatus(transaction.getTransactionStatus().toString());
+                getTransactionDTO.setTransactionDate(transaction.getTransactionDate());
+                getTransactionDTO.setTransactionNote(transaction.getTransactionNote());
+                getTransactionDTO.setPayment(transaction.getPayment());
+
+
+            getTransactionDTO.setCelebrantName(transaction.getCelebrantName());
+            getTransactionDTO.setAdditionalCelebrants(transaction.getAdditionalCelebrants());
+            getTransactionDTO.setProjectedAttendees(transaction.getProjectedAttendees());
+            getTransactionDTO.setBudget(transaction.getBudget());
 
             result.add(getTransactionDTO);
+
+             
+            } catch (Exception e) {
+                System.out.println("Error processing transaction " + transaction.getTransaction_Id() + ": " + e.getMessage());
+            }
+
         }
         return result;
     }
@@ -278,6 +299,11 @@ public class TransactionService {
             getTransactionDTO.setTransactionDate(transaction.getTransactionDate());
             getTransactionDTO.setTransactionNote(transaction.getTransactionNote());
             getTransactionDTO.setPayment(transaction.getPayment());
+
+            getTransactionDTO.setCelebrantName(transaction.getCelebrantName());
+            getTransactionDTO.setAdditionalCelebrants(transaction.getAdditionalCelebrants());
+            getTransactionDTO.setProjectedAttendees(transaction.getProjectedAttendees());
+            getTransactionDTO.setBudget(transaction.getBudget());
 
             result.add(getTransactionDTO);
         }
@@ -381,7 +407,12 @@ public class TransactionService {
             transaction.setTransactionIsActive(true);
             transaction.setTransactionisApprove(false);
             
-
+            // Set the new fields
+            transaction.setCelebrantName(bookingData.getCelebrantName());
+            transaction.setAdditionalCelebrants(bookingData.getAdditionalCelebrants());
+            transaction.setProjectedAttendees(bookingData.getProjectedAttendees());
+            transaction.setBudget(bookingData.getBudget());
+            
             transaction.setPayment(null);
             
             // 6. Handle Package OR Custom Services (mutually exclusive)
@@ -510,6 +541,11 @@ public class TransactionService {
             getTransactionDTO.setTransactionDate(transaction.getTransactionDate());
             getTransactionDTO.setTransactionNote(transaction.getTransactionNote());
             getTransactionDTO.setPayment(transaction.getPayment());
+
+            getTransactionDTO.setCelebrantName(transaction.getCelebrantName());
+            getTransactionDTO.setAdditionalCelebrants(transaction.getAdditionalCelebrants());
+            getTransactionDTO.setProjectedAttendees(transaction.getProjectedAttendees());
+            getTransactionDTO.setBudget(transaction.getBudget());
 
             result.add(getTransactionDTO);
         }

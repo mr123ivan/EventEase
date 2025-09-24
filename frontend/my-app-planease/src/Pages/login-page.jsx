@@ -1,12 +1,11 @@
 "use client"
 
 import { useState, useEffect, useMemo } from "react"
-import { Eye, EyeOff } from 'lucide-react'
+import { Eye, EyeOff } from "lucide-react"
 import { Link, useNavigate } from "react-router-dom"
 import CustomInput from "../Components/CustomInput"
 import CustomButton from "../Components/CustomButton"
 import { FcGoogle } from "react-icons/fc" // Google icon
-import { FaFacebook } from "react-icons/fa" // Facebook icon
 import axios from "axios" // Make sure axios is imported
 import { motion, AnimatePresence } from "framer-motion" // Import framer-motion
 
@@ -159,7 +158,11 @@ export default function LoginPage() {
           callback: async (response) => {
             if (response.error) {
               console.error("Google login error:", response.error)
-              setError("Google login failed")
+              if (response.error === "popup_closed_by_user" || response.error === "access_denied") {
+                setError("Google login was cancelled")
+              } else {
+                setError("Google login failed")
+              }
               setIsLoading(false)
               return
             }
@@ -221,9 +224,20 @@ export default function LoginPage() {
               setIsLoading(false)
             }
           },
+          error_callback: (error) => {
+            console.error("Google OAuth error:", error)
+            setError("Google login was cancelled or failed")
+            setIsLoading(false)
+          },
         })
 
-        client.requestAccessToken()
+        try {
+          client.requestAccessToken()
+        } catch (popupError) {
+          console.error("Popup blocked or failed:", popupError)
+          setError("Please allow popups for Google login to work")
+          setIsLoading(false)
+        }
       } catch (err) {
         console.error("Google login error:", err)
         setIsLoading(false)
@@ -330,16 +344,16 @@ export default function LoginPage() {
       "rgba(186, 255, 201, 0.8)",
       "rgba(186, 225, 255, 0.8)",
     ]
-    
+
     // Shapes for the confetti particles
     const shapes = ["circle", "square", "triangle"]
-    
+
     return Array.from({ length: 30 }, () => {
       const shape = shapes[Math.floor(Math.random() * shapes.length)]
       const color = colors[Math.floor(Math.random() * colors.length)]
       const size = Math.random() * 15 + 5
       const zIndex = Math.floor(Math.random() * 10) - 5 // For 3D effect
-      
+
       return {
         left: `${Math.random() * 100}%`,
         top: `${Math.random() * 100}%`,
@@ -377,7 +391,7 @@ export default function LoginPage() {
           {confettiParticles.map((particle, i) => {
             // Render different shapes based on the particle type
             let shapeElement
-            
+
             if (particle.shape === "circle") {
               shapeElement = (
                 <div
@@ -390,8 +404,8 @@ export default function LoginPage() {
                     backgroundColor: particle.color,
                     opacity: particle.opacity,
                     transform: `rotate(${particle.rotation}deg) translateZ(${particle.zIndex}px)`,
-                    boxShadow: `0 ${particle.size/5}px ${particle.size/3}px rgba(0,0,0,0.1), 
-                                inset 0 0 ${particle.size/3}px rgba(255,255,255,0.6)`,
+                    boxShadow: `0 ${particle.size / 5}px ${particle.size / 3}px rgba(0,0,0,0.1), 
+                                inset 0 0 ${particle.size / 3}px rgba(255,255,255,0.6)`,
                     filter: `blur(${particle.blur}px)`,
                   }}
                 />
@@ -408,13 +422,14 @@ export default function LoginPage() {
                     backgroundColor: particle.color,
                     opacity: particle.opacity,
                     transform: `rotate(${particle.rotation}deg) translateZ(${particle.zIndex}px)`,
-                    boxShadow: `0 ${particle.size/5}px ${particle.size/3}px rgba(0,0,0,0.1), 
-                                inset 0 0 ${particle.size/3}px rgba(255,255,255,0.6)`,
+                    boxShadow: `0 ${particle.size / 5}px ${particle.size / 3}px rgba(0,0,0,0.1), 
+                                inset 0 0 ${particle.size / 3}px rgba(255,255,255,0.6)`,
                     filter: `blur(${particle.blur}px)`,
                   }}
                 />
               )
-            } else { // triangle
+            } else {
+              // triangle
               const triangleSize = particle.size * 1.5
               shapeElement = (
                 <div
@@ -424,8 +439,8 @@ export default function LoginPage() {
                     top: particle.top,
                     width: 0,
                     height: 0,
-                    borderLeft: `${triangleSize/2}px solid transparent`,
-                    borderRight: `${triangleSize/2}px solid transparent`,
+                    borderLeft: `${triangleSize / 2}px solid transparent`,
+                    borderRight: `${triangleSize / 2}px solid transparent`,
                     borderBottom: `${triangleSize}px solid ${particle.color}`,
                     opacity: particle.opacity,
                     transform: `rotate(${particle.rotation}deg) translateZ(${particle.zIndex}px)`,
@@ -434,7 +449,7 @@ export default function LoginPage() {
                 />
               )
             }
-            
+
             return (
               <motion.div
                 key={i}
@@ -478,7 +493,7 @@ export default function LoginPage() {
                   "0px 0px 0px rgba(251, 191, 36, 0)",
                 ],
               }}
-              transition={{ duration: 3, repeat: Infinity, repeatType: "loop" }}
+              transition={{ duration: 3, repeat: Number.POSITIVE_INFINITY, repeatType: "loop" }}
             >
               Ease
             </motion.span>
