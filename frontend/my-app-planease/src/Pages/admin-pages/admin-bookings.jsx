@@ -15,6 +15,17 @@ const AdminBookings = () => {
   const [viewReasonModal, setViewReasonModal] = useState(false)
   const [isValidating, setIsValidating] = useState(false)
 
+  // Debug logging for selectedRequest data
+  useEffect(() => {
+    if (selectedRequest) {
+      console.log("Selected request data:", selectedRequest);
+      console.log("Celebrant name:", selectedRequest.celebrantName);
+      console.log("Additional celebrants:", selectedRequest.additionalCelebrants);
+      console.log("Projected attendees:", selectedRequest.projectedAttendees);
+      console.log("Budget:", selectedRequest.budget);
+    }
+  }, [selectedRequest]);
+  
   useEffect(() => {
     fetchData()
   }, [])
@@ -211,6 +222,16 @@ const AdminBookings = () => {
                           </div>
                         </>
                       )}
+                      <div>
+                        <label className="text-sm font-medium text-gray-500 block mb-1">Name of Celebrant(s)</label>
+                        <input type="text" className="border p-2 rounded w-full" 
+                               value={selectedRequest.celebrantName || "Not provided"} readOnly />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-500 block mb-1">Additional Celebrant(s)</label>
+                        <input type="text" className="border p-2 rounded w-full" 
+                               value={selectedRequest.additionalCelebrants || "None"} readOnly />
+                      </div>
                     </div>
                     <div className="flex flex-col gap-2 w-auto">
                       <div>
@@ -230,6 +251,16 @@ const AdminBookings = () => {
                           value={selectedRequest.transactionDate}
                           readOnly
                         />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-500 block mb-1">Projected Attendees</label>
+                        <input type="text" className="border p-2 rounded w-full" 
+                               value={selectedRequest.projectedAttendees || "Not specified"} readOnly />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-500 block mb-1">Budget</label>
+                        <input type="text" className="border p-2 rounded w-full" 
+                               value={selectedRequest.budget ? `₱${selectedRequest.budget.toLocaleString()}` : "Not specified"} readOnly />
                       </div>
                     </div>
                   </div>
