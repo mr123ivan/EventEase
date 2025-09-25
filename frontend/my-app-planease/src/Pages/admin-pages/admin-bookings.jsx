@@ -14,6 +14,23 @@ const AdminBookings = () => {
   const [transactions, setTransactions] = useState([])
   const [viewReasonModal, setViewReasonModal] = useState(false)
   const [isValidating, setIsValidating] = useState(false)
+  
+  // Cancel confirmation modal states
+  const [showCancelModal, setShowCancelModal] = useState(false)
+  const [cancelConfirmText, setCancelConfirmText] = useState('')
+  
+  // Complete confirmation modal states
+  const [showCompleteModal, setShowCompleteModal] = useState(false)
+  const [completeConfirmText, setCompleteConfirmText] = useState('')
+  const [showCompleteSuccess, setShowCompleteSuccess] = useState(false)
+  
+  // Filter states
+  const [statusFilter, setStatusFilter] = useState('')
+  const [eventTypeFilter, setEventTypeFilter] = useState('')
+  const [dateFilter, setDateFilter] = useState('')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [filteredTransactions, setFilteredTransactions] = useState([])
+  const [eventTypes, setEventTypes] = useState([])
 
   // Debug logging for selectedRequest data
   useEffect(() => {
@@ -26,16 +43,95 @@ const AdminBookings = () => {
     }
   }, [selectedRequest]);
   
+  // Apply filters when transactions or filter values change
+  useEffect(() => {
+    applyFilters()
+  }, [transactions, statusFilter, eventTypeFilter, dateFilter, searchQuery])
+  
+  const applyFilters = () => {
+    let result = [...transactions]
+    
+    // Apply status filter
+    if (statusFilter) {
+      result = result.filter(item => item.transactionStatus === statusFilter)
+    }
+    
+    // Apply event type filter
+    if (eventTypeFilter) {
+      result = result.filter(item => {
+        if (eventTypeFilter === 'Wedding') {
+          return item.eventName === null || item.eventName === 'Wedding'
+        } else {
+          return item.eventName === eventTypeFilter
+        }
+      })
+    }
+    
+    // Apply date filter
+    if (dateFilter) {
+      result = result.filter(item => {
+        const transactionDate = item.transactionDate.split(' - ')[0]
+        return transactionDate === dateFilter
+      })
+    }
+    
+    // Apply search query for name
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase()
+      result = result.filter(item => {
+        return item.userName.toLowerCase().includes(query)
+      })
+    }
+    
+    setFilteredTransactions(result)
+  }
+
+  const fetchEventTypes = async () => {
+    try {
+      const response = await axios.get("http://localhost:8080/api/events/getEvents")
+      
+      // Extract unique event names from the response
+      if (response.data && response.data.length > 0) {
+        const uniqueEventTypes = response.data.map(event => event.event_name)
+        // Add Wedding as an option if not already included (for backward compatibility)
+        if (!uniqueEventTypes.includes('Wedding')) {
+          uniqueEventTypes.unshift('Wedding')
+        }
+        setEventTypes(uniqueEventTypes)
+        console.log('Available event types:', uniqueEventTypes)
+      }
+    } catch (error) {
+      console.error('Error fetching event types:', error)
+      // Fallback to default event types if fetch fails
+      setEventTypes(['Wedding', 'Birthday', 'Corporate', 'Anniversary'])
+    }
+  }
+
   useEffect(() => {
     fetchData()
+    fetchEventTypes()
   }, [])
 
   const fetchData = async () => {
     axios
       .get("http://localhost:8080/api/transactions/getAllTransactions")
       .then((res) => {
-        setTransactions(res.data)
-        console.log(res.data)
+        // Filter out transactions with PENDING status
+        const nonPendingTransactions = res.data.filter(transaction => transaction.transactionStatus !== "PENDING")
+        setTransactions(nonPendingTransactions)
+        setFilteredTransactions(nonPendingTransactions)
+        console.log('All transactions:', res.data)
+        console.log('Non-pending transactions:', nonPendingTransactions)
+        
+        // Extract unique event types for filter dropdown
+        const eventTypes = new Set()
+        res.data.forEach(item => {
+          if (item.eventName) {
+            eventTypes.add(item.eventName)
+          } else {
+            eventTypes.add('Wedding')
+          }
+        })
       })
       .catch((err) => {
         if (err.response) {
@@ -46,6 +142,50 @@ const AdminBookings = () => {
           console.log(`[ERROR] ${err.message}`)
         }
       })
+  }
+
+  const handleCancelClick = () => {
+    setShowCancelModal(true)
+    setCancelConfirmText('')
+  }
+
+  const handleCloseCancelModal = () => {
+    setShowCancelModal(false)
+    setCancelConfirmText('')
+  }
+
+  const handleSubmitCancel = () => {
+    if (cancelConfirmText.trim() === 'Cancel') {
+      ValidateTransaction('CANCELLED')
+      setShowCancelModal(false)
+    }
+  }
+  
+  const handleCompleteClick = () => {
+    setShowCompleteModal(true)
+    setCompleteConfirmText('')
+  }
+  
+  const handleCloseCompleteModal = () => {
+    setShowCompleteModal(false)
+    setCompleteConfirmText('')
+  }
+  
+  const handleCloseSuccessModal = () => {
+    setShowCompleteSuccess(false)
+  }
+  
+  const handleSubmitComplete = () => {
+    if (completeConfirmText.trim().toLowerCase() === 'success') {
+      ValidateTransaction('COMPLETED')
+      setShowCompleteModal(false)
+      setShowCompleteSuccess(true)
+      
+      // Auto-hide success message after 3 seconds
+      setTimeout(() => {
+        setShowCompleteSuccess(false)
+      }, 3000)
+    }
   }
 
   const ValidateTransaction = async (validate) => {
@@ -83,7 +223,87 @@ const AdminBookings = () => {
         </aside>
 
         <main className="flex-1 p-4 sm:p-6 md:p-10 bg-gray-50 overflow-auto">
-          <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">BOOKINGS</h2>
+          <h2 className="text-xl sm:text-2xl font-bold mb-4">APPROVED BOOKINGS</h2>
+          
+          {/* Filter Section */}
+          <div className="bg-white p-4 rounded-lg shadow mb-6">
+            <h3 className="text-lg font-medium mb-3">Filters</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Status Filter */}
+              <div>
+                <label htmlFor="statusFilter" className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                <select
+                  id="statusFilter"
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="w-full rounded-md border border-gray-300 p-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="">All Status</option>
+                  <option value="ONGOING">Ongoing</option>
+                  <option value="COMPLETED">Completed</option>
+                  <option value="CANCELLED">Cancelled</option>
+                  <option value="DECLINED">Declined</option>
+                  {/* PENDING status removed as those bookings are shown in admin-pendingrequest.jsx */}
+                </select>
+              </div>
+              
+              {/* Event Type Filter */}
+              <div>
+                <label htmlFor="eventTypeFilter" className="block text-sm font-medium text-gray-700 mb-1">Event Type</label>
+                <select
+                  id="eventTypeFilter"
+                  value={eventTypeFilter}
+                  onChange={(e) => setEventTypeFilter(e.target.value)}
+                  className="w-full rounded-md border border-gray-300 p-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="">All Event Types</option>
+                  {eventTypes.map(eventType => (
+                    <option key={eventType} value={eventType}>{eventType}</option>
+                  ))}
+                </select>
+              </div>
+              
+              {/* Date Filter */}
+              <div>
+                <label htmlFor="dateFilter" className="block text-sm font-medium text-gray-700 mb-1">Event Date</label>
+                <input
+                  type="date"
+                  id="dateFilter"
+                  value={dateFilter}
+                  onChange={(e) => setDateFilter(e.target.value)}
+                  className="w-full rounded-md border border-gray-300 p-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+              
+              {/* Search by Name */}
+              <div>
+                <label htmlFor="searchQuery" className="block text-sm font-medium text-gray-700 mb-1">Search by Name</label>
+                <input
+                  type="text"
+                  id="searchQuery"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Enter customer name"
+                  className="w-full rounded-md border border-gray-300 p-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+            </div>
+            
+            <div className="mt-4 flex justify-end">
+              <button
+                onClick={() => {
+                  setStatusFilter('')
+                  setEventTypeFilter('')
+                  setDateFilter('')
+                  setSearchQuery('')
+                }}
+                className="bg-gray-200 text-gray-700 px-4 py-2 rounded hover:bg-gray-300"
+              >
+                Clear Filters
+              </button>
+            </div>
+          </div>
+          
           <div className="bg-white shadow rounded-lg overflow-x-auto">
             <table className="min-w-full text-left text-sm">
               <thead className="bg-[#F1F1FB] text-gray-700">
@@ -95,39 +315,47 @@ const AdminBookings = () => {
                 </tr>
               </thead>
               <tbody>
-                {transactions?.map((req) => (
-                  <tr
-                    key={req.transaction_Id}
-                    className="hover:bg-gray-100 cursor-pointer"
-                    onClick={() => setSelectedRequest(req)}
-                  >
-                    <td className="p-3 sm:p-4 whitespace-nowrap text-[#667085]">{req.userName}</td>
-                    <td className="p-3 sm:p-4 whitespace-nowrap text-[#667085]">
-                      {req.transactionDate.split(" - ")[0]}
-                    </td>
-                    {req.eventName != null ? (
-                      <td className="p-3 sm:p-4 whitespace-nowrap text-[#667085]">{req.eventName}</td>
-                    ) : (
-                      <td className="p-3 sm:p-4 whitespace-nowrap text-[#667085]">{"Wedding"}</td>
-                    )}
-                    <td className="p-3 sm:p-4 whitespace-nowrap text-[#667085]">
-                      <div
-                        className={`inline-block px-4 py-1 rounded-full font-semibold text-sm text-center
-                                            ${
-                                              req.transactionStatus === "CANCELLED"
-                                                ? "bg-[#FFB8B2] text-[#912018]"
-                                                : req.transactionStatus === "ONGOING"
-                                                  ? "bg-[#63A6FF] text-[#FFFFFF]"
-                                                  : req.transactionStatus === "COMPLETED"
-                                                    ? "bg-[#AFFAD2] text-[#05603A]"
-                                                    : "bg-gray-100 text-gray-600"
-                                            }`}
-                      >
-                        {req.transactionStatus}
-                      </div>
+                {filteredTransactions.length === 0 ? (
+                  <tr>
+                    <td colSpan="4" className="p-4 text-center text-gray-500">
+                      No bookings match your filters
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  filteredTransactions.map((req) => (
+                    <tr
+                      key={req.transaction_Id}
+                      className="hover:bg-gray-100 cursor-pointer"
+                      onClick={() => setSelectedRequest(req)}
+                    >
+                      <td className="p-3 sm:p-4 whitespace-nowrap text-[#667085]">{req.userName}</td>
+                      <td className="p-3 sm:p-4 whitespace-nowrap text-[#667085]">
+                        {req.transactionDate.split(" - ")[0]}
+                      </td>
+                      {req.eventName != null ? (
+                        <td className="p-3 sm:p-4 whitespace-nowrap text-[#667085]">{req.eventName}</td>
+                      ) : (
+                        <td className="p-3 sm:p-4 whitespace-nowrap text-[#667085]">{"Wedding"}</td>
+                      )}
+                      <td className="p-3 sm:p-4 whitespace-nowrap text-[#667085]">
+                        <div
+                          className={`inline-block px-4 py-1 rounded-full font-semibold text-sm text-center
+                                              ${
+                                                req.transactionStatus === "CANCELLED"
+                                                  ? "bg-[#FFB8B2] text-[#912018]"
+                                                  : req.transactionStatus === "ONGOING"
+                                                    ? "bg-[#63A6FF] text-[#FFFFFF]"
+                                                    : req.transactionStatus === "COMPLETED"
+                                                      ? "bg-[#AFFAD2] text-[#05603A]"
+                                                      : "bg-gray-100 text-gray-600"
+                                              }`}
+                        >
+                          {req.transactionStatus}
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -293,12 +521,11 @@ const AdminBookings = () => {
                     ></textarea>
                   </div>
                 </div>
-                {selectedRequest &&
-                  !["CANCELLED", "COMPLETED", "DECLINED"].includes(selectedRequest.transactionStatus) && (
+                {selectedRequest && selectedRequest.transactionStatus === "ONGOING" && (
                     <div className="flex flex-col sm:flex-row justify-end gap-4 pt-4">
                       <button
                         className="bg-red-500 text-white px-4 py-2 rounded w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                        onClick={() => ValidateTransaction("CANCELLED")}
+                        onClick={handleCancelClick}
                         disabled={isValidating}
                       >
                         {isValidating ? (
@@ -307,12 +534,12 @@ const AdminBookings = () => {
                             CANCELLING...
                           </>
                         ) : (
-                          "CANCEL"
+                          "CANCEL BOOKING"
                         )}
                       </button>
                       <button
                         className="bg-green-500 text-white px-4 py-2 rounded w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                        onClick={() => ValidateTransaction("COMPLETED")}
+                        onClick={handleCompleteClick}
                         disabled={isValidating}
                       >
                         {isValidating ? (
@@ -454,6 +681,146 @@ const AdminBookings = () => {
               <button
                 onClick={() => setViewReasonModal(false)}
                 className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded"
+              >
+                Close
+              </button>
+            </div>
+          </Dialog.Panel>
+        </div>
+      </Dialog>
+      
+      {/* Cancel Confirmation Modal */}
+      <Dialog
+        open={showCancelModal}
+        onClose={handleCloseCancelModal}
+        className="fixed z-1200 shadow-md inset-0 overflow-y-auto"
+      >
+        <div className="flex items-center justify-center min-h-screen px-4">
+          <Dialog.Panel className="bg-white w-full max-w-md rounded-lg shadow-lg p-6">
+            <div className="flex justify-between items-center border-b pb-3">
+              <h3 className="text-xl font-semibold text-red-600">Cancel Booking</h3>
+              <button onClick={handleCloseCancelModal} className="text-gray-500 hover:text-gray-700 text-xl">
+                ×
+              </button>
+            </div>
+
+            <div className="py-6">
+              <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
+                <p className="text-red-700">
+                  Are you sure you want to cancel this ongoing event? This action cannot be undone after the cancellation.
+                  <span className="font-bold block mt-2">!!Think carefully — if you cancel this event now, you won't be able to bring it back!!</span>
+                </p>
+              </div>
+              
+              <div className="mt-6">
+                <label className="block text-gray-700 font-medium mb-2">
+                  Type 'Cancel' to confirm:
+                </label>
+                <input
+                  type="text"
+                  value={cancelConfirmText}
+                  onChange={(e) => setCancelConfirmText(e.target.value)}
+                  className="w-full border border-gray-300 p-3 rounded focus:outline-none focus:ring-2 focus:ring-red-500"
+                  placeholder="Type 'Cancel' here"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={handleCloseCancelModal}
+                className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
+              >
+                Go Back
+              </button>
+              <button
+                onClick={handleSubmitCancel}
+                className={`px-4 py-2 bg-red-600 text-white rounded ${cancelConfirmText.trim() === 'Cancel' ? 'hover:bg-red-700' : 'opacity-50 cursor-not-allowed'}`}
+                disabled={cancelConfirmText.trim() !== 'Cancel'}
+              >
+                Confirm Cancellation
+              </button>
+            </div>
+          </Dialog.Panel>
+        </div>
+      </Dialog>
+      
+      {/* Complete Confirmation Modal */}
+      <Dialog
+        open={showCompleteModal}
+        onClose={handleCloseCompleteModal}
+        className="fixed z-1200 shadow-md inset-0 overflow-y-auto"
+      >
+        <div className="flex items-center justify-center min-h-screen px-4">
+          <Dialog.Panel className="bg-white w-full max-w-md rounded-lg shadow-lg p-6">
+            <div className="flex justify-between items-center border-b pb-3">
+              <h3 className="text-xl font-semibold text-green-600">Complete Booking</h3>
+              <button onClick={handleCloseCompleteModal} className="text-gray-500 hover:text-gray-700 text-xl">
+                ×
+              </button>
+            </div>
+
+            <div className="py-6">
+              <div className="bg-green-50 border-l-4 border-green-500 p-4 mb-4">
+                <p className="text-green-700">
+                  Is the event already done and successful? Type success to confirm.
+                </p>
+              </div>
+              
+              <div className="mt-6">
+                <label className="block text-gray-700 font-medium mb-2">
+                  Type 'Success' to confirm:
+                </label>
+                <input
+                  type="text"
+                  value={completeConfirmText}
+                  onChange={(e) => setCompleteConfirmText(e.target.value)}
+                  className="w-full border border-gray-300 p-3 rounded focus:outline-none focus:ring-2 focus:ring-green-500"
+                  placeholder="Type 'Success' here"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={handleCloseCompleteModal}
+                className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
+              >
+                Go Back
+              </button>
+              <button
+                onClick={handleSubmitComplete}
+                className={`px-4 py-2 bg-green-600 text-white rounded ${completeConfirmText.trim().toLowerCase() === 'success' ? 'hover:bg-green-700' : 'opacity-50 cursor-not-allowed'}`}
+                disabled={completeConfirmText.trim().toLowerCase() !== 'success'}
+              >
+                Confirm Completion
+              </button>
+            </div>
+          </Dialog.Panel>
+        </div>
+      </Dialog>
+      
+      {/* Success Message Modal */}
+      <Dialog
+        open={showCompleteSuccess}
+        onClose={handleCloseSuccessModal}
+        className="fixed z-1200 shadow-md inset-0 overflow-y-auto"
+      >
+        <div className="flex items-center justify-center min-h-screen px-4">
+          <Dialog.Panel className="bg-white w-full max-w-sm rounded-lg shadow-lg p-6 text-center">
+            <div className="py-4">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100 mb-4">
+                <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Event Completed Successfully!</h3>
+              <p className="text-gray-500">The event has been marked as completed.</p>
+            </div>
+            <div className="mt-4">
+              <button
+                onClick={handleCloseSuccessModal}
+                className="w-full px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
               >
                 Close
               </button>
