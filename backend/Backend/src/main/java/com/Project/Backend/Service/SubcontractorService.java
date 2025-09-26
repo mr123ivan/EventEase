@@ -14,6 +14,7 @@ import com.Project.Backend.Repository.SubcontractorServiceRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import com.Project.Backend.Entity.SubcontractorEntity;
 import com.Project.Backend.Entity.UserEntity;
 import software.amazon.awssdk.core.exception.SdkClientException;
@@ -88,7 +89,17 @@ public class SubcontractorService {
         // First get the subcontractor to access its associated user
         SubcontractorEntity subcontractor = subContractorRepository.findById(id).orElse(null);
 
-        if (subcontractor != null && subcontractor.getUser() != null) {
+        if (subcontractor == null) {
+            throw new RuntimeException("Subcontractor not found");
+        }
+
+        // Check if subcontractor has ongoing bookings
+        boolean hasOngoingBookings = subcontractorServiceRepository.hasOngoingBookings(id);
+        if (hasOngoingBookings) {
+            throw new RuntimeException("Cannot delete subcontractor with ongoing bookings. Please complete or cancel all associated transactions first.");
+        }
+
+        if (subcontractor.getUser() != null) {
             // Get the user ID before deleting the subcontractor
             int userId = subcontractor.getUser().getUserId();
 
@@ -192,5 +203,54 @@ public class SubcontractorService {
 
         // Reload to include services
         return subContractorRepository.findById(savedSubcontractor.getSubcontractor_Id()).orElse(savedSubcontractor);
+    }
+
+    // Update subcontractor with user and services
+    @Transactional
+    public SubcontractorEntity updateSubcontractorWithUser(int id, CreateBasicSubcontractorRequest req) {
+        SubcontractorEntity subcontractor = getSubcontractorById(id);
+        if (subcontractor == null) {
+            throw new RuntimeException("Subcontractor not found");
+        }
+
+        // Update user
+        UserEntity user = subcontractor.getUser();
+        if (user != null) {
+            user.setFirstname(req.getFirstname());
+            user.setLastname(req.getLastname());
+            user.setEmail(req.getEmail());
+            user.setPhoneNumber(req.getPhoneNumber());
+            userService.saveUser(user);
+        }
+
+        // Update subcontractor
+        subcontractor.setBusinessName(req.getBusinessName());
+        subcontractor.setContactPerson(req.getContactPerson());
+
+        SubcontractorEntity saved = subContractorRepository.save(subcontractor);
+
+        // Update services: update existing, add new, don't delete old to preserve foreign key references
+        if (req.getServices() != null && !req.getServices().isEmpty()) {
+            for (CreateBasicSubcontractorRequest.ServiceItem item : req.getServices()) {
+                if (item.getName() == null) continue;
+                // Check if service exists
+                SubcontractorServiceEntity existing = subcontractorServiceRepository.findBySubcontractorAndName(saved, item.getName());
+                if (existing != null) {
+                    // Update price
+                    existing.setPrice(item.getPrice());
+                    subcontractorServiceRepository.save(existing);
+                } else {
+                    // Add new
+                    SubcontractorServiceEntity s = new SubcontractorServiceEntity();
+                    s.setName(item.getName());
+                    s.setPrice(item.getPrice());
+                    s.setSubcontractor(saved);
+                    subcontractorServiceRepository.save(s);
+                }
+            }
+        }
+
+        // Reload to include services
+        return subContractorRepository.findById(saved.getSubcontractor_Id()).orElse(saved);
     }
 }

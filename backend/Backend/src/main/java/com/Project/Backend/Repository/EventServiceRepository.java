@@ -3,8 +3,10 @@ package com.Project.Backend.Repository;
 import com.Project.Backend.DTO.GetTransactionDTO;
 import com.Project.Backend.Entity.EventServiceEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 import java.util.List;
 import com.Project.Backend.Entity.TransactionsEntity;
 
@@ -23,4 +25,6 @@ public interface EventServiceRepository extends JpaRepository<EventServiceEntity
     // Find event services by subcontractor ID (through subcontractorService relationship)
     @org.springframework.data.jpa.repository.Query("SELECT e FROM EventServiceEntity e WHERE e.subcontractorService.subcontractor.subcontractor_Id = :subcontractorId")
     List<EventServiceEntity> findBySubcontractor_SubcontractorId(int subcontractorId);
+
+
 }

@@ -82,6 +82,9 @@ const AdminSubContractors = () => {
     "Hi! We are passionate about bringing delicious food and memorable dining experience to your special events...",
   )
   const [open, setOpen] = useState(false)
+  const [editOpen, setEditOpen] = useState(false)
+  const [isEditMode, setIsEditMode] = useState(false)
+  const [editingSubcontractorId, setEditingSubcontractorId] = useState(null)
   const [editMediaOpen, setEditMediaOpen] = useState(false)
   const [itemData, setItemData] = useState([])
 
@@ -350,9 +353,137 @@ const AdminSubContractors = () => {
     }
   }
 
+  // Handle editing subcontractor
+  const handleEditSubcontractor = async (subcontractorId) => {
+    try {
+      const token = getAuthToken()
+      const response = await axios.get(`${API_BASE_URL}/subcontractor/${subcontractorId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+
+      const subcontractor = response.data
+
+      // Populate form fields with subcontractor data
+      setFirstname(subcontractor.user?.firstname || "")
+      setLastname(subcontractor.user?.lastname || "")
+      setEmail(subcontractor.user?.email || "")
+      const fullPhone = subcontractor.user?.phoneNumber || ""
+      if (fullPhone.startsWith("+63")) {
+        setSelectedCountry({
+          code: "PH",
+          dialCode: "+63",
+          flag: "🇵🇭",
+          name: "Philippines",
+        })
+        setPhoneNumber(fullPhone.substring(3).trim())
+      } else {
+        setSelectedCountry({
+          code: "PH",
+          dialCode: "+63",
+          flag: "🇵🇭",
+          name: "Philippines",
+        })
+        setPhoneNumber(fullPhone.replace(/^\+\d+/, "").trim())
+      }
+      setBusinessName(subcontractor.businessName || "")
+      setContactPerson(subcontractor.contactPerson || "")
+      setServiceItems(
+        subcontractor.services?.length > 0
+          ? subcontractor.services.map((svc) => ({ name: svc.name || "", price: svc.price?.toString() || "" }))
+          : [{ name: "", price: "" }]
+      )
+
+      // Set edit mode
+      setIsEditMode(true)
+      setEditingSubcontractorId(subcontractorId)
+      setOpen(true)
+    } catch (error) {
+      console.error("Error fetching subcontractor for edit:", error)
+      setSnackbar({ open: true, message: "Failed to load subcontractor data for editing.", severity: "error" })
+    }
+  }
+
+  // Handle submitting edited subcontractor
+  const handleEditSubcontractorSubmit = async () => {
+    // Basic validation
+    if (!firstname.trim() || !lastname.trim() || !email.trim() || !phoneNumber.trim()) {
+      setSnackbar({ open: true, message: "Please provide First Name, Last Name, Email, and Phone Number.", severity: "warning" })
+      return
+    }
+    if (!businessName.trim() || !contactPerson.trim()) {
+      setSnackbar({ open: true, message: "Please provide Business Name and Contact Person.", severity: "warning" })
+      return
+    }
+
+    const cleanedServices = serviceItems
+      .map((s) => ({ name: s.name.trim(), price: s.price.toString().trim() }))
+      .filter((s) => s.name && s.price !== "")
+
+    if (cleanedServices.length === 0) {
+      setSnackbar({ open: true, message: "Add at least one service with a name and price.", severity: "warning" })
+      return
+    }
+
+    // Validate prices numeric with up to 2 decimals
+    for (const svc of cleanedServices) {
+      const num = Number(svc.price)
+      if (Number.isNaN(num)) {
+        setSnackbar({ open: true, message: `Invalid price for service: ${svc.name}`, severity: "error" })
+        return
+      }
+      // Fix to 2 decimals when sending
+      svc.price = Number(num.toFixed(2))
+    }
+
+    const payload = {
+      firstname: firstname.trim(),
+      lastname: lastname.trim(),
+      email: email.trim(),
+      phoneNumber: selectedCountry.dialCode + phoneNumber.trim(),
+      businessName: businessName.trim(),
+      contactPerson: contactPerson.trim(),
+      services: cleanedServices,
+    }
+
+    try {
+      setIsSubmitting(true)
+      const token = getAuthToken()
+      const response = await axios.put(`${API_BASE_URL}/subcontractor/${editingSubcontractorId}`, payload, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+
+      // Handle success response
+      if (response.data.success) {
+        setSnackbar({
+          open: true,
+          message: response.data.message || "Subcontractor updated successfully.",
+          severity: "success",
+        })
+        handleClose()
+        await fetchSubcontractors()
+      } else {
+        // Handle backend validation errors
+        setSnackbar({
+          open: true,
+          message: response.data.message || "Failed to update subcontractor.",
+          severity: "error",
+        })
+      }
+    } catch (error) {
+      console.error("Error updating subcontractor:", error)
+      console.error("Response data:", error?.response?.data)
+      const message = error?.response?.data?.message || "Failed to update subcontractor."
+      setSnackbar({ open: true, message, severity: "error" })
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   const handleOpen = () => setOpen(true)
   const handleClose = () => {
     setOpen(false)
+    setIsEditMode(false)
+    setEditingSubcontractorId(null)
     resetForm()
   }
 
@@ -805,20 +936,30 @@ const AdminSubContractors = () => {
                               <div className="text-sm text-gray-900">{subcontractor.contactPerson || "—"}</div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                              <Button
-                                variant="outlined"
-                                size="small"
-                                color="primary"
-                                onClick={() => handleOpenModal(subcontractor.subcontractor_Id)}
-                                disabled={isViewingProfile}
-                                startIcon={
-                                  isViewingProfile ? (
-                                    <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                                  ) : null
-                                }
-                              >
-                                {isViewingProfile ? "Loading..." : "View Profile"}
-                              </Button>
+                              <Box display="flex" gap={1}>
+                                <Button
+                                  variant="outlined"
+                                  size="small"
+                                  color="primary"
+                                  onClick={() => handleOpenModal(subcontractor.subcontractor_Id)}
+                                  disabled={isViewingProfile}
+                                  startIcon={
+                                    isViewingProfile ? (
+                                      <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                                    ) : null
+                                  }
+                                >
+                                  {isViewingProfile ? "Loading..." : "View Profile"}
+                                </Button>
+                                <Button
+                                  variant="outlined"
+                                  size="small"
+                                  color="secondary"
+                                  onClick={() => handleEditSubcontractor(subcontractor.subcontractor_Id)}
+                                >
+                                  Edit
+                                </Button>
+                              </Box>
                             </td>
                           </tr>
                         ))}
@@ -1044,7 +1185,7 @@ const AdminSubContractors = () => {
           {/* Header */}
           <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
             <Typography variant="h6" fontWeight={600}>
-              Add Subcontractor
+              {isEditMode ? "Edit Subcontractor" : "Add Subcontractor"}
             </Typography>
             <IconButton onClick={handleClose}>
               <CloseIcon />
@@ -1248,8 +1389,8 @@ const AdminSubContractors = () => {
               <Button variant="outlined" onClick={handleClose}>
                 Cancel
               </Button>
-              <Button variant="contained" onClick={handleAddSubcontractor} disabled={isSubmitting}>
-                {isSubmitting ? "Adding..." : "Add Subcontractor"}
+              <Button variant="contained" onClick={isEditMode ? handleEditSubcontractorSubmit : handleAddSubcontractor} disabled={isSubmitting}>
+                {isSubmitting ? (isEditMode ? "Updating..." : "Adding...") : (isEditMode ? "Update Subcontractor" : "Add Subcontractor")}
               </Button>
             </Box>
           </Stack>
