@@ -129,10 +129,53 @@ public class SubcontractorController {
         }
     }
 
+    // Update subcontractor with user and services
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateSubcontractor(@PathVariable int id, @RequestBody CreateBasicSubcontractorRequest request) {
+        if (request.getFirstname() == null || request.getFirstname().trim().isEmpty() ||
+            request.getLastname() == null || request.getLastname().trim().isEmpty() ||
+            request.getEmail() == null || request.getEmail().trim().isEmpty() ||
+            request.getPhoneNumber() == null || request.getPhoneNumber().trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "success", false,
+                "message", "User information (firstname, lastname, email, phone number) is required to update subcontractor"
+            ));
+        }
+
+        if (request.getBusinessName() == null || request.getBusinessName().trim().isEmpty() ||
+            request.getContactPerson() == null || request.getContactPerson().trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "success", false,
+                "message", "Business name and contact person are required"
+            ));
+        }
+
+        try {
+            SubcontractorEntity updated = subcontractorService.updateSubcontractorWithUser(id, request);
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Subcontractor updated successfully",
+                "subcontractor", updated
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "success", false,
+                "message", "Failed to update subcontractor: " + e.getMessage()
+            ));
+        }
+    }
+
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteSubcontractor(@PathVariable int id) {
-        subcontractorService.deleteSubcontractor(id);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<?> deleteSubcontractor(@PathVariable int id) {
+        try {
+            subcontractorService.deleteSubcontractor(id);
+            return ResponseEntity.noContent().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "success", false,
+                "message", e.getMessage()
+            ));
+        }
     }
     
     /**
