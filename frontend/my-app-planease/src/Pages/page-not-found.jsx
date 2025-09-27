@@ -1,17 +1,29 @@
 import { useEffect, useState } from "react"
 import { useNavigate, Link } from "react-router-dom"
 import { Home, Briefcase, MessageCircle, ArrowRight, Clock } from "lucide-react"
+import { useAuth } from "../Components/AuthProvider"
 
 export default function NotFound() {
   const [countdown, setCountdown] = useState(10)
   const navigate = useNavigate()
+  const { isAuthenticated, user } = useAuth()
 
   useEffect(() => {
     const timer = setInterval(() => {
       setCountdown((prev) => {
         if (prev <= 1) {
           clearInterval(timer)
-          navigate("/")
+          if (isAuthenticated && user) {
+            if (user.role === "User") {
+              navigate("/home")
+            } else if (user.role === "Admin") {
+              navigate("/admin/pendings")
+            } else if (user.role === "SubContractor") {
+              navigate("/subcontractor/dashboard")
+            }
+          } else {
+            navigate("/")
+          }
           return 0
         }
         return prev - 1
@@ -19,7 +31,7 @@ export default function NotFound() {
     }, 1000)
 
     return () => clearInterval(timer)
-  }, [navigate])
+  }, [navigate, isAuthenticated, user])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black relative overflow-hidden">
