@@ -33,6 +33,7 @@ import AdminPackages from './Pages/admin-pages/admin-your-packages.jsx'
 import UserBookingsPage from './Pages/user-bookings.jsx'
 import EventTrackingAdmin from './Pages/admin-pages/admin-eventprogress.jsx'
 import SubcontractorProgress from './Pages/subcontractor-pages/subcontractor-progress.jsx'
+import NotFound from './Pages/page-not-found'
 
 function App() {
   return (
@@ -175,6 +176,9 @@ function App() {
               </>
             }
           />
+
+          <Route path="*" element={<NotFound />} />
+          
         </Routes>
     </BrowserRouter>
   </AuthProvider>
