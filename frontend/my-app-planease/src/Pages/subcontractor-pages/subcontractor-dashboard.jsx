@@ -640,53 +640,7 @@ const SubcontractorDashboard = () => {
                         <div className="flex flex-row w-full justify-between items-center md:p-4">
                             <h1 className="md:text-xl font-poppins">Overview</h1>
                         </div>
-                        <Divider />
-                        <div className="md:p-4">
-                            <Box display="flex" justifyContent="space-between" alignItems="center">
-                                <Typography variant="h6" fontWeight="medium" className="font-poppins md:text-lg">
-                                    About us
-                                </Typography>
-                                <IconButton
-                                    size="small"
-                                    onClick={() => {
-                                        setIsEditingAbout((prev) => {
-                                            if (!prev) setDescription(about); // Pre-fill when entering edit mode
-                                            return !prev;
-                                        });
-                                    }}
-                                    sx={{ color: 'gray' }}
-                                >
-                                    {isEditingAbout ? <CloseIcon /> : <EditIcon />} {/* Toggle icon */}
-                                </IconButton>
-                            </Box>
-
-                            {!isEditingAbout ? (
-                                <Typography className="font-poppins md:text-md text-gray-600 whitespace-pre-line">
-                                    {about}
-                                </Typography>
-                            ) : (
-                                <Box mt={2}>
-                                    <TextField
-                                        multiline
-                                        rows={4}
-                                        fullWidth
-                                        value={description}
-                                        onChange={(e) => setDescription(e.target.value)} // ← only updates state as you type
-                                    />
-                                    <Box display="flex" justifyContent="flex-end" mt={1}>
-                                        <Button
-                                            variant="contained"
-                                            size="small"
-                                            onClick={handleSubmitDescription}
-                                        >
-                                            Save
-                                        </Button>
-                                    </Box>
-                                </Box>
-                            )}
-                        </div>
                         
-                        <Divider />
                         
                         {/* Statistics Cards */}
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">

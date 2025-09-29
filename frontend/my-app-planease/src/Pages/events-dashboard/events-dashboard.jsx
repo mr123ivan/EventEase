@@ -107,52 +107,7 @@ const EventPage = () => {
       </div>
 
       {/* Wedding Packages Section - Fixed to use packageId */}
-      <section className="text-center my-10">
-        <p className="text-sm tracking-widest text-yellow-600 font-semibold mb-2">WE OFFER</p>
-        <h2 className="text-4xl font-bold text-gray-800 mb-8">WEDDING PACKAGES</h2>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 justify-center px-4 gap-6">
-          {packages.map((pkg) => (
-            <div key={pkg.packageId} className="bg-white shadow-md rounded-lg p-7 flex flex-col items-center">
-              {/* Package Image */}
-              <div className="rounded-full w-30 h-30 mb-4 overflow-hidden">
-                {pkg.packageImage ? (
-                  <img
-                    src={pkg.packageImage || "/placeholder.svg"}
-                    alt={pkg.packageName}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                    <span className="text-gray-500">No Image</span>
-                  </div>
-                )}
-              </div>
-
-              {/* Package Details */}
-              <h3 className="text-xl font-bold text-gray-800">{pkg.packageName}</h3>
-              <p className="text-gray-500 mb-2">₱{pkg.packagePrice.toLocaleString()}</p>
-              <p className="text-sm text-gray-700 p-5 text-center">
-                {pkg.packageDescription || "No description available"}
-              </p>
-
-              {/* Package Link - Fixed to use packageId instead of packageName */}
-              <Link to={`/package/${pkg.packageId}`} className="mt-auto">
-                <button className="mt-4 px-4 py-2 bg-gray-900 text-white text-sm rounded hover:bg-gray-800">
-                  CLICK FOR MORE DETAILS
-                </button>
-              </Link> 
-            </div>
-          ))}
-        </div>
-
-        {/* Show message if no packages available */}
-        {packages.length === 0 && (
-          <div className="text-center py-8">
-            <p className="text-gray-500">No packages available at the moment.</p>
-          </div>
-        )}
-      </section>
+   
     </div>
   )
 }
