@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -152,7 +153,7 @@ public class UserController {
 
                 UserEntity user = userService.getUserByEmail(loginRequest.getEmail());
 
-                Authentication authentication = new UsernamePasswordAuthenticationToken(user,null,null);
+                Authentication authentication = new UsernamePasswordAuthenticationToken(user, null, Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getRole().toUpperCase())));
 
                 String token = tokenService.generateToken(authentication,user.getEmail(),user.getRole());
 
