@@ -28,6 +28,7 @@ import {
   Typography,
   Grid,
   Box,
+  CircularProgress,
 } from "@mui/material"
 import { Edit as EditIcon, Refresh as RefreshIcon, Work as WorkIcon } from "@mui/icons-material"
 
@@ -42,6 +43,7 @@ const SubcontractorProgress = () => {
   const [selectedFiles, setSelectedFiles] = useState([])
   const [existingImageUrl, setExistingImageUrl] = useState(null)
   const [userEmail, setUserEmail] = useState("")
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
     const token = localStorage.getItem("token")
@@ -130,6 +132,7 @@ const SubcontractorProgress = () => {
 
   const handleSubmitUpdate = async () => {
     if (selectedTransaction && updateData.description.trim()) {
+      setIsSubmitting(true)
       try {
         const token = localStorage.getItem("token")
 
@@ -184,6 +187,8 @@ const SubcontractorProgress = () => {
       } catch (error) {
         console.error("Failed to submit check-in:", error)
         console.error("Error details:", error.response?.data)
+      } finally {
+        setIsSubmitting(false)
       }
     }
   }
@@ -594,13 +599,14 @@ const SubcontractorProgress = () => {
                 <Button
                   variant="contained"
                   onClick={handleSubmitUpdate}
+                  disabled={isSubmitting}
                   sx={{
                     backgroundColor: "#FFB22C",
                     color: "#1a1a1a",
                     "&:hover": { backgroundColor: "#e6a028", color: "#1a1a1a" },
                   }}
                 >
-                  {selectedTransaction.myProgress.checkInStatus === "pending" ? "Submit Check-in" : "Update Submission"}
+                  {isSubmitting ? <CircularProgress size={20} /> : (selectedTransaction.myProgress.checkInStatus === "pending" ? "Submit Check-in" : "Update Submission")}
                 </Button>
               </Box>
             </Box>

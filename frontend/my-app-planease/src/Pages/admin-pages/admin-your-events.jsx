@@ -5,13 +5,14 @@ import axios from "axios"
 import AdminSideBar from "../../Components/admin-sidebar.jsx"
 import { Dialog } from "@headlessui/react"
 import Navbar from "../../Components/Navbar"
-import { Snackbar, Alert } from "@mui/material"
+import { Snackbar, Alert, CircularProgress } from "@mui/material"
 
 const YourEvents = () => {
   const [events, setEvents] = useState([])
   const [selectedEvent, setSelectedEvent] = useState(null)
   const [showModal, setShowModal] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   // Basic event info (simplified)
   const [formData, setFormData] = useState({
     event_name: "",
@@ -173,6 +174,8 @@ const YourEvents = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    if (isSubmitting) return
+    setIsSubmitting(true)
     try {
       let savedEvent
       if (isEditing) {
@@ -222,6 +225,8 @@ const YourEvents = () => {
       }
     } catch (error) {
       console.error("Error saving event:", error)
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -601,9 +606,11 @@ const YourEvents = () => {
                 </button>
                 <button
                   type="submit"
-                  className="bg-[#FFB22C] hover:bg-[#e6a028] text-white px-4 py-2 rounded w-full sm:w-auto"
+                  disabled={isSubmitting}
+                  className="bg-[#FFB22C] hover:bg-[#e6a028] disabled:bg-gray-400 disabled:cursor-not-allowed text-white px-4 py-2 rounded w-full sm:w-auto flex items-center justify-center gap-2"
                 >
-                  {isEditing ? "Update Event" : "Create Event"}
+                  {isSubmitting ? <CircularProgress size={20} color="inherit" /> : null}
+                  {isSubmitting ? (isEditing ? "Updating..." : "Creating...") : (isEditing ? "Update Event" : "Create Event")}
                 </button>
               </div>
             </form>
