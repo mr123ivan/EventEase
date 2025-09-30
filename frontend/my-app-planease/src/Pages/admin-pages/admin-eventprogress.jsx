@@ -47,6 +47,10 @@ import {
 
 const EventTrackingAdmin = () => {
   const [events, setEvents] = useState([])
+  const [filteredEvents, setFilteredEvents] = useState([])
+  const [statusFilter, setStatusFilter] = useState("all")
+  const [eventNameFilter, setEventNameFilter] = useState("")
+  const [ownerFilter, setOwnerFilter] = useState("")
   const [selectedEvent, setSelectedEvent] = useState(null)
   const [selectedSubcontractor, setSelectedSubcontractor] = useState(null)
   const [showModal, setShowModal] = useState(false)
@@ -68,6 +72,38 @@ const EventTrackingAdmin = () => {
   useEffect(() => {
     fetchEventsProgress()
   }, [])
+  
+  // Apply filters to events whenever filter criteria or events data changes
+  useEffect(() => {
+    if (!events.length) {
+      setFilteredEvents([])
+      return
+    }
+    
+    let result = [...events]
+    
+    // Apply status filter
+    if (statusFilter !== "all") {
+      result = result.filter(event => event.currentStatus === statusFilter)
+    }
+    
+    // Apply event name filter
+    if (eventNameFilter) {
+      result = result.filter(event => 
+        event.eventName.toLowerCase().includes(eventNameFilter.toLowerCase())
+      )
+    }
+    
+    // Apply owner filter
+    if (ownerFilter) {
+      result = result.filter(event => 
+        (event.userName && event.userName.toLowerCase().includes(ownerFilter.toLowerCase())) ||
+        (event.userEmail && event.userEmail.toLowerCase().includes(ownerFilter.toLowerCase()))
+      )
+    }
+    
+    setFilteredEvents(result)
+  }, [events, statusFilter, eventNameFilter, ownerFilter])
 
   const fetchEventsProgress = async () => {
     try {
@@ -131,6 +167,9 @@ const EventTrackingAdmin = () => {
             return {
               id: transaction.transaction_Id.toString(),
               eventName: transaction.eventName || transaction.packages || "N/A",
+              userName: transaction.userName || "N/A",
+              userEmail: transaction.userEmail || "",
+              phoneNumber: transaction.phoneNumber || "",
               subcontractors: subcontractors,
               currentStatus: eventProgressData.currentStatus,
               location: transaction.transactionVenue || "N/A",
@@ -146,6 +185,9 @@ const EventTrackingAdmin = () => {
             return {
               id: transaction.transaction_Id.toString(),
               eventName: transaction.eventName || transaction.packages || "N/A",
+              userName: transaction.userName || "N/A",
+              userEmail: transaction.userEmail || "",
+              phoneNumber: transaction.phoneNumber || "",
               subcontractors: transaction.subcontractors.map((sub) => ({
                 id: sub.subcontractorUserId.toString(),
                 subcontractorEntityId: sub.subcontractorEntityId || sub.subcontractorUserId, // Add subcontractorEntityId for API calls
@@ -171,6 +213,7 @@ const EventTrackingAdmin = () => {
       )
 
       setEvents(eventsData)
+      setFilteredEvents(eventsData) // Initialize filteredEvents with all events
     } catch (error) {
       console.error("Failed to fetch all transactions for admin:", error)
     }
@@ -712,12 +755,76 @@ const EventTrackingAdmin = () => {
               </Card>
             </Grid>
           </Grid>
+          
+          {/* Filter Controls */}
+          <Box className="mb-6 p-4 bg-white rounded-lg shadow-sm">
+            <Typography variant="h6" className="mb-4">Filters</Typography>
+            <Grid container spacing={3} alignItems="center">
+              <Grid item xs={12} sm={4} md={3}>
+                <FormControl fullWidth size="small">
+                  <InputLabel>Status Filter</InputLabel>
+                  <Select
+                    value={statusFilter}
+                    label="Status Filter"
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                  >
+                    <MenuItem value="all">All Statuses</MenuItem>
+                    <MenuItem value="pending">Pending</MenuItem>
+                    <MenuItem value="in-progress">In Progress</MenuItem>
+                    <MenuItem value="review">Under Review</MenuItem>
+                    <MenuItem value="completed">Completed</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} sm={4} md={3}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Search by Event Name"
+                  variant="outlined"
+                  value={eventNameFilter}
+                  onChange={(e) => setEventNameFilter(e.target.value)}
+                  placeholder="Type to search..."
+                />
+              </Grid>
+              <Grid item xs={12} sm={4} md={3}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Search by Owner"
+                  variant="outlined"
+                  value={ownerFilter}
+                  onChange={(e) => setOwnerFilter(e.target.value)}
+                  placeholder="Name or email..."
+                />
+              </Grid>
+              <Grid item xs={12} sm={12} md={3}>
+                <Box display="flex" justifyContent="flex-end">
+                  <Button
+                    variant="outlined"
+                    onClick={() => {
+                      setStatusFilter("all");
+                      setEventNameFilter("");
+                      setOwnerFilter("");
+                    }}
+                    sx={{ marginRight: 1 }}
+                  >
+                    Clear Filters
+                  </Button>
+                  <Typography variant="subtitle2" className="ml-4 pt-2">
+                    Showing {filteredEvents.length} of {events.length} events
+                  </Typography>
+                </Box>
+              </Grid>
+            </Grid>
+          </Box>
 
           <TableContainer component={Paper} className="shadow rounded-lg">
             <Table>
               <TableHead sx={{ backgroundColor: "#F1F1FB" }}>
                 <TableRow>
                   <TableCell>Event Name</TableCell>
+                  <TableCell>Owner</TableCell>
                   <TableCell>Subcontractor(s)</TableCell>
                   <TableCell>Location</TableCell>
                   <TableCell>Progress</TableCell>
@@ -728,11 +835,16 @@ const EventTrackingAdmin = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {events.map((event) => (
+                {filteredEvents.length > 0 ? filteredEvents.map((event) => (
                   <TableRow key={event.id} hover>
                     <TableCell>
                       <Typography variant="body2" className="font-medium text-[#667085]">
                         {event.eventName}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2" className="text-[#667085]">
+                        {event.userName || "N/A"}
                       </Typography>
                     </TableCell>
                     <TableCell>
@@ -816,7 +928,27 @@ const EventTrackingAdmin = () => {
                       </Button>
                     </TableCell>
                   </TableRow>
-                ))}
+                )) : (
+                  <TableRow>
+                    <TableCell colSpan={9} align="center" className="py-8">
+                      <Typography variant="subtitle1" color="text.secondary">
+                        No events match your filter criteria
+                      </Typography>
+                      <Button 
+                        variant="text" 
+                        color="primary"
+                        onClick={() => {
+                          setStatusFilter("all");
+                          setEventNameFilter("");
+                          setOwnerFilter("");
+                        }}
+                        sx={{ mt: 1 }}
+                      >
+                        Clear Filters
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
           </TableContainer>

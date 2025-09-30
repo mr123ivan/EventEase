@@ -49,7 +49,9 @@ import CleaningServicesIcon from "@mui/icons-material/CleaningServices"
 import GroupsIcon from "@mui/icons-material/Groups"
 import DesignServicesIcon from "@mui/icons-material/DesignServices"
 import MicIcon from "@mui/icons-material/Mic"
-
+import BusinessIcon from "@mui/icons-material/Business";
+import PersonIcon from "@mui/icons-material/Person";
+import WorkIcon from "@mui/icons-material/Work";
 // API service functions
 const API_BASE_URL = "http://localhost:8080"
 
@@ -82,6 +84,9 @@ const AdminSubContractors = () => {
     "Hi! We are passionate about bringing delicious food and memorable dining experience to your special events...",
   )
   const [open, setOpen] = useState(false)
+  const [editOpen, setEditOpen] = useState(false)
+  const [isEditMode, setIsEditMode] = useState(false)
+  const [editingSubcontractorId, setEditingSubcontractorId] = useState(null)
   const [editMediaOpen, setEditMediaOpen] = useState(false)
   const [itemData, setItemData] = useState([])
 
@@ -350,9 +355,137 @@ const AdminSubContractors = () => {
     }
   }
 
+  // Handle editing subcontractor
+  const handleEditSubcontractor = async (subcontractorId) => {
+    try {
+      const token = getAuthToken()
+      const response = await axios.get(`${API_BASE_URL}/subcontractor/${subcontractorId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+
+      const subcontractor = response.data
+
+      // Populate form fields with subcontractor data
+      setFirstname(subcontractor.user?.firstname || "")
+      setLastname(subcontractor.user?.lastname || "")
+      setEmail(subcontractor.user?.email || "")
+      const fullPhone = subcontractor.user?.phoneNumber || ""
+      if (fullPhone.startsWith("+63")) {
+        setSelectedCountry({
+          code: "PH",
+          dialCode: "+63",
+          flag: "🇵🇭",
+          name: "Philippines",
+        })
+        setPhoneNumber(fullPhone.substring(3).trim())
+      } else {
+        setSelectedCountry({
+          code: "PH",
+          dialCode: "+63",
+          flag: "🇵🇭",
+          name: "Philippines",
+        })
+        setPhoneNumber(fullPhone.replace(/^\+\d+/, "").trim())
+      }
+      setBusinessName(subcontractor.businessName || "")
+      setContactPerson(subcontractor.contactPerson || "")
+      setServiceItems(
+        subcontractor.services?.length > 0
+          ? subcontractor.services.map((svc) => ({ name: svc.name || "", price: svc.price?.toString() || "" }))
+          : [{ name: "", price: "" }]
+      )
+
+      // Set edit mode
+      setIsEditMode(true)
+      setEditingSubcontractorId(subcontractorId)
+      setOpen(true)
+    } catch (error) {
+      console.error("Error fetching subcontractor for edit:", error)
+      setSnackbar({ open: true, message: "Failed to load subcontractor data for editing.", severity: "error" })
+    }
+  }
+
+  // Handle submitting edited subcontractor
+  const handleEditSubcontractorSubmit = async () => {
+    // Basic validation
+    if (!firstname.trim() || !lastname.trim() || !email.trim() || !phoneNumber.trim()) {
+      setSnackbar({ open: true, message: "Please provide First Name, Last Name, Email, and Phone Number.", severity: "warning" })
+      return
+    }
+    if (!businessName.trim() || !contactPerson.trim()) {
+      setSnackbar({ open: true, message: "Please provide Business Name and Contact Person.", severity: "warning" })
+      return
+    }
+
+    const cleanedServices = serviceItems
+      .map((s) => ({ name: s.name.trim(), price: s.price.toString().trim() }))
+      .filter((s) => s.name && s.price !== "")
+
+    if (cleanedServices.length === 0) {
+      setSnackbar({ open: true, message: "Add at least one service with a name and price.", severity: "warning" })
+      return
+    }
+
+    // Validate prices numeric with up to 2 decimals
+    for (const svc of cleanedServices) {
+      const num = Number(svc.price)
+      if (Number.isNaN(num)) {
+        setSnackbar({ open: true, message: `Invalid price for service: ${svc.name}`, severity: "error" })
+        return
+      }
+      // Fix to 2 decimals when sending
+      svc.price = Number(num.toFixed(2))
+    }
+
+    const payload = {
+      firstname: firstname.trim(),
+      lastname: lastname.trim(),
+      email: email.trim(),
+      phoneNumber: selectedCountry.dialCode + phoneNumber.trim(),
+      businessName: businessName.trim(),
+      contactPerson: contactPerson.trim(),
+      services: cleanedServices,
+    }
+
+    try {
+      setIsSubmitting(true)
+      const token = getAuthToken()
+      const response = await axios.put(`${API_BASE_URL}/subcontractor/${editingSubcontractorId}`, payload, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+
+      // Handle success response
+      if (response.data.success) {
+        setSnackbar({
+          open: true,
+          message: response.data.message || "Subcontractor updated successfully.",
+          severity: "success",
+        })
+        handleClose()
+        await fetchSubcontractors()
+      } else {
+        // Handle backend validation errors
+        setSnackbar({
+          open: true,
+          message: response.data.message || "Failed to update subcontractor.",
+          severity: "error",
+        })
+      }
+    } catch (error) {
+      console.error("Error updating subcontractor:", error)
+      console.error("Response data:", error?.response?.data)
+      const message = error?.response?.data?.message || "Failed to update subcontractor."
+      setSnackbar({ open: true, message, severity: "error" })
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   const handleOpen = () => setOpen(true)
   const handleClose = () => {
     setOpen(false)
+    setIsEditMode(false)
+    setEditingSubcontractorId(null)
     resetForm()
   }
 
@@ -805,20 +938,30 @@ const AdminSubContractors = () => {
                               <div className="text-sm text-gray-900">{subcontractor.contactPerson || "—"}</div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                              <Button
-                                variant="outlined"
-                                size="small"
-                                color="primary"
-                                onClick={() => handleOpenModal(subcontractor.subcontractor_Id)}
-                                disabled={isViewingProfile}
-                                startIcon={
-                                  isViewingProfile ? (
-                                    <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                                  ) : null
-                                }
-                              >
-                                {isViewingProfile ? "Loading..." : "View Profile"}
-                              </Button>
+                              <Box display="flex" gap={1}>
+                                <Button
+                                  variant="outlined"
+                                  size="small"
+                                  color="primary"
+                                  onClick={() => handleOpenModal(subcontractor.subcontractor_Id)}
+                                  disabled={isViewingProfile}
+                                  startIcon={
+                                    isViewingProfile ? (
+                                      <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                                    ) : null
+                                  }
+                                >
+                                  {isViewingProfile ? "Loading..." : "View Profile"}
+                                </Button>
+                                <Button
+                                  variant="outlined"
+                                  size="small"
+                                  color="secondary"
+                                  onClick={() => handleEditSubcontractor(subcontractor.subcontractor_Id)}
+                                >
+                                  Edit
+                                </Button>
+                              </Box>
                             </td>
                           </tr>
                         ))}
@@ -859,117 +1002,160 @@ const AdminSubContractors = () => {
         </main>
       </div>
 
-      {/* Subcontractor Details Modal */}
-      <Dialog open={openModal} onClose={handleCloseModal} maxWidth="sm" fullWidth>
-        <DialogTitle sx={{ bgcolor: "#f5f5f5", pb: 1 }}>
-          <Typography variant="h6" component="div" fontWeight="bold">
-            Subcontractor Details
-          </Typography>
-        </DialogTitle>
-        <DialogContent dividers>
-          {loadingSubcontractorDetails ? (
-            <Box display="flex" justifyContent="center" alignItems="center" p={4}>
-              <CircularProgress />
-            </Box>
-          ) : selectedSubcontractor ? (
-            <Box>
-              <Box display="flex" alignItems="center" mb={3}>
-                <Avatar
-                  src={selectedSubcontractor.user?.profilePicture || "/placeholder.svg"}
-                  alt={
-                    selectedSubcontractor.user
-                      ? `${selectedSubcontractor.user.firstname} ${selectedSubcontractor.user.lastname}`
-                      : "Subcontractor"
-                  }
-                  sx={{ width: 80, height: 80, mr: 2 }}
+       <Dialog
+      open={openModal}
+      onClose={handleCloseModal}
+      maxWidth="md"
+      fullWidth
+      PaperProps={{
+        sx: { borderRadius: 3, p: 2 },
+      }}
+    >
+      {/* Header */}
+      <Box display="flex" justifyContent="space-between" alignItems="center" borderBottom={1} borderColor="divider" pb={1}>
+        <Typography variant="h6" fontWeight="bold">
+          Subcontractor Details
+        </Typography>
+        <IconButton onClick={handleCloseModal}>
+          <CloseIcon />
+        </IconButton>
+      </Box>
+
+      {/* Body */}
+      <DialogContent sx={{ mt: 2 }}>
+        {loadingSubcontractorDetails ? (
+          <Box display="flex" justifyContent="center" alignItems="center" py={6}>
+            <CircularProgress />
+            <Typography variant="body2" sx={{ ml: 2 }}>
+              Loading subcontractor details...
+            </Typography>
+          </Box>
+        ) : selectedSubcontractor ? (
+          <Box display="flex" flexDirection="column" gap={4}>
+            {/* Profile */}
+            <Box display="flex" alignItems="center" gap={3}>
+              <Avatar
+                src={selectedSubcontractor.user?.profilePicture || "/placeholder.svg"}
+                sx={{ width: 80, height: 80 }}
+              />
+              <Box>
+                <Typography variant="h6">
+                  {selectedSubcontractor.user
+                    ? `${selectedSubcontractor.user.firstname} ${selectedSubcontractor.user.lastname}`
+                    : "No Name"}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {selectedSubcontractor.user?.email || "No email"}
+                </Typography>
+                <Chip
+                  icon={getCategoryIcon(selectedSubcontractor.subcontractor_serviceCategory || "Other")}
+                  label={selectedSubcontractor.subcontractor_serviceCategory || "Other"}
+                  size="small"
+                  sx={{ mt: 1 }}
                 />
-                <Box>
-                  <Typography variant="h6">
-                    {selectedSubcontractor.user
-                      ? `${selectedSubcontractor.user.firstname} ${selectedSubcontractor.user.lastname}`
-                      : "No Name"}
+              </Box>
+            </Box>
+
+            <Divider />
+
+            {/* Business Info */}
+            <Box>
+              <Typography variant="subtitle1" fontWeight="bold" gutterBottom color="primary">
+                Business Information
+              </Typography>
+              <Box display="grid" gridTemplateColumns={{ xs: "1fr", sm: "1fr 1fr" }} gap={2}>
+                <Box display="flex" alignItems="center" gap={1} p={1.5} border="1px solid #eee" borderRadius={2}>
+                  <BusinessIcon fontSize="small" color="action" />
+                  <Typography variant="body2">
+                    {selectedSubcontractor.businessName || "Not specified"}
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {selectedSubcontractor.user?.email || "No email"}
+                </Box>
+                <Box display="flex" alignItems="center" gap={1} p={1.5} border="1px solid #eee" borderRadius={2}>
+                  <PersonIcon fontSize="small" color="action" />
+                  <Typography variant="body2">
+                    {selectedSubcontractor.contactPerson || "Not specified"}
                   </Typography>
-                  <Chip
-                    icon={getCategoryIcon(selectedSubcontractor.subcontractor_serviceCategory || "Other")}
-                    label={selectedSubcontractor.subcontractor_serviceCategory || "Other"}
-                    variant="outlined"
-                    size="small"
-                    sx={{ mt: 1 }}
-                  />
                 </Box>
               </Box>
-
-              <Divider sx={{ my: 2 }} />
-
-              <Box mb={2}>
-                <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-                  Business Name
-                </Typography>
-                <Typography variant="body1">{selectedSubcontractor.businessName || "Not specified"}</Typography>
-              </Box>
-
-              <Box mb={2}>
-                <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-                  Contact Person
-                </Typography>
-                <Typography variant="body1">{selectedSubcontractor.contactPerson || "Not specified"}</Typography>
-              </Box>
-
-              <Box>
-                <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-                  Services
-                </Typography>
-                {Array.isArray(selectedSubcontractor.services) && selectedSubcontractor.services.length > 0 ? (
-                  <Box component="ul" sx={{ pl: 2, m: 0 }}>
-                    {selectedSubcontractor.services.map((svc, idx) => (
-                      <li key={idx} style={{ marginBottom: 6 }}>
-                        <Typography variant="body2">
-                          {svc.name || "Unnamed Service"} — ₱
-                          {Number(svc.price || 0).toLocaleString(undefined, {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          })}
-                        </Typography>
-                      </li>
-                    ))}
-                  </Box>
-                ) : (
-                  <Typography variant="body2" color="text.secondary">
-                    No services listed
-                  </Typography>
-                )}
-              </Box>
             </Box>
-          ) : (
-            <Typography variant="body1" color="error">
-              Failed to load subcontractor details.
-            </Typography>
-          )}
-        </DialogContent>
-        <DialogActions sx={{ display: "flex", justifyContent: "space-between", px: 3, pb: 2 }}>
-          <Button
-            variant="contained"
-            color="error"
-            onClick={handleOpenDeleteConfirmation}
-            startIcon={
-              isDeletingSubcontractor ? (
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+
+            {/* Services */}
+            <Box>
+              <Typography variant="subtitle1" fontWeight="bold" gutterBottom color="primary">
+                Services Offered
+              </Typography>
+              {Array.isArray(selectedSubcontractor.services) && selectedSubcontractor.services.length > 0 ? (
+                <Box border="1px solid #eee" borderRadius={2} overflow="hidden">
+                  <Box component="table" sx={{ width: "100%", borderCollapse: "collapse" }}>
+                    <Box component="thead" sx={{ bgcolor: "grey.100" }}>
+                      <Box component="tr">
+                        <Box component="th" sx={{ textAlign: "left", p: 1.5, fontSize: 14 }}>
+                          Service
+                        </Box>
+                        <Box component="th" sx={{ textAlign: "left", p: 1.5, fontSize: 14 }}>
+                          Price
+                        </Box>
+                      </Box>
+                    </Box>
+                    <Box component="tbody">
+                      {selectedSubcontractor.services.map((svc, idx) => (
+                        <Box
+                          component="tr"
+                          key={idx}
+                          sx={{ borderTop: "1px solid #eee", "&:hover": { bgcolor: "grey.50" } }}
+                        >
+                          <Box component="td" sx={{ p: 1.5, fontSize: 14 }}>
+                            <WorkIcon sx={{ fontSize: 16, mr: 1, verticalAlign: "middle" }} />
+                            {svc.name || "Unnamed Service"}
+                          </Box>
+                          <Box component="td" sx={{ p: 1.5, fontSize: 14 }}>
+                            ₱
+                            {Number(svc.price || 0).toLocaleString(undefined, {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}
+                          </Box>
+                        </Box>
+                      ))}
+                    </Box>
+                  </Box>
+                </Box>
               ) : (
-                <CloseIcon />
-              )
-            }
-            disabled={loadingSubcontractorDetails || !selectedSubcontractor || isDeletingSubcontractor}
-          >
-            {isDeletingSubcontractor ? "Deleting..." : "Delete Subcontractor"}
-          </Button>
-          <Button variant="outlined" onClick={handleCloseModal} color="primary">
-            Close
-          </Button>
-        </DialogActions>
-      </Dialog>
+                <Typography variant="body2" color="text.secondary">
+                  No services listed
+                </Typography>
+              )}
+            </Box>
+          </Box>
+        ) : (
+          <Typography variant="body1" color="error">
+            Failed to load subcontractor details.
+          </Typography>
+        )}
+      </DialogContent>
+
+      {/* Footer */}
+      <DialogActions sx={{ display: "flex", justifyContent: "space-between", px: 3, pb: 2 }}>
+        <Button
+          variant="contained"
+          color="error"
+          onClick={handleOpenDeleteConfirmation}
+          startIcon={
+            isDeletingSubcontractor ? (
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            ) : (
+              <CloseIcon />
+            )
+          }
+          disabled={loadingSubcontractorDetails || !selectedSubcontractor || isDeletingSubcontractor}
+        >
+          {isDeletingSubcontractor ? "Deleting..." : "Delete Subcontractor"}
+        </Button>
+        <Button variant="outlined" onClick={handleCloseModal} color="primary">
+          Close
+        </Button>
+      </DialogActions>
+    </Dialog>
 
       {/* Delete Confirmation Dialog */}
       <Dialog
@@ -1044,7 +1230,7 @@ const AdminSubContractors = () => {
           {/* Header */}
           <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
             <Typography variant="h6" fontWeight={600}>
-              Add Subcontractor
+              {isEditMode ? "Edit Subcontractor" : "Add Subcontractor"}
             </Typography>
             <IconButton onClick={handleClose}>
               <CloseIcon />
@@ -1248,8 +1434,8 @@ const AdminSubContractors = () => {
               <Button variant="outlined" onClick={handleClose}>
                 Cancel
               </Button>
-              <Button variant="contained" onClick={handleAddSubcontractor} disabled={isSubmitting}>
-                {isSubmitting ? "Adding..." : "Add Subcontractor"}
+              <Button variant="contained" onClick={isEditMode ? handleEditSubcontractorSubmit : handleAddSubcontractor} disabled={isSubmitting}>
+                {isSubmitting ? (isEditMode ? "Updating..." : "Adding...") : (isEditMode ? "Update Subcontractor" : "Add Subcontractor")}
               </Button>
             </Box>
           </Stack>

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useAuth } from "../Components/AuthProvider";
-import { AlertCircle, CheckCircle, Clock, Calendar, ChevronLeft, Loader2, MapPin, User, Package } from "lucide-react";
+import { AlertCircle, CheckCircle, Clock, Calendar, ChevronLeft, Loader2, MapPin, User, Package, BarChart } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Dialog } from "@headlessui/react"
 const API_BASE_URL = "http://localhost:8080";
@@ -18,6 +18,8 @@ const UserBookingsPage = () => {
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [eventDetails, setEventDetails] = useState(null);
   const [loadingDetails, setLoadingDetails] = useState(false);
+  const [progressData, setProgressData] = useState(null);
+  const [loadingProgress, setLoadingProgress] = useState(false);
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [userEmail, setUserEmail] = useState(null);
@@ -26,6 +28,7 @@ const UserBookingsPage = () => {
   const handleBookingSelect = async (booking) => {
     setSelectedBooking(booking);
     setLoadingDetails(true);
+    setProgressData(null); // Reset progress data
     
     try {
       // If the booking has a transaction ID, fetch complete details
@@ -41,11 +44,31 @@ const UserBookingsPage = () => {
         // Merge the details with existing booking data
         // This ensures we don't lose any data that might only exist in one place
         setSelectedBooking({...booking, ...response.data});
+        
+        // After getting booking details, fetch progress data
+        fetchEventProgress(booking.transaction_Id, token);
       }
     } catch (error) {
       console.error("Failed to fetch booking details:", error);
     } finally {
       setLoadingDetails(false);
+    }
+  };
+  
+  // Function to fetch event progress data
+  const fetchEventProgress = async (transactionId, token) => {
+    setLoadingProgress(true);
+    try {
+      const response = await axios.get(
+        `${API_BASE_URL}/api/transactions/event-progress/${transactionId}`,
+        { headers: token ? { Authorization: `Bearer ${token}` } : {} }
+      );
+      console.log("Fetched event progress data:", response.data);
+      setProgressData(response.data);
+    } catch (error) {
+      console.error("Failed to fetch event progress:", error);
+    } finally {
+      setLoadingProgress(false);
     }
   };
   
@@ -229,8 +252,8 @@ const UserBookingsPage = () => {
       year: 'numeric', 
       month: 'short', 
       day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+      // hour: '2-digit',
+      // minute: '2-digit'
     }).format(date);
   };
 
@@ -583,6 +606,98 @@ const UserBookingsPage = () => {
             </div>
           )}
           
+          {/* Progress Information */}
+          <div>
+            <h4 className="font-semibold mb-2 text-[#FFB22C]">Event Progress</h4>
+            {loadingProgress ? (
+              <div className="flex justify-center items-center py-4">
+                <Loader2 className="animate-spin h-6 w-6 text-blue-500" />
+                <span className="ml-2 text-gray-600">Loading progress data...</span>
+              </div>
+            ) : progressData ? (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <BarChart size={18} className="text-blue-500 mr-2" />
+                    <span className="font-medium">Overall Progress:</span>
+                  </div>
+                  <span className="font-medium text-blue-600">{progressData.progressPercentage}%</span>
+                </div>
+                
+                {/* Progress Bar */}
+                <div className="w-full bg-gray-200 rounded-full h-2.5 mb-4">
+                  <div 
+                    className="bg-blue-600 h-2.5 rounded-full transition-all duration-500" 
+                    style={{ width: `${progressData.progressPercentage}%` }}
+                  ></div>
+                </div>
+                
+                {/* Status Information */}
+                <div className="grid sm:grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-500 block mb-1">Current Status</label>
+                    <div className="flex items-center border p-2 rounded bg-gray-50">
+                      <span className="capitalize">{progressData.currentStatus || "Not available"}</span>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-500 block mb-1">Last Updated</label>
+                    <div className="flex items-center border p-2 rounded bg-gray-50">
+                      <span>{progressData.lastUpdate ? new Date(progressData.lastUpdate).toLocaleString() : "Not available"}</span>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Service Providers Progress */}
+                {progressData.subcontractors && progressData.subcontractors.length > 0 && (
+                  <div className="mt-4">
+                    <h5 className="text-sm font-medium text-gray-700 mb-2">Service Providers Progress</h5>
+                    <div className="overflow-x-auto border rounded">
+                      <table className="min-w-full table-auto text-sm text-left">
+                        <thead className="bg-indigo-50">
+                          <tr>
+                            <th className="p-2 text-gray-700 font-semibold">Provider</th>
+                            <th className="p-2 text-gray-700 font-semibold">Service</th>
+                            <th className="p-2 text-gray-700 font-semibold">Progress</th>
+                            <th className="p-2 text-gray-700 font-semibold">Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {progressData.subcontractors.map((sub, index) => (
+                            <tr key={index} className="border-t">
+                              <td className="p-2 text-gray-700">{sub.subcontractorName}</td>
+                              <td className="p-2 text-gray-700">{sub.subcontractorRole}</td>
+                              <td className="p-2 text-gray-700">
+                                <div className="flex items-center">
+                                  <div className="w-24 bg-gray-200 rounded-full h-1.5 mr-2">
+                                    <div 
+                                      className="bg-blue-600 h-1.5 rounded-full" 
+                                      style={{ width: `${sub.progressPercentage}%` }}
+                                    ></div>
+                                  </div>
+                                  <span className="text-xs">{sub.progressPercentage}%</span>
+                                </div>
+                              </td>
+                              <td className="p-2 text-gray-700">
+                                <span className="capitalize text-xs px-2 py-1 rounded-full bg-blue-50 text-blue-600">
+                                  {sub.checkInStatus?.toLowerCase() || "pending"}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-center py-4 bg-gray-50 rounded-lg">
+                <p className="text-gray-500">No progress data available for this event yet.</p>
+              </div>
+            )}
+          </div>
+
           {/* Notes - If available */}
           {selectedBooking.transactionNote && (
             <div>

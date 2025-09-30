@@ -5,6 +5,7 @@ import com.Project.Backend.Entity.TransactionsEntity;
 import com.Project.Backend.Entity.TransactionProgressEntity;
 import com.Project.Backend.Entity.SubcontractorEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -50,4 +51,6 @@ public interface SubcontractorProgressRepository extends JpaRepository<Subcontra
      */
     @Query("SELECT sp FROM SubcontractorProgressEntity sp WHERE sp.subcontractorService.subcontractor.user.email = :userEmail")
     List<SubcontractorProgressEntity> findByUserEmail(@Param("userEmail") String userEmail);
+
+
 }
