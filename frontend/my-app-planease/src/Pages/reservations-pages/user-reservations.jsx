@@ -5,7 +5,7 @@ import Navbar from "../../Components/Navbar"
 import Footer from "../../Components/Footer"
 import axios from "axios"
 
-const API_BASE_URL = "http://localhost:8080"
+const API_BASE_URL = "http://54.255.151.41:8080"
 
 const getAuthToken = () => {
   return localStorage.getItem("token") || ""

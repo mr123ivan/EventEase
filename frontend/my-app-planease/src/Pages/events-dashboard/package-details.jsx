@@ -29,7 +29,7 @@ const PackageDetails = () => {
         }
 
         // Fetch specific package using the package ID
-        const packageResponse = await axios.get(`http://localhost:8080/package/get/${package_id}`, {
+        const packageResponse = await axios.get(`http://54.255.151.41:8080/package/get/${package_id}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -45,7 +45,7 @@ const PackageDetails = () => {
 
         // Always use the serviceAttachments endpoint for detailed service information
         try {
-          const serviceAttachmentsResponse = await axios.get(`http://localhost:8080/package/service/${package_id}`, {
+          const serviceAttachmentsResponse = await axios.get(`http://54.255.151.41:8080/package/service/${package_id}`, {
             headers: {
               Authorization: `Bearer ${token}`,
             },
@@ -70,7 +70,7 @@ const PackageDetails = () => {
         }
 
         // Fetch all packages for the "other packages" section
-        const allPackagesResponse = await axios.get("http://localhost:8080/package/getall", {
+        const allPackagesResponse = await axios.get("http://54.255.151.41:8080/package/getall", {
           headers: {
             Authorization: `Bearer ${token}`,
           },

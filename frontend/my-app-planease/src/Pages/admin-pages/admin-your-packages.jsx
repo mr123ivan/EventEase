@@ -47,7 +47,7 @@ const AdminPackages = () => {
     try {
       setLoading(true)
       const token = localStorage.getItem("token")
-      const response = await axios.get("http://localhost:8080/package/getall", {
+      const response = await axios.get("http://54.255.151.41:8080/package/getall", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -77,7 +77,7 @@ const AdminPackages = () => {
   const fetchSubcontractors = async () => {
     try {
       const token = localStorage.getItem("token")
-      const response = await axios.get("http://localhost:8080/subcontractor/getall", {
+      const response = await axios.get("http://54.255.151.41:8080/subcontractor/getall", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -97,7 +97,7 @@ const AdminPackages = () => {
   const fetchPackageServices = async (packageName) => {
     try {
       const token = localStorage.getItem("token")
-      const response = await axios.get(`http://localhost:8080/package/getServices/${packageName}`, {
+      const response = await axios.get(`http://54.255.151.41:8080/package/getServices/${packageName}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -170,7 +170,7 @@ const AdminPackages = () => {
       const imageFormData = new FormData()
       imageFormData.append("file", imageFile)
 
-      const response = await axios.post(`http://localhost:8080/package/upload/image/${packageId}`, imageFormData, {
+      const response = await axios.post(`http://54.255.151.41:8080/package/upload/image/${packageId}`, imageFormData, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",
@@ -228,7 +228,7 @@ const AdminPackages = () => {
 
       if (isEditing) {
         // Update package
-        const response = await axios.put("http://localhost:8080/package/update", formData, {
+        const response = await axios.put("http://54.255.151.41:8080/package/update", formData, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -236,7 +236,7 @@ const AdminPackages = () => {
         savedPackage = response.data
       } else {
         // Create package
-        const response = await axios.post("http://localhost:8080/package/create", formData, {
+        const response = await axios.post("http://54.255.151.41:8080/package/create", formData, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -274,7 +274,7 @@ const AdminPackages = () => {
             console.log("Adding service with email:", email)
 
             const addServiceResponse = await axios.post(
-              "http://localhost:8080/package/addService",
+              "http://54.255.151.41:8080/package/addService",
               {
                 packageId: savedPackage.packageId.toString(),
                 subcontractorEmail: email,
@@ -323,7 +323,7 @@ const AdminPackages = () => {
     if (window.confirm("Are you sure you want to delete this package?")) {
       try {
         const token = localStorage.getItem("token")
-        await axios.delete(`http://localhost:8080/package/delete/${selectedPackage.packageId}`, {
+        await axios.delete(`http://54.255.151.41:8080/package/delete/${selectedPackage.packageId}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

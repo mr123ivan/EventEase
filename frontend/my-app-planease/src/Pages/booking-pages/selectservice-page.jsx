@@ -45,7 +45,7 @@ const SelectServicePage = () => {
     const fetchEventSections = async () => {
       if (!currentEventName) return
       try {
-        const res = await axios.get(`http://localhost:8080/api/events/event-details/${encodeURIComponent(currentEventName)}`)
+        const res = await axios.get(`http://54.255.151.41:8080/api/events/event-details/${encodeURIComponent(currentEventName)}`)
         const ev = res?.data
         const raw = ev?.event_sections
         const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw
@@ -94,7 +94,7 @@ const SelectServicePage = () => {
   useEffect(() => {
     const fetchServices = async () => {
       try {
-        const resp = await axios.get('http://localhost:8080/subcontractor/getall')
+        const resp = await axios.get('http://54.255.151.41:8080/subcontractor/getall')
         const arr = Array.isArray(resp.data) ? resp.data : []
         const map = {}
         arr.forEach(sc => {
@@ -118,7 +118,7 @@ const SelectServicePage = () => {
   useEffect(() => {
     const fetchPackages = async () => {
       try {
-        const resp = await axios.get('http://localhost:8080/package/getall')
+        const resp = await axios.get('http://54.255.151.41:8080/package/getall')
         const arr = Array.isArray(resp.data) ? resp.data : []
         const map = {}
         arr.forEach(pkg => {
@@ -349,7 +349,7 @@ const SelectServicePage = () => {
     }
 
     try {
-      await axios.post(`http://localhost:8080/form-draft/save`, body, {
+      await axios.post(`http://54.255.151.41:8080/form-draft/save`, body, {
         headers: { Authorization: `Bearer ${token}` },
       })
     } catch (error) {

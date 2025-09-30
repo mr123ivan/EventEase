@@ -53,7 +53,7 @@ import BusinessIcon from "@mui/icons-material/Business";
 import PersonIcon from "@mui/icons-material/Person";
 import WorkIcon from "@mui/icons-material/Work";
 // API service functions
-const API_BASE_URL = "http://localhost:8080"
+const API_BASE_URL = "http://54.255.151.41:8080"
 
 // Note: PSGC API removed as location dropdowns are no longer used
 

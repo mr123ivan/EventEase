@@ -6,7 +6,7 @@ import { Bell, Info } from "lucide-react"
 import moment from "moment"
 import axios from "axios"
 
-const API_BASE_URL = "http://localhost:8080"
+const API_BASE_URL = "http://54.255.151.41:8080"
 
 const NotificationsPage = () => {
   const [notifications, setNotifications] = useState([])

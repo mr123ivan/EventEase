@@ -109,7 +109,7 @@ const EventTrackingAdmin = () => {
     try {
       const token = localStorage.getItem("token")
       // Fetch all transactions for admin (no email filter)
-      const response = await axios.get("http://localhost:8080/api/transactions/getAllTransactions", {
+      const response = await axios.get("http://54.255.151.41:8080/api/transactions/getAllTransactions", {
         headers: { Authorization: `Bearer ${token}` },
       })
 
@@ -119,7 +119,7 @@ const EventTrackingAdmin = () => {
           try {
             // Fetch event progress including status from backend
             const eventProgressResponse = await axios.get(
-              `http://localhost:8080/api/transactions/event-progress/${transaction.transaction_Id}`,
+              `http://54.255.151.41:8080/api/transactions/event-progress/${transaction.transaction_Id}`,
               {
                 headers: { Authorization: `Bearer ${token}` },
               }
@@ -129,7 +129,7 @@ const EventTrackingAdmin = () => {
 
             // Fetch subcontractor progress data for each transaction
             const subcontractorProgressResponse = await axios.get(
-              `http://localhost:8080/api/transactions/subcontractor-progress/${transaction.transaction_Id}`,
+              `http://54.255.151.41:8080/api/transactions/subcontractor-progress/${transaction.transaction_Id}`,
               {
                 headers: { Authorization: `Bearer ${token}` },
               }
@@ -159,7 +159,7 @@ const EventTrackingAdmin = () => {
                   avatar: progressData?.subcontractorAvatar && progressData.subcontractorAvatar.trim() !== ""
                     ? (progressData.subcontractorAvatar.startsWith('http')
                         ? progressData.subcontractorAvatar
-                        : `http://localhost:8080/uploads/${progressData.subcontractorAvatar}`)
+                        : `http://54.255.151.41:8080/uploads/${progressData.subcontractorAvatar}`)
                     : "/placeholder.svg?key=" + sub.subcontractorUserId, // Use avatar from progress data if available
                 }
               })
@@ -273,7 +273,7 @@ const EventTrackingAdmin = () => {
       try {
         const token = localStorage.getItem("token")
         await axios.put(
-          `http://localhost:8080/api/transactions/updateProgress/${selectedEvent.id}`,
+          `http://54.255.151.41:8080/api/transactions/updateProgress/${selectedEvent.id}`,
           null,
           {
             params: {
@@ -405,7 +405,7 @@ const EventTrackingAdmin = () => {
       const token = localStorage.getItem("token")
       console.log("DEBUG: Calling API with progressId:", subcontractor.progressId)
       const progressResponse = await axios.get(
-        `http://localhost:8080/api/transactions/subcontractor-progress/id/${subcontractor.progressId}`,
+        `http://54.255.151.41:8080/api/transactions/subcontractor-progress/id/${subcontractor.progressId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -470,11 +470,11 @@ const EventTrackingAdmin = () => {
       // Use progressId endpoint if available, otherwise fallback to entity ID or email
       let apiUrl
       if (subcontractor.progressId) {
-        apiUrl = `http://localhost:8080/api/transactions/subcontractor-progress/id/${subcontractor.progressId}`
+        apiUrl = `http://54.255.151.41:8080/api/transactions/subcontractor-progress/id/${subcontractor.progressId}`
       } else if (subcontractor.subcontractorEntityId) {
-        apiUrl = `http://localhost:8080/api/transactions/subcontractor-progress/${event.id}/${subcontractor.subcontractorEntityId}`
+        apiUrl = `http://54.255.151.41:8080/api/transactions/subcontractor-progress/${event.id}/${subcontractor.subcontractorEntityId}`
       } else {
-        apiUrl = `http://localhost:8080/api/transactions/subcontractor-progress/${event.id}/email/${subcontractor.subcontractorEmail}`
+        apiUrl = `http://54.255.151.41:8080/api/transactions/subcontractor-progress/${event.id}/email/${subcontractor.subcontractorEmail}`
       }
 
       console.log("DEBUG: API URL:", apiUrl)
@@ -560,11 +560,11 @@ const EventTrackingAdmin = () => {
       // Use progressId endpoint if available, otherwise fallback to entity ID or email
       let apiUrl
       if (subcontractor.progressId) {
-        apiUrl = `http://localhost:8080/api/transactions/subcontractor-progress/id/${subcontractor.progressId}`
+        apiUrl = `http://54.255.151.41:8080/api/transactions/subcontractor-progress/id/${subcontractor.progressId}`
       } else if (subcontractor.subcontractorEntityId) {
-        apiUrl = `http://localhost:8080/api/transactions/subcontractor-progress/${event.id}/${subcontractor.subcontractorEntityId}`
+        apiUrl = `http://54.255.151.41:8080/api/transactions/subcontractor-progress/${event.id}/${subcontractor.subcontractorEntityId}`
       } else {
-        apiUrl = `http://localhost:8080/api/transactions/subcontractor-progress/${event.id}/email/${subcontractor.subcontractorEmail}`
+        apiUrl = `http://54.255.151.41:8080/api/transactions/subcontractor-progress/${event.id}/email/${subcontractor.subcontractorEmail}`
       }
 
       console.log("DEBUG: API URL:", apiUrl)
@@ -648,8 +648,8 @@ const EventTrackingAdmin = () => {
 
         // Use email endpoint if subcontractorEntityId is undefined, otherwise use entity ID endpoint
         const apiUrl = selectedSubcontractor.subcontractorEntityId
-          ? `http://localhost:8080/api/transactions/subcontractor-progress/${selectedEvent.id}/${selectedSubcontractor.subcontractorEntityId}`
-          : `http://localhost:8080/api/transactions/subcontractor-progress/${selectedEvent.id}/email/${selectedSubcontractor.subcontractorEmail}`
+          ? `http://54.255.151.41:8080/api/transactions/subcontractor-progress/${selectedEvent.id}/${selectedSubcontractor.subcontractorEntityId}`
+          : `http://54.255.151.41:8080/api/transactions/subcontractor-progress/${selectedEvent.id}/email/${selectedSubcontractor.subcontractorEmail}`
 
         await axios.put(
           apiUrl,

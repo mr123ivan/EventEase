@@ -178,7 +178,7 @@ export default function LoginPage() {
               // console.log(profile)
 
               // Check if user exists in the database
-              const checkUserResponse = await axios.get("http://localhost:8080/user/check-user", {
+              const checkUserResponse = await axios.get("http://54.255.151.41:8080/user/check-user", {
                 params: { email: profile.email },
               })
 
@@ -204,9 +204,9 @@ export default function LoginPage() {
                   isGoogle: true,
                   isFacebook: false,
                 }
-                const registerResponse = await axios.post("http://localhost:8080/user/register", registrationData)
+                const registerResponse = await axios.post("http://54.255.151.41:8080/user/register", registrationData)
                 try {
-                  await axios.post("http://localhost:8080/regularuser/create", { userId: registerResponse.data.userId })
+                  await axios.post("http://54.255.151.41:8080/regularuser/create", { userId: registerResponse.data.userId })
                 } catch (error) {
                   console.error("Regular user creation error:", error)
                 }
@@ -268,7 +268,7 @@ export default function LoginPage() {
               window.FB.api("/me", { fields: "id,name,email,picture" }, async (profile) => {
                 try {
                   // Check if user exists in the database
-                  const checkUserResponse = await axios.get("http://localhost:8080/user/check-user", {
+                  const checkUserResponse = await axios.get("http://54.255.151.41:8080/user/check-user", {
                     params: { email: profile.email },
                   })
 
@@ -295,9 +295,9 @@ export default function LoginPage() {
                       isGoogle: false,
                       isFacebook: true,
                     }
-                    const registerResponse = await axios.post("http://localhost:8080/user/register", registrationData)
+                    const registerResponse = await axios.post("http://54.255.151.41:8080/user/register", registrationData)
                     try {
-                      await axios.post("http://localhost:8080/regularuser/create", {
+                      await axios.post("http://54.255.151.41:8080/regularuser/create", {
                         userId: registerResponse.data.userId,
                       })
                     } catch (error) {

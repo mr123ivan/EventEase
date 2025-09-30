@@ -17,7 +17,7 @@ const AdminProtectedRoute = ({ children }) => {
             }
 
             try {
-                const response = await axios.get(`http://localhost:8080/user/getcurrentrole`, {
+                const response = await axios.get(`http://54.255.151.41:8080/user/getcurrentrole`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
 

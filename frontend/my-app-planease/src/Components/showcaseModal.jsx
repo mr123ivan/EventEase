@@ -9,7 +9,7 @@ const ShowcaseModal = ({ title, subcontractorId, onClose }) => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const res = await axios.get(`http://localhost:8080/subcontractor/${subcontractorId}`);
+                const res = await axios.get(`http://54.255.151.41:8080/subcontractor/${subcontractorId}`);
                 setSubcontractor(res.data);
                 console.log(res.data);
             } catch (error) {
