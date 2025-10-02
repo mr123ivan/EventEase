@@ -618,7 +618,7 @@ const SelectServicePage = () => {
                     : (
                     <>
                       {/* Default required radio groups */}
-                      {Object.entries(DEFAULT_RADIO_GROUPS).map(([groupKey, group]) => (
+                      {/* {Object.entries(DEFAULT_RADIO_GROUPS).map(([groupKey, group]) => (
                         <div key={groupKey} className="service-group">
                           <div className="group-title-container">
                             <h3 className="group-title">{group.label} <span className="required">(Choose one only, required*)</span></h3>
@@ -656,7 +656,7 @@ const SelectServicePage = () => {
                         </div>
                       ))}
 
-                      {/* Optional checkbox groups */}
+                      //  Optional checkbox groups
                       <div className="service-group">
                         <h3 className="group-title">choose other services you want to include:</h3>
                         <div className="group-options">
@@ -689,13 +689,13 @@ const SelectServicePage = () => {
                             </label>
                           ))}
                         </div>
-                      </div>
+                      </div> */}
                     </>
                   )}
                 </div>
                 )}
 
-                {selectionMode === 'packages' && (
+                {/* {selectionMode === 'packages' && (
                 <div className="package-options">
                   {AVAILABLE_PACKAGES.length === 0 ? (
                     <div style={{ padding: 12, opacity: 0.7 }}>No packages available for this event.</div>
@@ -729,7 +729,7 @@ const SelectServicePage = () => {
                     ))
                   )}
                 </div>
-                )}
+                )} */}
               </div>
 
               {/* Summary Section */}
