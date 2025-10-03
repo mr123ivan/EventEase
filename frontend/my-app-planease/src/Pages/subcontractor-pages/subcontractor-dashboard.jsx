@@ -624,11 +624,27 @@ const SubcontractorDashboard = () => {
                 </div>
                 <div className="flex flex-col direct rounded-lg gap-4 bg-gray-100 md:px-10 md:py-10">
                     <div className="flex items-center bg-white p-5 md:p-10 shadow-lg">
-                        <img
-                            src={userdetails.profile_image}
-                            alt="Profile"
-                            className="w-20 h-20 rounded-full object-cover"
-                        />
+                        {userdetails.profile_image && userdetails.profile_image.trim() !== '' ? (
+                            <img
+                                src={userdetails.profile_image}
+                                alt="Profile"
+                                className="w-20 h-20 rounded-full object-cover"
+                                onError={(e) => {
+                                    e.target.style.display = 'none';
+                                    e.target.nextSibling.style.display = 'flex';
+                                }}
+                            />
+                        ) : null}
+                        <div
+                            className={`w-20 h-20 rounded-full flex items-center justify-center text-white font-bold text-xl ${
+                                userdetails.profile_image && userdetails.profile_image.trim() !== '' ? 'hidden' : 'bg-blue-500'
+                            }`}
+                            style={{
+                                display: userdetails.profile_image && userdetails.profile_image.trim() !== '' ? 'none' : 'flex'
+                            }}
+                        >
+                            {userdetails.fullname ? userdetails.fullname.charAt(0).toUpperCase() : 'U'}
+                        </div>
                         <div className="ml-4">
                             <h2 className="text-lg font-semibold">{userdetails.fullname}</h2>
                             <p className="text-gray-500">{userdetails.service_name}</p>

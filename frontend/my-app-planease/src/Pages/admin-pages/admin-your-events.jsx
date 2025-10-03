@@ -11,8 +11,11 @@ const YourEvents = () => {
   const [events, setEvents] = useState([])
   const [selectedEvent, setSelectedEvent] = useState(null)
   const [showModal, setShowModal] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [deleteWarningMessage, setDeleteWarningMessage] = useState("")
   const [isEditing, setIsEditing] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
   // Basic event info (simplified)
   const [formData, setFormData] = useState({
     event_name: "",
@@ -231,16 +234,56 @@ const YourEvents = () => {
   }
 
   const handleDeleteEvent = async () => {
-    if (window.confirm("Are you sure you want to delete this event?")) {
-      try {
-        await axios.delete(`http://localhost:8080/api/events/${selectedEvent.event_Id}`)
-        fetchEvents()
-        setShowModal(false)
-        setSelectedEvent(null)
-      } catch (error) {
-        console.error("Error deleting event:", error)
+    if (!selectedEvent) return
+    try {
+      // Fetch transactions for the selected event
+      const response = await axios.get(`http://localhost:8080/api/transactions/event/${selectedEvent.event_Id}`)
+      const transactions = response.data || []
+
+      // Check if any transaction is not DECLINED or COMPLETED
+      const hasActiveTransactions = transactions.some(
+        (tx) => tx.transactionStatus !== "DECLINED" && tx.transactionStatus !== "COMPLETED"
+      )
+
+      if (hasActiveTransactions) {
+        setDeleteWarningMessage(
+          "This event has active transactions that are not declined or completed. You cannot delete this event."
+        )
+      } else if (transactions.length > 0) {
+        setDeleteWarningMessage(
+          "Warning: Deleting this event will also delete all related transactions."
+        )
+      } else {
+        setDeleteWarningMessage("")
       }
+
+      setShowDeleteModal(true)
+    } catch (error) {
+      console.error("Error fetching transactions for event:", error)
+      setDeleteWarningMessage("")
+      setShowDeleteModal(true)
     }
+  }
+
+  const confirmDeleteEvent = async () => {
+    if (isDeleting) return
+    setIsDeleting(true)
+    try {
+      await axios.delete(`http://localhost:8080/api/events/${selectedEvent.event_Id}`)
+      fetchEvents()
+      setShowModal(false)
+      setSelectedEvent(null)
+      setShowDeleteModal(false)
+      setDeleteWarningMessage("")
+    } catch (error) {
+      console.error("Error deleting event:", error)
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
+  const cancelDeleteEvent = () => {
+    setShowDeleteModal(false)
   }
 
   return (
@@ -617,6 +660,49 @@ const YourEvents = () => {
           </Dialog.Panel>
         </div>
       </Dialog>
+
+      {/* Delete Event Modal */}
+      <Dialog
+        open={showDeleteModal}
+        onClose={cancelDeleteEvent}
+        className="fixed z-1200 shadow-md inset-0 overflow-y-auto"
+      >
+        <div className="flex items-center justify-center min-h-screen px-4">
+      <Dialog.Panel className="bg-white w-full max-w-md rounded-lg shadow-lg p-6">
+        <div className="text-center">
+          <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+            <svg className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Delete Event</h3>
+          <p className="text-sm text-gray-500 mb-6">
+            {deleteWarningMessage
+              ? deleteWarningMessage
+              : "Are you sure you want to delete this event? This action cannot be undone."}
+          </p>
+          <div className="flex justify-center gap-4">
+            <button
+              onClick={cancelDeleteEvent}
+              disabled={isDeleting}
+              className="bg-gray-200 hover:bg-gray-300 disabled:bg-gray-100 disabled:cursor-not-allowed text-gray-700 px-4 py-2 rounded font-medium"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={confirmDeleteEvent}
+              disabled={isDeleting || (deleteWarningMessage && deleteWarningMessage.includes("cannot delete"))}
+              className="bg-red-500 hover:bg-red-600 disabled:bg-red-300 disabled:cursor-not-allowed text-white px-4 py-2 rounded font-medium flex items-center justify-center gap-2"
+            >
+              {isDeleting ? <CircularProgress size={16} color="inherit" /> : null}
+              {isDeleting ? "Deleting..." : "Delete"}
+            </button>
+          </div>
+        </div>
+      </Dialog.Panel>
+        </div>
+      </Dialog>
+
       <Snackbar
         open={snackbar.open}
         autoHideDuration={6000}
