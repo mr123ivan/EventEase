@@ -7,6 +7,7 @@ import Navbar from "../../Components/Navbar"
 import BookingSidePanel from "../../Components/Booking-sidepanel"
 import Footer from "../../Components/Footer"
 import DatePickerWithRestriction from "../../Components/DatePickerWithRestriction"
+import MapModal from "../../Components/MapModal"
 import { getPersonalInfo, getEventDetails, savePersonalInfo, saveEventDetails, clearBookingData } from "./utils/booking-storage"
 import axios from "axios"
 import {
@@ -16,6 +17,8 @@ import {
   saveServicesData,
   PACKAGES,
 } from "../booking-pages/utils/booking-storage"
+import MapIcon from '@mui/icons-material/Map';
+import IconButton from '@mui/material/IconButton';
 
 const InputDetailsPage = () => {
   const navigate = useNavigate()
@@ -40,10 +43,11 @@ const InputDetailsPage = () => {
     }
   }, [currentEventName])
 
+  const [isMapModalOpen, setIsMapModalOpen] = useState(false);
 
-    const handleRemoveData = () => {
-        clearBookingData();
-    }
+  const handleRemoveData = () => {
+      clearBookingData();
+  }
 
   // Auto-fill user data on component mount
   useEffect(() => {
@@ -380,18 +384,27 @@ const InputDetailsPage = () => {
                       className="readonly-input"
                     />
                   </div>
-                  <div className="input-group">
-                    <label htmlFor="location">Location *</label>
-                    <input
-                      type="text"
-                      id="location"
-                      name="location"
-                      value={eventDetails.location}
-                      onChange={handleEventDetailsChange}
-                      placeholder="Enter event location"
-                      required
-                    />
-                  </div>
+              <div className="input-group" style={{ display: 'flex', alignItems: 'center' }}>
+                <label htmlFor="location" style={{ flex: '0 0 auto', marginRight: '8px' }}>Location *</label>
+                <input
+                  type="text"
+                  id="location"
+                  name="location"
+                  value={eventDetails.location}
+                  onChange={handleEventDetailsChange}
+                  placeholder="Enter event location"
+                  required
+                  style={{ flex: '1 1 auto' }}
+                />
+                <IconButton
+                  aria-label="select location on map"
+                  onClick={() => setIsMapModalOpen(true)}
+                  size="small"
+                  sx={{ ml: 1 }}
+                >
+                  <MapIcon />
+                </IconButton>
+              </div>
                 </div>
 
                 {/* Celebrant Names */}
@@ -502,6 +515,18 @@ const InputDetailsPage = () => {
         </div>
       </div>
       <Footer />
+      <MapModal
+        open={isMapModalOpen}
+        onClose={() => setIsMapModalOpen(false)}
+        initialLocation={eventDetails.location}
+        onLocationSelect={(location) => {
+          const locationString = location.address || `${location.lat.toFixed(6)}, ${location.lng.toFixed(6)}`;
+          setEventDetails((prev) => ({
+            ...prev,
+            location: locationString,
+          }));
+        }}
+      />
     </>
   )
 }
