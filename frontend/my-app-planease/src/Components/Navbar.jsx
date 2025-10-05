@@ -7,7 +7,7 @@ import { useAuth } from "./AuthProvider"
 import { useNavigate, Link } from "react-router-dom"
 import axios from "axios"
 
-const API_BASE_URL = "http://54.255.151.41:8080"
+const API_BASE_URL = "https://api.eventsease.app"
 
 // Create a custom event for profile updates
 export const PROFILE_UPDATED_EVENT = "profileUpdated"

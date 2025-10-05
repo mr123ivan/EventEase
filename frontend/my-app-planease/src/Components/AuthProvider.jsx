@@ -38,7 +38,7 @@ export const AuthProvider = ({ children }) => {
 
       try {
         // Try to verify the token and fetch user data
-        const response = await axios.get("http://54.255.151.41:8080/user/getuser", {
+        const response = await axios.get("https://api.eventsease.app/user/getuser", {
           headers: { Authorization: `Bearer ${storedToken}` },
         })
 
@@ -85,7 +85,7 @@ export const AuthProvider = ({ children }) => {
 
   const loginAction = async (data, navigate) => {
     try {
-      const response = await axios.post("http://54.255.151.41:8080/user/login", data, {
+      const response = await axios.post("https://api.eventsease.app/user/login", data, {
         headers: { "Content-Type": "application/json" },
       })
       if (response.status === 200 || response.status === 201) {
@@ -118,7 +118,7 @@ export const AuthProvider = ({ children }) => {
 
     try {
       await axios.post(
-        "http://54.255.151.41:8080/user/logout",
+        "https://api.eventsease.app/user/logout",
         {},
         {
           headers: { Authorization: `Bearer ${currentToken}` },

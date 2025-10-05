@@ -14,7 +14,7 @@ const EventPage = () => {
 
     // Fetch events
     axios
-      .get("http://54.255.151.41:8080/api/events/getEvents", {
+      .get("https://api.eventsease.app/api/events/getEvents", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -28,7 +28,7 @@ const EventPage = () => {
 
     // Fetch packages
     axios
-      .get("http://54.255.151.41:8080/package/getall", {
+      .get("https://api.eventsease.app/package/getall", {
         headers: {
           Authorization: `Bearer ${token}`,
         },

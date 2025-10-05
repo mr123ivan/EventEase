@@ -62,7 +62,7 @@ const SubcontractorProgress = () => {
   const fetchSubcontractorProgress = async (email) => {
     try {
       const token = localStorage.getItem("token")
-      const response = await axios.get(`http://54.255.151.41:8080/api/transactions/subcontractor-progress-by-email/${email}`, {
+      const response = await axios.get(`https://api.eventsease.app/api/transactions/subcontractor-progress-by-email/${email}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
 
@@ -148,7 +148,7 @@ const SubcontractorProgress = () => {
           formData.append("comment", updateData.description) // Add comment parameter for backend compatibility
 
           await axios.post(
-            `http://54.255.151.41:8080/api/transactions/subcontractor-progress/id/${selectedTransaction.id}/upload-image`,
+            `https://api.eventsease.app/api/transactions/subcontractor-progress/id/${selectedTransaction.id}/upload-image`,
             formData,
             {
               headers: {
@@ -160,7 +160,7 @@ const SubcontractorProgress = () => {
         } else {
           // Use the regular update endpoint without image
           await axios.put(
-            `http://54.255.151.41:8080/api/transactions/subcontractor-progress/id/${selectedTransaction.id}`,
+            `https://api.eventsease.app/api/transactions/subcontractor-progress/id/${selectedTransaction.id}`,
             null,
             {
               params: {

@@ -12,7 +12,7 @@ import MessageModal from "../../Components/MessageModal"
 
 // Create an axios instance with default configurations
 const api = axios.create({
-  baseURL: "http://54.255.151.41:8080",
+  baseURL: "https://api.eventsease.app",
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",
@@ -654,7 +654,7 @@ const PaymentProofPage = () => {
       
       // Create a new custom axios instance for multipart form data
       const formApi = axios.create({
-        baseURL: "http://54.255.151.41:8080",
+        baseURL: "https://api.eventsease.app",
         headers: {
           "Content-Type": "multipart/form-data",
           "Authorization": `Bearer ${token}`

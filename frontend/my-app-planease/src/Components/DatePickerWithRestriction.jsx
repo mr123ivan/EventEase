@@ -30,7 +30,7 @@ const DatePickerWithRestriction = ({ onChange, value, name }) => {
   const [unavailableDates, setUnavailableDates] = useState(new Map());
 
   const getTranscationDates = () => {
-    axios.get('http://54.255.151.41:8080/api/transactions/getAllActiveTransactions')
+    axios.get('https://api.eventsease.app/api/transactions/getAllActiveTransactions')
       .then(res => {
         // Count occurrences of each date in transactions
         const dateCounts = new Map();

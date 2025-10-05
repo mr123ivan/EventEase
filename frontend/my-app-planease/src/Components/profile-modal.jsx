@@ -6,7 +6,7 @@ import axios from "axios"
 import { Snackbar, Alert } from "@mui/material"
 import { PROFILE_UPDATED_EVENT } from "./Navbar"
 
-const API_BASE_URL = "http://54.255.151.41:8080"
+const API_BASE_URL = "https://api.eventsease.app"
 
 // Create separate axios instance for PSGC API (without auth headers)
 const psgcApi = axios.create({

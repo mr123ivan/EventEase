@@ -71,7 +71,7 @@ export default function SubcontractorBookings() {
       try {
         const token = localStorage.getItem('token');
 
-        const userResponse = await axios.get('http://54.255.151.41:8080/user/getcurrentuser', {
+        const userResponse = await axios.get('https://api.eventsease.app/user/getcurrentuser', {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -80,7 +80,7 @@ export default function SubcontractorBookings() {
         const email = userResponse.data.email;
 
 
-        const response = await axios.get(`http://54.255.151.41:8080/api/transactions/getTransactionByEmail/${email}`, {
+        const response = await axios.get(`https://api.eventsease.app/api/transactions/getTransactionByEmail/${email}`, {
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`

@@ -14,7 +14,7 @@ const EventDetails = () => {
     const token = localStorage.getItem("token")
 
     axios
-      .get(`http://54.255.151.41:8080/api/events/event-details/${event_name}`, {
+      .get(`https://api.eventsease.app/api/events/event-details/${event_name}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

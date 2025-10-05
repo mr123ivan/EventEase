@@ -16,7 +16,7 @@ const uploadImageInChunks = async (image, chunkSize) => {
         });
 
         try {
-            const res = await axios.post(`http://54.255.151.41:8080/toolitem/upload?${params.toString()}`, buffer, {
+            const res = await axios.post(`https://api.eventsease.app/toolitem/upload?${params.toString()}`, buffer, {
                 headers: {
                     'Content-Type': 'application/octet-stream',
                     Authorization: `Bearer ${localStorage.getItem('token')}`,

@@ -215,7 +215,7 @@ const PaymentProofPagePackage = () => {
   const handleDeleteFormDraft =  async () => {
     const token = localStorage.getItem("token")
     try {
-      const response = await axios.delete(`http://54.255.151.41:8080/form-draft/delete/${currentEmail}/${currentPackageName}`, {
+      const response = await axios.delete(`https://api.eventsease.app/form-draft/delete/${currentEmail}/${currentPackageName}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
     } catch (error) {
@@ -265,7 +265,7 @@ const PaymentProofPagePackage = () => {
       }
 
       // Get user email from token
-      const userResponse = await axios.get("http://54.255.151.41:8080/user/getuser", {
+      const userResponse = await axios.get("https://api.eventsease.app/user/getuser", {
         headers: { Authorization: `Bearer ${token}` },
       })
       const userEmail = userResponse.data.email
@@ -340,7 +340,7 @@ const PaymentProofPagePackage = () => {
       console.log("- bookingData JSON:", JSON.stringify(transactionData))
 
       // Submit to the backend endpoint
-      const response = await axios.post("http://54.255.151.41:8080/api/transactions/createPackageBooking", formData, {
+      const response = await axios.post("https://api.eventsease.app/api/transactions/createPackageBooking", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
           Authorization: `Bearer ${token}`, // Add token header
@@ -357,7 +357,7 @@ const PaymentProofPagePackage = () => {
 
         // Send notification to admins
         await axios.post(
-          "http://54.255.151.41:8080/api/notifications/notify-admins",
+          "https://api.eventsease.app/api/notifications/notify-admins",
           null,
           {
             params: { message: `New package booking submitted: ${currentPackageName}` },
