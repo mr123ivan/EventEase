@@ -129,7 +129,7 @@ const EventTrackingAdmin = () => {
 
             // Fetch subcontractor progress data for each transaction
             const subcontractorProgressResponse = await axios.get(
-              `https://api.eventsease.app/api/transactions/subcontractor-progress/${transaction.transaction_Id}`,
+                            `https://api.eventsease.app/api/transactions/subcontractor-progress/${transaction.transaction_Id}`,
               {
                 headers: { Authorization: `Bearer ${token}` },
               }
