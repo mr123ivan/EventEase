@@ -46,6 +46,7 @@ import {
   CheckCircle as CheckCircleIcon,
   Undo as UndoIcon,
 } from "@mui/icons-material"
+import MapViewModal from "../../Components/MapViewModal.jsx"
 
 const EventTrackingAdmin = () => {
   const [events, setEvents] = useState([])
@@ -70,6 +71,8 @@ const EventTrackingAdmin = () => {
     comment: "",
     progressPercentage: 0,
   })
+  const [viewMapModal, setViewMapModal] = useState(false)
+  const [selectedLocation, setSelectedLocation] = useState(null)
 
   useEffect(() => {
     fetchEventsProgress()
@@ -871,7 +874,15 @@ const EventTrackingAdmin = () => {
           </Box>
                     </TableCell>
                     <TableCell>
-                      <Typography variant="body2" className="text-[#667085]" noWrap>
+                      <Typography
+                        variant="body2"
+                        className="text-[#667085] cursor-pointer hover:text-blue-600"
+                        noWrap
+                        onClick={() => {
+                          setSelectedLocation(event.location);
+                          setViewMapModal(true);
+                        }}
+                      >
                         {event.location}
                       </Typography>
                     </TableCell>
@@ -1492,6 +1503,12 @@ const EventTrackingAdmin = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      <MapViewModal
+        open={viewMapModal}
+        onClose={() => setViewMapModal(false)}
+        location={selectedLocation}
+      />
     </div>
   )
 }

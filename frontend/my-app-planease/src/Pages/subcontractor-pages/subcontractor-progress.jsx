@@ -33,6 +33,7 @@ import {
   CircularProgress,
 } from "@mui/material"
 import { Edit as EditIcon, Refresh as RefreshIcon, Work as WorkIcon } from "@mui/icons-material"
+import MapViewModal from "../../Components/MapViewModal.jsx"
 
 const SubcontractorProgress = () => {
   const [transactions, setTransactions] = useState([])
@@ -46,6 +47,8 @@ const SubcontractorProgress = () => {
   const [existingImageUrl, setExistingImageUrl] = useState(null)
   const [userEmail, setUserEmail] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [viewMapModal, setViewMapModal] = useState(false)
+  const [selectedLocation, setSelectedLocation] = useState("")
 
   useEffect(() => {
     const token = localStorage.getItem("token")
@@ -333,7 +336,21 @@ const SubcontractorProgress = () => {
                           <Typography variant="body2" className="font-medium">
                             {transaction.eventName}
                           </Typography>
-                          <Typography variant="caption" color="text.secondary">
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            sx={{
+                              cursor: 'pointer',
+                              '&:hover': {
+                                color: '#FFB22C',
+                                textDecoration: 'underline',
+                              },
+                            }}
+                            onClick={() => {
+                              setSelectedLocation(transaction.location);
+                              setViewMapModal(true);
+                            }}
+                          >
                             {transaction.location}
                           </Typography>
                           <br />
@@ -615,6 +632,12 @@ const SubcontractorProgress = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      <MapViewModal
+        open={viewMapModal}
+        onClose={() => setViewMapModal(false)}
+        location={selectedLocation}
+      />
     </div>
   )
 }

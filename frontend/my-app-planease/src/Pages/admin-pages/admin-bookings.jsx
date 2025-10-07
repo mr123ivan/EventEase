@@ -6,6 +6,9 @@ import AdminSideBar from "../../Components/admin-sidebar.jsx"
 import { Dialog } from "@headlessui/react"
 import Navbar from "../../Components/Navbar"
 import axios from "axios"
+import MapViewModal from "../../Components/MapViewModal.jsx"
+import MapIcon from '@mui/icons-material/Map';
+import IconButton from '@mui/material/IconButton';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -15,6 +18,7 @@ const AdminBookings = () => {
   const [viewPaymentModal, setViewPaymentModal] = useState(false)
   const [transactions, setTransactions] = useState([])
   const [viewReasonModal, setViewReasonModal] = useState(false)
+  const [viewMapModal, setViewMapModal] = useState(false)
   const [isValidating, setIsValidating] = useState(false)
   
   // Cancel confirmation modal states
@@ -497,12 +501,20 @@ const AdminBookings = () => {
                     <div className="flex flex-col gap-2 w-auto">
                       <div>
                         <label className="text-sm font-medium text-gray-500 block mb-1">Location</label>
-                        <input
-                          type="text"
-                          className="border p-2 rounded w-full"
-                          value={selectedRequest.transactionVenue}
-                          readOnly
-                        />
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            className="border p-2 rounded flex-1"
+                            value={selectedRequest.transactionVenue}
+                            readOnly
+                          />
+                          <IconButton
+                            onClick={() => setViewMapModal(true)}
+                            sx={{ color: '#FFB22C', '&:hover': { backgroundColor: '#f0f0f0' } }}
+                          >
+                            <MapIcon />
+                          </IconButton>
+                        </div>
                       </div>
                       <div>
                         <label className="text-sm font-medium text-gray-500 block mb-1">Date</label>
@@ -935,6 +947,13 @@ const AdminBookings = () => {
           </Dialog.Panel>
         </div>
       </Dialog>
+
+      {/* Map View Modal */}
+      <MapViewModal
+        open={viewMapModal}
+        onClose={() => setViewMapModal(false)}
+        location={selectedRequest?.transactionVenue}
+      />
     </div>
   )
 }

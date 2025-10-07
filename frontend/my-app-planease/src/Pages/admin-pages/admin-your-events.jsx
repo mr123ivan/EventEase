@@ -238,16 +238,23 @@ const YourEvents = () => {
     }
   }
 
-  const handleDeleteEvent = async () => {
-    if (window.confirm("Are you sure you want to delete this event?")) {
-      try {
-        await axios.delete(`${API_BASE_URL}/api/events/${selectedEvent.event_Id}`)
-        fetchEvents()
-        setShowModal(false)
-        setSelectedEvent(null)
-      } catch (error) {
-        console.error("Error deleting event:", error)
-      }
+  const handleDeleteEvent = () => {
+    setShowDeleteModal(true)
+    setDeleteWarningMessage("")
+  }
+
+  const confirmDeleteEvent = async () => {
+    setIsDeleting(true)
+    try {
+      await axios.delete(`${API_BASE_URL}/api/events/${selectedEvent.event_Id}`)
+      fetchEvents()
+      setShowModal(false)
+      setSelectedEvent(null)
+      setShowDeleteModal(false)
+    } catch (error) {
+      console.error("Error deleting event:", error)
+    } finally {
+      setIsDeleting(false)
     }
   }
 

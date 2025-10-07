@@ -29,6 +29,8 @@ import SearchIcon from "@mui/icons-material/Search";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import FilterListIcon from "@mui/icons-material/FilterList";
+import MapIcon from '@mui/icons-material/Map';
+import MapViewModal from "../../Components/MapViewModal.jsx";
 
 const style = {
   position: 'absolute',
@@ -52,6 +54,7 @@ export default function SubcontractorBookings() {
   const [filterMenuOpen, setFilterMenuOpen] = useState(false);
   const filterRef = useRef(null);
   const bookingsPerPage = 10;
+  const [viewMapModal, setViewMapModal] = useState(false);
   
   const handleOpen = (row) => {
     setSelectedRow(row);
@@ -505,12 +508,20 @@ export default function SubcontractorBookings() {
 
         <Grid container spacing={2}>
           <Grid item xs={6}>
-            <TextField
-              fullWidth
-              label="Location"
-              value={selectedRow.place}
-              InputProps={{ readOnly: true }}
-            />
+            <div className="flex items-center gap-2">
+              <TextField
+                fullWidth
+                label="Location"
+                value={selectedRow.place}
+                InputProps={{ readOnly: true }}
+              />
+              <IconButton
+                onClick={() => setViewMapModal(true)}
+                sx={{ color: '#FFB22C', '&:hover': { backgroundColor: '#f0f0f0' } }}
+              >
+                <MapIcon />
+              </IconButton>
+            </div>
           </Grid>
           <Grid item xs={6}>
             <TextField
@@ -541,6 +552,12 @@ export default function SubcontractorBookings() {
     )}
   </Box>
 </Modal>
+
+<MapViewModal
+  open={viewMapModal}
+  onClose={() => setViewMapModal(false)}
+  location={selectedRow?.place}
+/>
 
     </div>
   );

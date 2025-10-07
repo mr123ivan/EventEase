@@ -7,6 +7,9 @@ import AdminSideBar from "../../Components/admin-sidebar.jsx"
 import { Dialog } from "@headlessui/react"
 import Navbar from "../../Components/Navbar"
 import { CloudArrowUpIcon } from "@heroicons/react/24/outline"
+import MapIcon from '@mui/icons-material/Map';
+import IconButton from '@mui/material/IconButton';
+import MapViewModal from "../../Components/MapViewModal"
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -15,6 +18,7 @@ const AdminPendingRequest = () => {
     const [selectedRequest, setSelectedRequest] = useState(null);
     const [viewServicesModal, setViewServicesModal] = useState(false);
     const [viewPaymentModal, setViewPaymentModal] = useState(false);
+    const [isMapModalOpen, setIsMapModalOpen] = useState(false);
 
     const [isApproving, setIsApproving] = useState(false);
     const [isDeclining, setIsDeclining] = useState(false);
@@ -415,7 +419,15 @@ const AdminPendingRequest = () => {
                     <div className="flex flex-col gap-2 w-auto">
                       <div>
                         <label className="text-sm font-medium text-gray-500 block mb-1">Location</label>
-                        <input type="text" className="border p-2 rounded w-full" value={selectedRequest.transactionVenue} readOnly />
+                        <div className="flex items-center gap-2">
+                          <input type="text" className="border p-2 rounded flex-1" value={selectedRequest.transactionVenue} readOnly />
+                          <IconButton
+                            onClick={() => setIsMapModalOpen(true)}
+                            sx={{ color: '#FFB22C', '&:hover': { backgroundColor: '#f0f0f0' } }}
+                          >
+                            <MapIcon />
+                          </IconButton>
+                        </div>
                       </div>
                       <div>
                         <label className="text-sm font-medium text-gray-500 block mb-1">Date</label>
@@ -850,6 +862,13 @@ const AdminPendingRequest = () => {
           </Dialog.Panel>
         </div>
       </Dialog>
+
+      {/* Map Modal */}
+      <MapViewModal
+        open={isMapModalOpen}
+        onClose={() => setIsMapModalOpen(false)}
+        location={selectedRequest?.transactionVenue}
+      />
     </div>
   )
 }
