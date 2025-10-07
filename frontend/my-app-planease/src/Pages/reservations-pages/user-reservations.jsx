@@ -5,7 +5,7 @@ import Navbar from "../../Components/Navbar"
 import Footer from "../../Components/Footer"
 import axios from "axios"
 
-const API_BASE_URL = "http://localhost:8080"
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const getAuthToken = () => {
   return localStorage.getItem("token") || ""

@@ -6,6 +6,7 @@ import axios from "axios"
 import { saveServicesData, clearBookingData } from "../booking-pages/utils/booking-storage"
 
 const PackageDetails = () => {
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const { package_id } = useParams()
   const [packageData, setPackageData] = useState(null)
   const [packageServices, setPackageServices] = useState([])
@@ -29,7 +30,7 @@ const PackageDetails = () => {
         }
 
         // Fetch specific package using the package ID
-        const packageResponse = await axios.get(`http://localhost:8080/package/get/${package_id}`, {
+        const packageResponse = await axios.get(`${API_BASE_URL}/package/get/${package_id}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -45,7 +46,7 @@ const PackageDetails = () => {
 
         // Always use the serviceAttachments endpoint for detailed service information
         try {
-          const serviceAttachmentsResponse = await axios.get(`http://localhost:8080/package/service/${package_id}`, {
+          const serviceAttachmentsResponse = await axios.get(`${API_BASE_URL}/package/service/${package_id}`, {
             headers: {
               Authorization: `Bearer ${token}`,
             },
@@ -70,7 +71,7 @@ const PackageDetails = () => {
         }
 
         // Fetch all packages for the "other packages" section
-        const allPackagesResponse = await axios.get("http://localhost:8080/package/getall", {
+        const allPackagesResponse = await axios.get(`${API_BASE_URL}/package/getall`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

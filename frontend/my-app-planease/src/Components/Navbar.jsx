@@ -7,7 +7,7 @@ import { useAuth } from "./AuthProvider"
 import { useNavigate, Link } from "react-router-dom"
 import axios from "axios"
 
-const API_BASE_URL = "http://localhost:8080"
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 // Create a custom event for profile updates
 export const PROFILE_UPDATED_EVENT = "profileUpdated"

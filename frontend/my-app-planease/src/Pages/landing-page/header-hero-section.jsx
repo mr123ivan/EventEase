@@ -9,7 +9,7 @@ export default function HeaderHeroSection() {
     <section className="relative h-screen flex flex-col">
       <div className="absolute inset-0 w-full h-full">
         <img
-          src="/public/sunsetweddingbackground.jpg"
+          src="/sunsetweddingbackground.jpg"
           alt="Wedding couple at sunset"
           className="w-full h-full object-cover"
         />

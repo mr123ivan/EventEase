@@ -7,6 +7,8 @@ import { Dialog } from "@headlessui/react"
 import Navbar from "../../Components/Navbar"
 import { Snackbar, Alert } from "@mui/material"
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 const AdminPackages = () => {
   const [packages, setPackages] = useState([])
   const [allSubcontractors, setAllSubcontractors] = useState([])
@@ -47,7 +49,7 @@ const AdminPackages = () => {
     try {
       setLoading(true)
       const token = localStorage.getItem("token")
-      const response = await axios.get("http://localhost:8080/package/getall", {
+      const response = await axios.get(`${API_BASE_URL}/package/getall`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -77,7 +79,7 @@ const AdminPackages = () => {
   const fetchSubcontractors = async () => {
     try {
       const token = localStorage.getItem("token")
-      const response = await axios.get("http://localhost:8080/subcontractor/getall", {
+      const response = await axios.get(`${API_BASE_URL}/subcontractor/getall`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -97,7 +99,7 @@ const AdminPackages = () => {
   const fetchPackageServices = async (packageName) => {
     try {
       const token = localStorage.getItem("token")
-      const response = await axios.get(`http://localhost:8080/package/getServices/${packageName}`, {
+      const response = await axios.get(`${API_BASE_URL}/package/getServices/${packageName}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -170,7 +172,7 @@ const AdminPackages = () => {
       const imageFormData = new FormData()
       imageFormData.append("file", imageFile)
 
-      const response = await axios.post(`http://localhost:8080/package/upload/image/${packageId}`, imageFormData, {
+      const response = await axios.post(`${API_BASE_URL}/package/upload/image/${packageId}`, imageFormData, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",
@@ -228,7 +230,7 @@ const AdminPackages = () => {
 
       if (isEditing) {
         // Update package
-        const response = await axios.put("http://localhost:8080/package/update", formData, {
+        const response = await axios.put(`${API_BASE_URL}/package/update`, formData, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -236,7 +238,7 @@ const AdminPackages = () => {
         savedPackage = response.data
       } else {
         // Create package
-        const response = await axios.post("http://localhost:8080/package/create", formData, {
+        const response = await axios.post(`${API_BASE_URL}/package/create`, formData, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -274,7 +276,7 @@ const AdminPackages = () => {
             console.log("Adding service with email:", email)
 
             const addServiceResponse = await axios.post(
-              "http://localhost:8080/package/addService",
+              `${API_BASE_URL}/package/addService`,
               {
                 packageId: savedPackage.packageId.toString(),
                 subcontractorEmail: email,
@@ -323,7 +325,7 @@ const AdminPackages = () => {
     if (window.confirm("Are you sure you want to delete this package?")) {
       try {
         const token = localStorage.getItem("token")
-        await axios.delete(`http://localhost:8080/package/delete/${selectedPackage.packageId}`, {
+        await axios.delete(`${API_BASE_URL}/package/delete/${selectedPackage.packageId}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

@@ -17,6 +17,8 @@ import { useTheme } from '@mui/material/styles';
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 const SubcontractorDashboard = () => {
 
     // Get JWT from localStorage and decode it
@@ -110,7 +112,7 @@ const SubcontractorDashboard = () => {
         setIsEditingAbout(false);
 
         // Submit the updated description
-        axios.put('http://localhost:8080/subcontractor/edit-description', {
+        axios.put(`${API_BASE_URL}/subcontractor/edit-description`, {
                 email: email,
                 description: description
             },
@@ -156,7 +158,7 @@ const SubcontractorDashboard = () => {
     }, []);
 
     const fetchShowcaseData = () => {
-        axios.get(`http://localhost:8080/subcontractor/getdetails/${email}`, {
+        axios.get(`${API_BASE_URL}/subcontractor/getdetails/${email}`, {
             headers: {
                 Authorization: `Bearer ${localStorage.getItem('token')}`
             }
@@ -189,7 +191,7 @@ const SubcontractorDashboard = () => {
         setIsLoadingOverview(true);
         
         // Get assigned events count and transactions
-        axios.get(`http://localhost:8080/api/transactions/getTransactionByEmail/${subcontractorEmail}`, {
+        axios.get(`${API_BASE_URL}/api/transactions/getTransactionByEmail/${subcontractorEmail}`, {
             headers: {
                 Authorization: `Bearer ${localStorage.getItem('token')}`
             }
@@ -372,7 +374,7 @@ const SubcontractorDashboard = () => {
     // };
 
     const performDelete = (showcase_id) => {
-        axios.delete(`http://localhost:8080/showcase/delete/${showcase_id}`, {
+        axios.delete(`${API_BASE_URL}/showcase/delete/${showcase_id}`, {
             headers: {
                 Authorization: `Bearer ${localStorage.getItem('token')}`,
             },
@@ -424,7 +426,7 @@ const SubcontractorDashboard = () => {
             for (const img of filteredResizedImages) {
                 try {
                     const presignedResponse = await axios.get(
-                        `http://localhost:8080/showcasemedia/generate-PresignedUrl`,
+                        `${API_BASE_URL}/showcasemedia/generate-PresignedUrl`,
                         {
                             params: {
                                 file_name: img.title,
@@ -467,8 +469,8 @@ const SubcontractorDashboard = () => {
             console.log("urlImages", urlFiles);
 
             const endpoint = isEditingShowcase
-                ? `http://localhost:8080/showcase/edit-showcase/${editingShowcaseId}`
-                : `http://localhost:8080/showcase/create-showcase`;
+                ? `${API_BASE_URL}/showcase/edit-showcase/${editingShowcaseId}`
+                : `${API_BASE_URL}/showcase/create-showcase`;
             const method = isEditingShowcase ? 'put' : 'post';
 
             axios[method](endpoint, {
@@ -493,7 +495,7 @@ const SubcontractorDashboard = () => {
             const urlFiles = [];
             try{
                 const presignedResponse = await axios.get(
-                    `http://localhost:8080/showcasemedia/generate-PresignedUrl`,
+                    `${API_BASE_URL}/showcasemedia/generate-PresignedUrl`,
                     {
                         params: {
                             file_name: selectVideo.name,
@@ -528,8 +530,8 @@ const SubcontractorDashboard = () => {
                 }
 
                 const endpoint = isEditingShowcase
-                    ? `http://localhost:8080/showcase/edit-showcase/${editingShowcaseId}`
-                    : `http://localhost:8080/showcase/create-showcase`;
+                    ? `${API_BASE_URL}/showcase/edit-showcase/${editingShowcaseId}`
+                    : `${API_BASE_URL}/showcase/create-showcase`;
                 const method = isEditingShowcase ? 'put' : 'post';
 
                 axios[method](endpoint, {

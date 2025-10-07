@@ -11,8 +11,9 @@ import axios from "axios"
 import MessageModal from "../../Components/MessageModal"
 
 // Create an axios instance with default configurations
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const api = axios.create({
-  baseURL: "http://localhost:8080",
+  baseURL: API_BASE_URL,
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",
@@ -654,7 +655,7 @@ const PaymentProofPage = () => {
       
       // Create a new custom axios instance for multipart form data
       const formApi = axios.create({
-        baseURL: "http://localhost:8080",
+        baseURL: API_BASE_URL,
         headers: {
           "Content-Type": "multipart/form-data",
           "Authorization": `Bearer ${token}`

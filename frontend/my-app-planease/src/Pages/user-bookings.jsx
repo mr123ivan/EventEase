@@ -4,7 +4,7 @@ import { useAuth } from "../Components/AuthProvider";
 import { AlertCircle, CheckCircle, Clock, Calendar, ChevronLeft, Loader2, MapPin, User, Package, BarChart } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Dialog } from "@headlessui/react"
-const API_BASE_URL = "http://localhost:8080";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const UserBookingsPage = () => {
   const [bookings, setBookings] = useState({
@@ -95,7 +95,7 @@ const UserBookingsPage = () => {
         console.log("User Bookings Page - Trying to fetch user data directly");
         
         // Make a direct API call to get user info
-        axios.get("http://localhost:8080/user/getuser", {
+        axios.get(`${API_BASE_URL}/user/getuser`, {
           headers: { Authorization: `Bearer ${token}` },
         })
         .then(response => {

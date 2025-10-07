@@ -7,6 +7,8 @@ import { Dialog } from "@headlessui/react"
 import Navbar from "../../Components/Navbar"
 import axios from "axios"
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 const AdminBookings = () => {
   const [selectedRequest, setSelectedRequest] = useState(null)
   const [viewServicesModal, setViewServicesModal] = useState(false)
@@ -92,7 +94,7 @@ const AdminBookings = () => {
 
   const fetchEventTypes = async () => {
     try {
-      const response = await axios.get("http://localhost:8080/api/events/getEvents")
+      const response = await axios.get(`${API_BASE_URL}/api/events/getEvents`)
       
       // Extract unique event names from the response
       if (response.data && response.data.length > 0) {
@@ -118,7 +120,7 @@ const AdminBookings = () => {
 
   const fetchData = async () => {
     axios
-      .get("http://localhost:8080/api/transactions/getAllTransactions")
+      .get(`${API_BASE_URL}/api/transactions/getAllTransactions`)
       .then((res) => {
         // Filter out transactions with PENDING status
         const nonPendingTransactions = res.data.filter(transaction => transaction.transactionStatus !== "PENDING")
@@ -224,7 +226,7 @@ const AdminBookings = () => {
 
     try {
       const response = await axios.put(
-        `http://localhost:8080/api/transactions/validateTransaction?transactionId=${selectedRequest?.transaction_Id}&status=${validate}`,
+        `${API_BASE_URL}/api/transactions/validateTransaction?transactionId=${selectedRequest?.transaction_Id}&status=${validate}`,
         {},
         {
           headers: {

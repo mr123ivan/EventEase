@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import Navbar from "../../Components/Navbar";
 import NavPanel from "../../Components/subcon-navpanel";
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 import {
   Box,
   Modal,
@@ -71,7 +73,7 @@ export default function SubcontractorBookings() {
       try {
         const token = localStorage.getItem('token');
 
-        const userResponse = await axios.get('http://localhost:8080/user/getcurrentuser', {
+        const userResponse = await axios.get(`${API_BASE_URL}/user/getcurrentuser`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -80,7 +82,7 @@ export default function SubcontractorBookings() {
         const email = userResponse.data.email;
 
 
-        const response = await axios.get(`http://localhost:8080/api/transactions/getTransactionByEmail/${email}`, {
+        const response = await axios.get(`${API_BASE_URL}/api/transactions/getTransactionByEmail/${email}`, {
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`

@@ -2,6 +2,7 @@ package com.Project.Backend.Controller;
 
 import com.Project.Backend.Service.OtpService;
 import com.Project.Backend.Service.PasswordEmailService;
+import com.Project.Backend.Service.UserService;
 import jakarta.mail.internet.MimeMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
@@ -23,10 +24,17 @@ public class EmailController {
     private OtpService otpService;
     @Autowired
     private PasswordEmailService passwordEmailService;
+    @Autowired
+    private UserService userService;
 
     @RequestMapping("/send-email/{email}")
     public String sendHtmlEmail(@PathVariable("email") String recipient) {
         try {
+            // Check if user exists
+            if (!userService.userExistsByEmail(recipient)) {
+                return "User not found";
+            }
+
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
 
@@ -101,11 +109,17 @@ public class EmailController {
     @GetMapping("/validate-otp")
     public ResponseEntity<Boolean> validateOtp(@RequestParam("email")String email, @RequestParam("OTP")String otp){
        boolean isValid = otpService.validateOtp(email, otp);
-       if(isValid){
+       // Don't clear OTP here - let reset-password handle clearing after successful password update
+       return ResponseEntity.ok(isValid);
+    }
+
+    @PostMapping("/clear-otp")
+    public ResponseEntity<String> clearOtp(@RequestParam("email") String email) {
+        try {
             otpService.clearOtp(email);
-           return ResponseEntity.ok(true);
-       }else{
-           return ResponseEntity.ok(false);
-       }
+            return ResponseEntity.ok("OTP cleared successfully");
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Failed to clear OTP: " + e.getMessage());
+        }
     }
 }
