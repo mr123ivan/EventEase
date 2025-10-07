@@ -12,6 +12,7 @@ import axios from "axios"
 
 
 const PaymentProofPagePackage = () => {
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const navigate = useNavigate()
   const { packageName } = useParams()
   const fileInputRef = useRef(null)
@@ -215,7 +216,7 @@ const PaymentProofPagePackage = () => {
   const handleDeleteFormDraft =  async () => {
     const token = localStorage.getItem("token")
     try {
-      const response = await axios.delete(`http://localhost:8080/form-draft/delete/${currentEmail}/${currentPackageName}`, {
+      const response = await axios.delete(`${API_BASE_URL}/form-draft/delete/${currentEmail}/${currentPackageName}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
     } catch (error) {
@@ -265,7 +266,7 @@ const PaymentProofPagePackage = () => {
       }
 
       // Get user email from token
-      const userResponse = await axios.get("http://localhost:8080/user/getuser", {
+      const userResponse = await axios.get(`${API_BASE_URL}/user/getuser`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       const userEmail = userResponse.data.email
@@ -340,7 +341,7 @@ const PaymentProofPagePackage = () => {
       console.log("- bookingData JSON:", JSON.stringify(transactionData))
 
       // Submit to the backend endpoint
-      const response = await axios.post("http://localhost:8080/api/transactions/createPackageBooking", formData, {
+      const response = await axios.post(`${API_BASE_URL}/api/transactions/createPackageBooking`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
           Authorization: `Bearer ${token}`, // Add token header
@@ -357,7 +358,7 @@ const PaymentProofPagePackage = () => {
 
         // Send notification to admins
         await axios.post(
-          "http://localhost:8080/api/notifications/notify-admins",
+          `${API_BASE_URL}/api/notifications/notify-admins`,
           null,
           {
             params: { message: `New package booking submitted: ${currentPackageName}` },

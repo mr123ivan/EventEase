@@ -83,6 +83,7 @@ public class SecurityConfig {
                         .requestMatchers("/user/login").permitAll()
                         .requestMatchers("/user/register").permitAll()
                         .requestMatchers("/user/check-user").permitAll()
+                        .requestMatchers("/user/reset-password").permitAll()
                         .requestMatchers("/user/verify-token").permitAll()
                         .requestMatchers("/user/getcurrentuser").authenticated()
                         .requestMatchers("/subcontractor/create", "/subcontractor/login").permitAll()
@@ -160,7 +161,7 @@ public class SecurityConfig {
     @Bean
     CorsConfigurationSource configurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:5173"));
+        configuration.setAllowedOrigins(List.of("http://localhost:5173","http://capstone-planease.s3-website-ap-southeast-1.amazonaws.com/"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE"));
         configuration.setAllowCredentials(true);
         configuration.setAllowedHeaders(List.of("*"));

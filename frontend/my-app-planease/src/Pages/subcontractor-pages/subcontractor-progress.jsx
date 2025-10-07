@@ -4,6 +4,8 @@ import { useState, useEffect } from "react"
 import axios from "axios"
 import Navbar from '../../Components/Navbar';
 import NavPanel from "../../Components/subcon-navpanel";
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 import {
   Button,
   Chip,
@@ -31,6 +33,7 @@ import {
   CircularProgress,
 } from "@mui/material"
 import { Edit as EditIcon, Refresh as RefreshIcon, Work as WorkIcon } from "@mui/icons-material"
+import MapViewModal from "../../Components/MapViewModal.jsx"
 
 const SubcontractorProgress = () => {
   const [transactions, setTransactions] = useState([])
@@ -44,6 +47,8 @@ const SubcontractorProgress = () => {
   const [existingImageUrl, setExistingImageUrl] = useState(null)
   const [userEmail, setUserEmail] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [viewMapModal, setViewMapModal] = useState(false)
+  const [selectedLocation, setSelectedLocation] = useState("")
 
   useEffect(() => {
     const token = localStorage.getItem("token")
@@ -62,7 +67,7 @@ const SubcontractorProgress = () => {
   const fetchSubcontractorProgress = async (email) => {
     try {
       const token = localStorage.getItem("token")
-      const response = await axios.get(`http://localhost:8080/api/transactions/subcontractor-progress-by-email/${email}`, {
+      const response = await axios.get(`${API_BASE_URL}/api/transactions/subcontractor-progress-by-email/${email}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
 
@@ -148,7 +153,7 @@ const SubcontractorProgress = () => {
           formData.append("comment", updateData.description) // Add comment parameter for backend compatibility
 
           await axios.post(
-            `http://localhost:8080/api/transactions/subcontractor-progress/id/${selectedTransaction.id}/upload-image`,
+            `${API_BASE_URL}/api/transactions/subcontractor-progress/id/${selectedTransaction.id}/upload-image`,
             formData,
             {
               headers: {
@@ -160,7 +165,7 @@ const SubcontractorProgress = () => {
         } else {
           // Use the regular update endpoint without image
           await axios.put(
-            `http://localhost:8080/api/transactions/subcontractor-progress/id/${selectedTransaction.id}`,
+            `${API_BASE_URL}/api/transactions/subcontractor-progress/id/${selectedTransaction.id}`,
             null,
             {
               params: {
@@ -331,7 +336,21 @@ const SubcontractorProgress = () => {
                           <Typography variant="body2" className="font-medium">
                             {transaction.eventName}
                           </Typography>
-                          <Typography variant="caption" color="text.secondary">
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            sx={{
+                              cursor: 'pointer',
+                              '&:hover': {
+                                color: '#FFB22C',
+                                textDecoration: 'underline',
+                              },
+                            }}
+                            onClick={() => {
+                              setSelectedLocation(transaction.location);
+                              setViewMapModal(true);
+                            }}
+                          >
                             {transaction.location}
                           </Typography>
                           <br />
@@ -613,6 +632,12 @@ const SubcontractorProgress = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      <MapViewModal
+        open={viewMapModal}
+        onClose={() => setViewMapModal(false)}
+        location={selectedLocation}
+      />
     </div>
   )
 }

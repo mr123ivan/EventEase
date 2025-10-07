@@ -7,7 +7,7 @@ import { useAuth } from "./AuthProvider"
 import { useNavigate, Link } from "react-router-dom"
 import axios from "axios"
 
-const API_BASE_URL = "http://localhost:8080"
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 // Create a custom event for profile updates
 export const PROFILE_UPDATED_EVENT = "profileUpdated"
@@ -82,17 +82,17 @@ const Navbar = () => {
 
     // Set up interval to periodically check for new notifications (every 30 seconds)
     const intervalId = setInterval(() => {
-      if (user.userId) {
+      if (user.email) {
         const token = localStorage.getItem("token")
         if (token) {
-          fetchUnreadCount(user.userId, token)
+          fetchUnreadCount(user.email, token)
         }
       }
     }, 30000)
 
     // Clean up interval on unmount
     return () => clearInterval(intervalId)
-  }, [user.userId])
+  }, [user.email])
 
   // Separate effect for fetching bookings after user data is loaded
   useEffect(() => {

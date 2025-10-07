@@ -9,6 +9,8 @@ import { AuthContext } from '../../Components/AuthProvider';
 import axios from 'axios';
 import '../../index.css';
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 const localizer = momentLocalizer(moment);
 
 const SubcontractorCalendar = () => {
@@ -39,7 +41,7 @@ const SubcontractorCalendar = () => {
         const token = localStorage.getItem('token');
         
         // First get the current user's email
-        const userResponse = await axios.get('http://localhost:8080/user/getcurrentuser', {
+        const userResponse = await axios.get(`${API_BASE_URL}/user/getcurrentuser`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -54,7 +56,7 @@ const SubcontractorCalendar = () => {
         }
         
         // Then fetch the unavailable dates using the email
-        const response = await axios.get(`http://localhost:8080/api/subcontractor/unavailable-dates`, {
+        const response = await axios.get(`${API_BASE_URL}/api/subcontractor/unavailable-dates`, {
           params: { email: email },
           headers: {
             'Content-Type': 'application/json',
@@ -134,7 +136,7 @@ const SubcontractorCalendar = () => {
       const token = localStorage.getItem('token');
       
       // First get the current user's email
-      const userResponse = await axios.get('http://localhost:8080/user/getcurrentuser', {
+      const userResponse = await axios.get(`${API_BASE_URL}/user/getcurrentuser`, {
         headers: {
              'Content-Type': 'application/json',
              'Authorization': `Bearer ${token}`
@@ -150,7 +152,7 @@ const SubcontractorCalendar = () => {
       const formattedDate = moment(date).format('YYYY-MM-DD');
       
       // Save the unavailable date
-      const response = await axios.post('http://localhost:8080/api/subcontractor/unavailable-dates', 
+      const response = await axios.post(`${API_BASE_URL}/api/subcontractor/unavailable-dates`, 
         {
           email: email,
           date: formattedDate,
@@ -237,7 +239,7 @@ const SubcontractorCalendar = () => {
     if (id) {
       // If the date has an ID, it's in the backend and needs to be deleted
       try {
-        const response = await fetch(`http://localhost:8080/api/subcontractor/unavailable-dates/${id}`, {
+        const response = await fetch(`${API_BASE_URL}/api/subcontractor/unavailable-dates/${id}`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${token}`
@@ -333,7 +335,7 @@ const SubcontractorCalendar = () => {
           reason: dateObj.reason || 'Unavailable'
         };
         
-        return fetch('http://localhost:8080/api/subcontractor/unavailable-dates', {
+        return fetch(`${API_BASE_URL}/api/subcontractor/unavailable-dates`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

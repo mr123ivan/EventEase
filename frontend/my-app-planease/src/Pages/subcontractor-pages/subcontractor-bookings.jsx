@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import Navbar from "../../Components/Navbar";
 import NavPanel from "../../Components/subcon-navpanel";
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 import {
   Box,
   Modal,
@@ -27,6 +29,8 @@ import SearchIcon from "@mui/icons-material/Search";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import FilterListIcon from "@mui/icons-material/FilterList";
+import MapIcon from '@mui/icons-material/Map';
+import MapViewModal from "../../Components/MapViewModal.jsx";
 
 const style = {
   position: 'absolute',
@@ -50,6 +54,7 @@ export default function SubcontractorBookings() {
   const [filterMenuOpen, setFilterMenuOpen] = useState(false);
   const filterRef = useRef(null);
   const bookingsPerPage = 10;
+  const [viewMapModal, setViewMapModal] = useState(false);
   
   const handleOpen = (row) => {
     setSelectedRow(row);
@@ -71,7 +76,7 @@ export default function SubcontractorBookings() {
       try {
         const token = localStorage.getItem('token');
 
-        const userResponse = await axios.get('http://localhost:8080/user/getcurrentuser', {
+        const userResponse = await axios.get(`${API_BASE_URL}/user/getcurrentuser`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -80,7 +85,7 @@ export default function SubcontractorBookings() {
         const email = userResponse.data.email;
 
 
-        const response = await axios.get(`http://localhost:8080/api/transactions/getTransactionByEmail/${email}`, {
+        const response = await axios.get(`${API_BASE_URL}/api/transactions/getTransactionByEmail/${email}`, {
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
@@ -503,12 +508,20 @@ export default function SubcontractorBookings() {
 
         <Grid container spacing={2}>
           <Grid item xs={6}>
-            <TextField
-              fullWidth
-              label="Location"
-              value={selectedRow.place}
-              InputProps={{ readOnly: true }}
-            />
+            <div className="flex items-center gap-2">
+              <TextField
+                fullWidth
+                label="Location"
+                value={selectedRow.place}
+                InputProps={{ readOnly: true }}
+              />
+              <IconButton
+                onClick={() => setViewMapModal(true)}
+                sx={{ color: '#FFB22C', '&:hover': { backgroundColor: '#f0f0f0' } }}
+              >
+                <MapIcon />
+              </IconButton>
+            </div>
           </Grid>
           <Grid item xs={6}>
             <TextField
@@ -539,6 +552,12 @@ export default function SubcontractorBookings() {
     )}
   </Box>
 </Modal>
+
+<MapViewModal
+  open={viewMapModal}
+  onClose={() => setViewMapModal(false)}
+  location={selectedRow?.place}
+/>
 
     </div>
   );

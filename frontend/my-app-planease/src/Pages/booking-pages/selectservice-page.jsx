@@ -17,6 +17,7 @@ import {
 } from "./utils/booking-storage"
 
 const SelectServicePage = () => {
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const navigate = useNavigate()
   const { eventName } = useParams()
 
@@ -45,7 +46,7 @@ const SelectServicePage = () => {
     const fetchEventSections = async () => {
       if (!currentEventName) return
       try {
-        const res = await axios.get(`http://localhost:8080/api/events/event-details/${encodeURIComponent(currentEventName)}`)
+        const res = await axios.get(`${API_BASE_URL}/api/events/event-details/${encodeURIComponent(currentEventName)}`)
         const ev = res?.data
         const raw = ev?.event_sections
         const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw
@@ -94,31 +95,48 @@ const SelectServicePage = () => {
   useEffect(() => {
     const fetchServices = async () => {
       try {
-        const resp = await axios.get('http://localhost:8080/subcontractor/getall')
-        const arr = Array.isArray(resp.data) ? resp.data : []
-        const map = {}
+        const resp = await axios.get(`${API_BASE_URL}/subcontractor/getall`);
+        const eventDate = getEventDetails().eventDate; // Get the selected event date
+        const arr = Array.isArray(resp.data) ? resp.data : [];
+        const map = {};
+        
         arr.forEach(sc => {
-          ;(sc.services || []).forEach(svc => {
-            const sid = Number(svc.id ?? svc.serviceId ?? svc.service_id)
-            if (Number.isFinite(sid)) {
-              map[sid] = { name: svc.name ?? svc.service_name ?? `Service ${sid}`, price: Number(svc.price ?? svc.service_price ?? 0) }
-            }
-          })
-        })
-        setServiceMap(map)
+          // Check if subcontractor is available on the event date
+          const isUnavailable = (sc.unavailableDates || []).some(
+            ud => ud.date === eventDate
+          );
+          
+          // Only process services if subcontractor is available
+          if (!isUnavailable) {
+            (sc.services || []).forEach(svc => {
+              const sid = Number(svc.id ?? svc.serviceId ?? svc.service_id);
+              if (Number.isFinite(sid)) {
+                map[sid] = { 
+                  name: svc.name ?? svc.service_name ?? `Service ${sid}`, 
+                  price: Number(svc.price ?? svc.service_price ?? 0),
+                  subcontractorId: sc.subcontractor_Id, // Keep track of which subcontractor provides this service
+                  subcontractorName: sc.businessName || `${sc.user?.firstname} ${sc.user?.lastname}`
+                };
+              }
+            });
+          }
+        });
+        
+        setServiceMap(map);
       } catch (e) {
-        console.warn('Unable to fetch subcontractor services for mapping', e)
-        setServiceMap({})
+        console.warn('Unable to fetch subcontractor services for mapping', e);
+        setServiceMap({});
       }
-    }
-    fetchServices()
-  }, [])
+    };
+    
+    fetchServices();
+  }, []);
 
   // Fetch all packages once to build id -> meta map
   useEffect(() => {
     const fetchPackages = async () => {
       try {
-        const resp = await axios.get('http://localhost:8080/package/getall')
+        const resp = await axios.get(`${API_BASE_URL}/package/getall`)
         const arr = Array.isArray(resp.data) ? resp.data : []
         const map = {}
         arr.forEach(pkg => {
@@ -349,7 +367,7 @@ const SelectServicePage = () => {
     }
 
     try {
-      await axios.post(`http://localhost:8080/form-draft/save`, body, {
+      await axios.post(`${API_BASE_URL}/form-draft/save`, body, {
         headers: { Authorization: `Bearer ${token}` },
       })
     } catch (error) {
@@ -519,41 +537,7 @@ const SelectServicePage = () => {
 
             {/* Services/Packages Mode Toggle */}
             <div className="services-selection">
-              <h2 className="section-title">Select Services or Package</h2>
-              <div className="mode-toggle" style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-                <button
-                  className={`toggle-btn ${selectionMode === 'services' ? 'active' : ''}`}
-                  onClick={() => { setSelectionMode('services'); if (selectedPackage) setSelectedPackage(null) }}
-                >
-                  Services
-                </button>
-                <button
-                  className={`toggle-btn ${selectionMode === 'packages' ? 'active' : ''}`}
-                  onClick={() => {
-                    setSelectionMode('packages')
-                    // Clear any custom selections when switching to packages
-                    const cleared = {}
-                    if (USING_EVENT_SECTIONS) {
-                      DYNAMIC_SECTIONS.forEach((sec) => {
-                        if (sec.multi) {
-                          sec.options.forEach((opt) => { cleared[opt.id] = false })
-                        } else {
-                          cleared[sec.key] = undefined
-                        }
-                      })
-                    } else {
-                      Object.keys(DEFAULT_RADIO_GROUPS).forEach((k) => { cleared[k] = undefined })
-                      const allOptionIds = [...DEFAULT_OTHER_SERVICES, ...DEFAULT_ADD_ONS]
-                      allOptionIds.forEach((s) => { cleared[s.id] = false })
-                    }
-                    setSelectedServices(cleared)
-                  }}
-                  disabled={AVAILABLE_PACKAGES.length === 0}
-                  title={AVAILABLE_PACKAGES.length === 0 ? 'No packages available for this event' : undefined}
-                >
-                  Packages
-                </button>
-              </div>
+              <h2 className="section-title">Select Services</h2>
               <div className="tab-content">
                 {selectionMode === 'services' && (
                 <div className="custom-services">
@@ -590,41 +574,52 @@ const SelectServicePage = () => {
                             </button>
                           )}
                         </div>
-                        <div className="group-options">
-                          {sec.multi ? (
-                            sec.options.map((opt) => (
-                              <label key={opt.id} className={`option-card ${selectedServices[opt.id] ? "selected" : ""}`}>
-                                <input
-                                  type="checkbox"
-                                  checked={!!selectedServices[opt.id]}
-                                  onChange={() => handleServiceChange(opt.id)}
-                                />
-                                <span>{opt.label}</span>
-                                <span className="option-price">₱{opt.price.toLocaleString()}</span>
-                              </label>
-                            ))
-                          ) : (
-                            sec.options.map((opt) => (
-                              <label key={opt.id} className={`option-card ${selectedServices[sec.key] === opt.id ? "selected" : ""}`}>
-                                <input
-                                  type="radio"
-                                  name={sec.key}
-                                  value={opt.id}
-                                  checked={selectedServices[sec.key] === opt.id}
-                                  onChange={() => handleRadioChange(sec.key, opt.id)}
-                                />
-                                <span>{opt.label}</span>
-                                <span className="option-price">₱{opt.price.toLocaleString()}</span>
-                              </label>
-                            ))
-                          )}
-                        </div>
+                        {(() => {
+                          const availableOptions = sec.options.filter(opt => serviceMap[opt.id]);
+                          
+                          if (availableOptions.length === 0) {
+                            return (
+                              <div className="w-full p-4 text-center text-gray-500 italic">
+                                No services available for the selected date
+                              </div>
+                            );
+                          }
+                          
+                          return (
+                            <div className="group-options">
+                              {availableOptions.map((opt) => (
+                                sec.multi ? (
+                                  <label key={opt.id} className={`option-card ${selectedServices[opt.id] ? "selected" : ""}`}>
+                                    <input
+                                      type="checkbox"
+                                      checked={!!selectedServices[opt.id]}
+                                      onChange={() => handleServiceChange(opt.id)}
+                                    />
+                                    <span>{opt.label}</span>
+                                    <span className="option-price">₱{opt.price.toLocaleString()}</span>
+                                  </label>
+                                ) : (
+                                  <label key={opt.id} className={`option-card ${selectedServices[sec.key] === opt.id ? "selected" : ""}`}>
+                                    <input
+                                      type="radio"
+                                      name={sec.key}
+                                      checked={selectedServices[sec.key] === opt.id}
+                                      onChange={() => handleRadioChange(sec.key, opt.id)}
+                                    />
+                                    <span>{opt.label}</span>
+                                    <span className="option-price">₱{opt.price.toLocaleString()}</span>
+                                  </label>
+                                )
+                              ))}
+                            </div>
+                          );
+                        })()}
                       </div>
-                    ))
-                  ) : (
+                    ))) 
+                    : (
                     <>
                       {/* Default required radio groups */}
-                      {Object.entries(DEFAULT_RADIO_GROUPS).map(([groupKey, group]) => (
+                      {/* {Object.entries(DEFAULT_RADIO_GROUPS).map(([groupKey, group]) => (
                         <div key={groupKey} className="service-group">
                           <div className="group-title-container">
                             <h3 className="group-title">{group.label} <span className="required">(Choose one only, required*)</span></h3>
@@ -662,7 +657,7 @@ const SelectServicePage = () => {
                         </div>
                       ))}
 
-                      {/* Optional checkbox groups */}
+                      //  Optional checkbox groups
                       <div className="service-group">
                         <h3 className="group-title">choose other services you want to include:</h3>
                         <div className="group-options">
@@ -695,13 +690,13 @@ const SelectServicePage = () => {
                             </label>
                           ))}
                         </div>
-                      </div>
+                      </div> */}
                     </>
                   )}
                 </div>
                 )}
 
-                {selectionMode === 'packages' && (
+                {/* {selectionMode === 'packages' && (
                 <div className="package-options">
                   {AVAILABLE_PACKAGES.length === 0 ? (
                     <div style={{ padding: 12, opacity: 0.7 }}>No packages available for this event.</div>
@@ -735,7 +730,7 @@ const SelectServicePage = () => {
                     ))
                   )}
                 </div>
-                )}
+                )} */}
               </div>
 
               {/* Summary Section */}

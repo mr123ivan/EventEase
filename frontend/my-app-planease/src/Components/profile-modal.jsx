@@ -6,7 +6,7 @@ import axios from "axios"
 import { Snackbar, Alert } from "@mui/material"
 import { PROFILE_UPDATED_EVENT } from "./Navbar"
 
-const API_BASE_URL = "http://localhost:8080"
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 // Create separate axios instance for PSGC API (without auth headers)
 const psgcApi = axios.create({

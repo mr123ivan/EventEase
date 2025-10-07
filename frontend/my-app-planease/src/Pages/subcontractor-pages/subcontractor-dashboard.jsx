@@ -17,6 +17,8 @@ import { useTheme } from '@mui/material/styles';
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 const SubcontractorDashboard = () => {
 
     // Get JWT from localStorage and decode it
@@ -110,7 +112,7 @@ const SubcontractorDashboard = () => {
         setIsEditingAbout(false);
 
         // Submit the updated description
-        axios.put('http://localhost:8080/subcontractor/edit-description', {
+        axios.put(`${API_BASE_URL}/subcontractor/edit-description`, {
                 email: email,
                 description: description
             },
@@ -156,7 +158,7 @@ const SubcontractorDashboard = () => {
     }, []);
 
     const fetchShowcaseData = () => {
-        axios.get(`http://localhost:8080/subcontractor/getdetails/${email}`, {
+        axios.get(`${API_BASE_URL}/subcontractor/getdetails/${email}`, {
             headers: {
                 Authorization: `Bearer ${localStorage.getItem('token')}`
             }
@@ -189,7 +191,7 @@ const SubcontractorDashboard = () => {
         setIsLoadingOverview(true);
         
         // Get assigned events count and transactions
-        axios.get(`http://localhost:8080/api/transactions/getTransactionByEmail/${subcontractorEmail}`, {
+        axios.get(`${API_BASE_URL}/api/transactions/getTransactionByEmail/${subcontractorEmail}`, {
             headers: {
                 Authorization: `Bearer ${localStorage.getItem('token')}`
             }
@@ -372,7 +374,7 @@ const SubcontractorDashboard = () => {
     // };
 
     const performDelete = (showcase_id) => {
-        axios.delete(`http://localhost:8080/showcase/delete/${showcase_id}`, {
+        axios.delete(`${API_BASE_URL}/showcase/delete/${showcase_id}`, {
             headers: {
                 Authorization: `Bearer ${localStorage.getItem('token')}`,
             },
@@ -424,7 +426,7 @@ const SubcontractorDashboard = () => {
             for (const img of filteredResizedImages) {
                 try {
                     const presignedResponse = await axios.get(
-                        `http://localhost:8080/showcasemedia/generate-PresignedUrl`,
+                        `${API_BASE_URL}/showcasemedia/generate-PresignedUrl`,
                         {
                             params: {
                                 file_name: img.title,
@@ -467,8 +469,8 @@ const SubcontractorDashboard = () => {
             console.log("urlImages", urlFiles);
 
             const endpoint = isEditingShowcase
-                ? `http://localhost:8080/showcase/edit-showcase/${editingShowcaseId}`
-                : `http://localhost:8080/showcase/create-showcase`;
+                ? `${API_BASE_URL}/showcase/edit-showcase/${editingShowcaseId}`
+                : `${API_BASE_URL}/showcase/create-showcase`;
             const method = isEditingShowcase ? 'put' : 'post';
 
             axios[method](endpoint, {
@@ -493,7 +495,7 @@ const SubcontractorDashboard = () => {
             const urlFiles = [];
             try{
                 const presignedResponse = await axios.get(
-                    `http://localhost:8080/showcasemedia/generate-PresignedUrl`,
+                    `${API_BASE_URL}/showcasemedia/generate-PresignedUrl`,
                     {
                         params: {
                             file_name: selectVideo.name,
@@ -528,8 +530,8 @@ const SubcontractorDashboard = () => {
                 }
 
                 const endpoint = isEditingShowcase
-                    ? `http://localhost:8080/showcase/edit-showcase/${editingShowcaseId}`
-                    : `http://localhost:8080/showcase/create-showcase`;
+                    ? `${API_BASE_URL}/showcase/edit-showcase/${editingShowcaseId}`
+                    : `${API_BASE_URL}/showcase/create-showcase`;
                 const method = isEditingShowcase ? 'put' : 'post';
 
                 axios[method](endpoint, {
@@ -624,11 +626,27 @@ const SubcontractorDashboard = () => {
                 </div>
                 <div className="flex flex-col direct rounded-lg gap-4 bg-gray-100 md:px-10 md:py-10">
                     <div className="flex items-center bg-white p-5 md:p-10 shadow-lg">
-                        <img
-                            src={userdetails.profile_image}
-                            alt="Profile"
-                            className="w-20 h-20 rounded-full object-cover"
-                        />
+                        {userdetails.profile_image && userdetails.profile_image.trim() !== '' ? (
+                            <img
+                                src={userdetails.profile_image}
+                                alt="Profile"
+                                className="w-20 h-20 rounded-full object-cover"
+                                onError={(e) => {
+                                    e.target.style.display = 'none';
+                                    e.target.nextSibling.style.display = 'flex';
+                                }}
+                            />
+                        ) : null}
+                        <div
+                            className={`w-20 h-20 rounded-full flex items-center justify-center text-white font-bold text-xl ${
+                                userdetails.profile_image && userdetails.profile_image.trim() !== '' ? 'hidden' : 'bg-blue-500'
+                            }`}
+                            style={{
+                                display: userdetails.profile_image && userdetails.profile_image.trim() !== '' ? 'none' : 'flex'
+                            }}
+                        >
+                            {userdetails.fullname ? userdetails.fullname.charAt(0).toUpperCase() : 'U'}
+                        </div>
                         <div className="ml-4">
                             <h2 className="text-lg font-semibold">{userdetails.fullname}</h2>
                             <p className="text-gray-500">{userdetails.service_name}</p>
