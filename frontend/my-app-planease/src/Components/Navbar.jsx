@@ -82,17 +82,17 @@ const Navbar = () => {
 
     // Set up interval to periodically check for new notifications (every 30 seconds)
     const intervalId = setInterval(() => {
-      if (user.userId) {
+      if (user.email) {
         const token = localStorage.getItem("token")
         if (token) {
-          fetchUnreadCount(user.userId, token)
+          fetchUnreadCount(user.email, token)
         }
       }
     }, 30000)
 
     // Clean up interval on unmount
     return () => clearInterval(intervalId)
-  }, [user.userId])
+  }, [user.email])
 
   // Separate effect for fetching bookings after user data is loaded
   useEffect(() => {
