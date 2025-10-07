@@ -8,6 +8,8 @@ import { Dialog } from "@headlessui/react"
 import Navbar from "../../Components/Navbar"
 import { CloudArrowUpIcon } from "@heroicons/react/24/outline"
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 const AdminPendingRequest = () => {
 
     const [selectedRequest, setSelectedRequest] = useState(null);
@@ -60,7 +62,7 @@ const AdminPendingRequest = () => {
     }, []);
 
     const fetchData = async () => {
-        axios.get('http://54.255.151.41:8080/api/transactions/getAllPendingTransactions')
+        axios.get(`${API_BASE_URL}/api/transactions/getAllPendingTransactions`)
             .then((res) => {
                     setTransactions(res.data);
                     console.log("All pending transactions:", res.data);
@@ -103,7 +105,7 @@ const AdminPendingRequest = () => {
     const reason = new FormData()
     const finalReason = declineReason === "Other" ? otherReason : declineReason
     if (refundReceipt) {
-      const presignedResponse = await axios.get(`http://54.255.151.41:8080/bookingrejectionnote/generate-PresignedUrl`, {
+      const presignedResponse = await axios.get(`${API_BASE_URL}/bookingrejectionnote/generate-PresignedUrl`, {
         params: {
           file_name: refundReceipt.name,
           user_name: selectedRequest.userName,
@@ -141,7 +143,7 @@ const AdminPendingRequest = () => {
     // Make the API call to decline the transaction
     axios
       .put(
-        `http://54.255.151.41:8080/api/transactions/validateTransaction?transactionId=${selectedRequest?.transaction_Id}&status=DECLINED`,
+        `${API_BASE_URL}/api/transactions/validateTransaction?transactionId=${selectedRequest?.transaction_Id}&status=DECLINED`,
         reason,
         {
           headers: {
@@ -154,7 +156,7 @@ const AdminPendingRequest = () => {
         setDeclineSuccess(true)
         setDeclineStep(4) // Move to success message
         axios
-          .post(`http://54.255.151.41:8080/api/notifications/booking-rejected`, null, {
+          .post(`${API_BASE_URL}/api/notifications/booking-rejected`, null, {
             params: {
               userEmail: selectedRequest?.userEmail,
               reason: `Your booking has been declined, Due to ${finalReason}, your payment will be refunded via GCash.`,
@@ -199,7 +201,7 @@ const AdminPendingRequest = () => {
     // For approve or other actions, continue with the original flow
     axios
       .put(
-        `http://54.255.151.41:8080/api/transactions/validateTransaction?transactionId=${selectedRequest?.transaction_Id}&status=${validate}`,
+        `${API_BASE_URL}/api/transactions/validateTransaction?transactionId=${selectedRequest?.transaction_Id}&status=${validate}`,
         {},
         {
           headers: {
@@ -212,7 +214,7 @@ const AdminPendingRequest = () => {
         // After validating transaction, create notification for user by email
         if (validate === "APPROVED") {
           axios
-            .post(`http://54.255.151.41:8080/api/notifications/booking-approved`, null, {
+            .post(`${API_BASE_URL}/api/notifications/booking-approved`, null, {
               params: {
                 userEmail: selectedRequest?.userEmail,
                 amount: selectedRequest?.downpaymentAmount || "0",
@@ -229,7 +231,7 @@ const AdminPendingRequest = () => {
                       console.log(subcontractor.subcontractorUserId)
                       console.log(selectedRequest.eventName)
                       const response = await axios.post(
-                        `http://54.255.151.41:8080/api/notifications/notify-subcontractors-byid`,
+                        `${API_BASE_URL}/api/notifications/notify-subcontractors-byid`,
                         null,
                         {
                           params: {
@@ -253,7 +255,7 @@ const AdminPendingRequest = () => {
             })
         } else if (validate === "DECLINED") {
           axios
-            .post(`http://54.255.151.41:8080/api/notifications/booking-rejected`, null, {
+            .post(`${API_BASE_URL}/api/notifications/booking-rejected`, null, {
               params: {
                 userEmail: selectedRequest?.userEmail,
               },

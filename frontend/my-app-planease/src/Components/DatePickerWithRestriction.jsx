@@ -4,6 +4,7 @@ import './styles/DatePickerWithRestriction.css';
 import axios from 'axios';
 
 const DatePickerWithRestriction = ({ onChange, value, name }) => {
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const [selectedDate, setSelectedDate] = useState(value || '');
   const [minDate, setMinDate] = useState('');
   const [showWarning, setShowWarning] = useState(false);
@@ -30,7 +31,7 @@ const DatePickerWithRestriction = ({ onChange, value, name }) => {
   const [unavailableDates, setUnavailableDates] = useState(new Map());
 
   const getTranscationDates = () => {
-    axios.get('http://54.255.151.41:8080/api/transactions/getAllActiveTransactions')
+    axios.get(`${API_BASE_URL}/api/transactions/getAllActiveTransactions`)
       .then(res => {
         // Count occurrences of each date in transactions
         const dateCounts = new Map();

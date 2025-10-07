@@ -6,6 +6,7 @@ import axios from "axios"
 import FindTrustedProfessionals from "../../assets/FindTrustedProfessionals.jpg"
 
 const EventPage = () => {
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const [events, setEvents] = useState([])
   const [packages, setPackages] = useState([])
 
@@ -14,7 +15,7 @@ const EventPage = () => {
 
     // Fetch events
     axios
-      .get("http://54.255.151.41:8080/api/events/getEvents", {
+      .get(`${API_BASE_URL}/api/events/getEvents`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -28,7 +29,7 @@ const EventPage = () => {
 
     // Fetch packages
     axios
-      .get("http://54.255.151.41:8080/package/getall", {
+      .get(`${API_BASE_URL}/package/getall`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

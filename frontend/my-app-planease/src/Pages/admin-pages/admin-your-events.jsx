@@ -7,6 +7,8 @@ import { Dialog } from "@headlessui/react"
 import Navbar from "../../Components/Navbar"
 import { Snackbar, Alert, CircularProgress } from "@mui/material"
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 const YourEvents = () => {
   const [events, setEvents] = useState([])
   const [selectedEvent, setSelectedEvent] = useState(null)
@@ -51,7 +53,7 @@ const YourEvents = () => {
 
   const fetchEvents = async () => {
     try {
-      const response = await axios.get("http://54.255.151.41:8080/api/events/getEvents")
+      const response = await axios.get(`${API_BASE_URL}/api/events/getEvents`)
       setEvents(response.data)
     } catch (error) {
       console.error("Error fetching events:", error)
@@ -61,7 +63,7 @@ const YourEvents = () => {
   // Fetch and flatten all subcontractor services for DnD palette
   const fetchAllServices = async () => {
     try {
-      const resp = await axios.get("http://54.255.151.41:8080/subcontractor/getall")
+      const resp = await axios.get(`${API_BASE_URL}/subcontractor/getall`)
       const list = Array.isArray(resp.data) ? resp.data : []
       // Flatten to { id, name, price, subcontractorId, subcontractorName }
       const flattened = list.flatMap((sc) =>
@@ -151,7 +153,7 @@ const YourEvents = () => {
         const uploadFormData = new FormData()
         uploadFormData.append("file", file)
         const response = await axios.post(
-          `http://54.255.151.41:8080/api/events/upload/image/${selectedEvent.event_Id}`,
+          `${API_BASE_URL}/api/events/upload/image/${selectedEvent.event_Id}`,
           uploadFormData,
           { headers: { "Content-Type": "multipart/form-data" } },
         )
@@ -190,7 +192,7 @@ const YourEvents = () => {
             .map((id) => ({ id })),
         }))
         const payload = { ...rest, event_sections: [...svcSectionsDto] }
-        savedEvent = await axios.put("http://54.255.151.41:8080/api/events", payload)
+        savedEvent = await axios.put(`${API_BASE_URL}/api/events`, payload)
       } else {
         // Create event with sections
         const { imageFile, event_image, ...rest } = formData
@@ -203,14 +205,14 @@ const YourEvents = () => {
             .map((id) => ({ id })),
         }))
         const eventData = { ...rest, event_sections: [...svcSectionsDto] }
-        const response = await axios.post("http://54.255.151.41:8080/api/events/createEvent", eventData)
+        const response = await axios.post(`${API_BASE_URL}/api/events/createEvent`, eventData)
         savedEvent = response.data
 
         // If there's an image file, upload it after creation
         if (imageFile && savedEvent?.event_Id) {
           const uploadFormData = new FormData()
           uploadFormData.append("file", imageFile)
-          await axios.post(`http://54.255.151.41:8080/api/events/upload/image/${savedEvent.event_Id}`, uploadFormData, {
+          await axios.post(`${API_BASE_URL}/api/events/upload/image/${savedEvent.event_Id}`, uploadFormData, {
             headers: { "Content-Type": "multipart/form-data" },
           })
         }
@@ -233,7 +235,7 @@ const YourEvents = () => {
   const handleDeleteEvent = async () => {
     if (window.confirm("Are you sure you want to delete this event?")) {
       try {
-        await axios.delete(`http://54.255.151.41:8080/api/events/${selectedEvent.event_Id}`)
+        await axios.delete(`${API_BASE_URL}/api/events/${selectedEvent.event_Id}`)
         fetchEvents()
         setShowModal(false)
         setSelectedEvent(null)

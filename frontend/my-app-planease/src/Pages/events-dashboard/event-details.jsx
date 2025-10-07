@@ -5,6 +5,7 @@ import { useEffect, useState } from "react"
 import axios from "axios"
 
 const EventDetails = () => {
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const { event_name } = useParams()
   const [event, setEvent] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -14,7 +15,7 @@ const EventDetails = () => {
     const token = localStorage.getItem("token")
 
     axios
-      .get(`http://54.255.151.41:8080/api/events/event-details/${event_name}`, {
+      .get(`${API_BASE_URL}/api/events/event-details/${event_name}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

@@ -1,4 +1,5 @@
 const uploadImageInChunks = async (image, chunkSize) => {
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
     const file = image;
     const totalChunks = Math.ceil(file.size / chunkSize);
 
@@ -16,7 +17,7 @@ const uploadImageInChunks = async (image, chunkSize) => {
         });
 
         try {
-            const res = await axios.post(`http://54.255.151.41:8080/toolitem/upload?${params.toString()}`, buffer, {
+            const res = await axios.post(`${API_BASE_URL}/toolitem/upload?${params.toString()}`, buffer, {
                 headers: {
                     'Content-Type': 'application/octet-stream',
                     Authorization: `Bearer ${localStorage.getItem('token')}`,

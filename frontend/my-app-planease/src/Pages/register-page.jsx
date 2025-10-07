@@ -9,6 +9,7 @@ import axios from "axios"
 import { motion, AnimatePresence } from "framer-motion"
 
 export default function SignUpPage() {
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [firstname, setFirstname] = useState("")
@@ -452,7 +453,7 @@ export default function SignUpPage() {
     setIsSendingOTP(true)
 
     try {
-      const response = await axios.get(`http://54.255.151.41:8080/email/send-email/${email}`)
+      const response = await axios.get(`${API_BASE_URL}/email/send-email/${email}`)
       if (response && response.data) {
         console.log("OTP email response:", response.data)
       }
@@ -1112,21 +1113,21 @@ export default function SignUpPage() {
                         return
                       }
                       try {
-                        const response = await axios.get(`http://54.255.151.41:8080/email/validate-otp`, {
+                        const response = await axios.get(`${API_BASE_URL}/email/validate-otp`, {
                           params: { email: email, OTP: otpValue },
                         })
                         if (response.data === true) {
                           // OTP is valid, proceed with registration
                           try {
                             const registerResponse = await axios.post(
-                              "http://54.255.151.41:8080/user/register",
+                              `${API_BASE_URL}/user/register`,
                               pendingRegistrationData,
                             )
 
                             if (registerResponse.status === 201 || registerResponse.status === 200) {
                               // After successful user registration, also create regular user entity
                               try {
-                                await axios.post("http://54.255.151.41:8080/regularuser/create", registerResponse.data)
+                                await axios.post(`${API_BASE_URL}/regularuser/create`, registerResponse.data)
                               } catch (error) {
                                 console.error("Regular user creation error:", error)
                                 // Optionally handle error, but do not block navigation
@@ -1177,7 +1178,7 @@ export default function SignUpPage() {
                               setOtpError("")
                               setOtpValue("")
                               try {
-                                const response = await axios.get(`http://54.255.151.41:8080/email/send-email/${email}`)
+                                const response = await axios.get(`${API_BASE_URL}/email/send-email/${email}`)
                                 if (response && response.data) {
                                   console.log("OTP email response:", response.data)
                                 }

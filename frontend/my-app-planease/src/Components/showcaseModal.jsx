@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 
 const ShowcaseModal = ({ title, subcontractorId, onClose }) => {
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
     const [previewState, setPreviewState] = useState({ visible: false, images: [], index: 0 });
     const [subcontractor, setSubcontractor] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -9,7 +10,7 @@ const ShowcaseModal = ({ title, subcontractorId, onClose }) => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const res = await axios.get(`http://54.255.151.41:8080/subcontractor/${subcontractorId}`);
+                const res = await axios.get(`${API_BASE_URL}/subcontractor/${subcontractorId}`);
                 setSubcontractor(res.data);
                 console.log(res.data);
             } catch (error) {

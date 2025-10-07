@@ -18,6 +18,7 @@ import {
 } from "../booking-pages/utils/booking-storage"
 
 const InputDetailsPage = () => {
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const navigate = useNavigate()
   const { eventName } = useParams()
 
@@ -55,7 +56,7 @@ const InputDetailsPage = () => {
           return;
         }
   
-        const response = await axios.get("http://54.255.151.41:8080/user/getuser", {
+        const response = await axios.get(`${API_BASE_URL}/user/getuser`, {
           headers: { Authorization: `Bearer ${token}` },
         });
   
@@ -96,7 +97,7 @@ const InputDetailsPage = () => {
     const token = localStorage.getItem("token");
   
     try {
-      const response = await axios.get(`http://54.255.151.41:8080/form-draft/load`, {
+      const response = await axios.get(`${API_BASE_URL}/form-draft/load`, {
         headers: { Authorization: `Bearer ${token}` },
         params: {
           email: email,
@@ -144,7 +145,7 @@ const InputDetailsPage = () => {
     }
 
     console.log(body)
-    axios.post(`http://54.255.151.41:8080/form-draft/save`, body, {
+    axios.post(`${API_BASE_URL}/form-draft/save`, body, {
       headers: { Authorization: `Bearer ${token}` },
     })
     .then((response) => {

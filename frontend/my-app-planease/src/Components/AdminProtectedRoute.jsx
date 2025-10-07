@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 
 const AdminProtectedRoute = ({ children }) => {
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
     const [hasAuthority, setHasAuthority] = useState(null);
     const [loading, setLoading] = useState(true);
 
@@ -17,7 +18,7 @@ const AdminProtectedRoute = ({ children }) => {
             }
 
             try {
-                const response = await axios.get(`http://54.255.151.41:8080/user/getcurrentrole`, {
+                const response = await axios.get(`${API_BASE_URL}/user/getcurrentrole`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
 

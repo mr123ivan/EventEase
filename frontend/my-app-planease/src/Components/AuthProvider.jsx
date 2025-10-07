@@ -6,6 +6,7 @@ import { createContext, useContext, useState, useEffect } from "react"
 export const AuthContext = createContext()
 
 export const AuthProvider = ({ children }) => {
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const [user, setUser] = useState(null)
   const [token, setToken] = useState(localStorage.getItem("token") || "")
   const [isLoading, setIsLoading] = useState(true)
@@ -38,7 +39,7 @@ export const AuthProvider = ({ children }) => {
 
       try {
         // Try to verify the token and fetch user data
-        const response = await axios.get("http://54.255.151.41:8080/user/getuser", {
+        const response = await axios.get(`${API_BASE_URL}/user/getuser`, {
           headers: { Authorization: `Bearer ${storedToken}` },
         })
 
@@ -85,7 +86,7 @@ export const AuthProvider = ({ children }) => {
 
   const loginAction = async (data, navigate) => {
     try {
-      const response = await axios.post("http://54.255.151.41:8080/user/login", data, {
+      const response = await axios.post(`${API_BASE_URL}/user/login`, data, {
         headers: { "Content-Type": "application/json" },
       })
       if (response.status === 200 || response.status === 201) {
@@ -118,7 +119,7 @@ export const AuthProvider = ({ children }) => {
 
     try {
       await axios.post(
-        "http://54.255.151.41:8080/user/logout",
+        `${API_BASE_URL}/user/logout`,
         {},
         {
           headers: { Authorization: `Bearer ${currentToken}` },

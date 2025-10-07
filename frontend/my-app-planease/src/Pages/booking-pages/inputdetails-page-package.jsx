@@ -19,6 +19,7 @@ import {
 import axios from "axios"
 
 const InputDetailsPagePackage = () => {
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const navigate = useNavigate()
   const { packageName } = useParams()
 
@@ -53,7 +54,7 @@ const InputDetailsPagePackage = () => {
         }
 
         // Fetch package data from API
-        const response = await axios.get("http://54.255.151.41:8080/api/packages")
+        const response = await axios.get(`${API_BASE_URL}/api/packages`)
         const packages = response.data
 
         // Find the matching package by name
@@ -152,7 +153,7 @@ const InputDetailsPagePackage = () => {
           return;
         }
   
-        const response = await axios.get("http://54.255.151.41:8080/user/getuser", {
+        const response = await axios.get(`${API_BASE_URL}/user/getuser`, {
           headers: { Authorization: `Bearer ${token}` },
         });
   
@@ -192,7 +193,7 @@ const InputDetailsPagePackage = () => {
     const token = localStorage.getItem("token");
   
     try {
-      const response = await axios.get(`http://54.255.151.41:8080/form-draft/load`, {
+      const response = await axios.get(`${API_BASE_URL}/form-draft/load`, {
         headers: { Authorization: `Bearer ${token}` },
         params: {
           email: email,
@@ -223,7 +224,7 @@ const InputDetailsPagePackage = () => {
     }
 
     console.log(body)
-    axios.post(`http://54.255.151.41:8080/form-draft/save`, body, {
+    axios.post(`${API_BASE_URL}/form-draft/save`, body, {
       headers: { Authorization: `Bearer ${token}` },
     })
     .then((response) => {

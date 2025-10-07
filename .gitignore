@@ -68,4 +68,7 @@ nginx*
 playwright*
 test/
 test-results/
+
+
 config/
+docker-compose.yml

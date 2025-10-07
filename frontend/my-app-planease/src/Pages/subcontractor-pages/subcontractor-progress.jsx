@@ -4,6 +4,8 @@ import { useState, useEffect } from "react"
 import axios from "axios"
 import Navbar from '../../Components/Navbar';
 import NavPanel from "../../Components/subcon-navpanel";
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 import {
   Button,
   Chip,
@@ -62,7 +64,7 @@ const SubcontractorProgress = () => {
   const fetchSubcontractorProgress = async (email) => {
     try {
       const token = localStorage.getItem("token")
-      const response = await axios.get(`http://54.255.151.41:8080/api/transactions/subcontractor-progress-by-email/${email}`, {
+      const response = await axios.get(`${API_BASE_URL}/api/transactions/subcontractor-progress-by-email/${email}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
 
@@ -148,7 +150,7 @@ const SubcontractorProgress = () => {
           formData.append("comment", updateData.description) // Add comment parameter for backend compatibility
 
           await axios.post(
-            `http://54.255.151.41:8080/api/transactions/subcontractor-progress/id/${selectedTransaction.id}/upload-image`,
+            `${API_BASE_URL}/api/transactions/subcontractor-progress/id/${selectedTransaction.id}/upload-image`,
             formData,
             {
               headers: {
@@ -160,7 +162,7 @@ const SubcontractorProgress = () => {
         } else {
           // Use the regular update endpoint without image
           await axios.put(
-            `http://54.255.151.41:8080/api/transactions/subcontractor-progress/id/${selectedTransaction.id}`,
+            `${API_BASE_URL}/api/transactions/subcontractor-progress/id/${selectedTransaction.id}`,
             null,
             {
               params: {

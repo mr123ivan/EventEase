@@ -11,6 +11,7 @@ import BookingSidePanel from "../../Components/Booking-sidepanel"
 import { getCompleteBookingData, getSelectedServices, getSelectedPackage, PACKAGES, clearBookingData } from "./utils/booking-storage"
 
 const PreviewBookingPage = () => {
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const navigate = useNavigate()
   const location = useLocation()
   const { eventName } = useParams()
@@ -33,7 +34,7 @@ const PreviewBookingPage = () => {
     const fetchEventSections = async () => {
       if (!currentEventName) return
       try {
-        const res = await axios.get(`http://54.255.151.41:8080/api/events/event-details/${encodeURIComponent(currentEventName)}`)
+        const res = await axios.get(`${API_BASE_URL}/api/events/event-details/${encodeURIComponent(currentEventName)}`)
         const ev = res?.data
         const raw = ev?.event_sections
         const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw
@@ -51,7 +52,7 @@ const PreviewBookingPage = () => {
   useEffect(() => {
     const fetchServices = async () => {
       try {
-        const resp = await axios.get('http://54.255.151.41:8080/subcontractor/getall')
+        const resp = await axios.get(`${API_BASE_URL}/subcontractor/getall`)
         const arr = Array.isArray(resp.data) ? resp.data : []
         const map = {}
         arr.forEach(sc => {
@@ -78,7 +79,7 @@ const PreviewBookingPage = () => {
   useEffect(() => {
     const fetchPackages = async () => {
       try {
-        const resp = await axios.get('http://54.255.151.41:8080/package/getall')
+        const resp = await axios.get(`${API_BASE_URL}/package/getall`)
         const arr = Array.isArray(resp.data) ? resp.data : []
         const map = {}
         arr.forEach(pkg => {
