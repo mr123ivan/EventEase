@@ -36,7 +36,10 @@ import {
   Avatar,
   AvatarGroup,
   Tooltip,
+  IconButton,
+  Drawer,
 } from "@mui/material"
+import MenuIcon from "@mui/icons-material/Menu"
 import {
   Edit as EditIcon,
   Refresh as RefreshIcon,
@@ -73,6 +76,7 @@ const EventTrackingAdmin = () => {
   })
   const [viewMapModal, setViewMapModal] = useState(false)
   const [selectedLocation, setSelectedLocation] = useState(null)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
   useEffect(() => {
     fetchEventsProgress()
@@ -688,6 +692,22 @@ const EventTrackingAdmin = () => {
         </aside>
 
         <main className="flex-1 p-4 sm:p-6 md:p-10 bg-gray-50 overflow-auto">
+          {/* Hamburger menu for mobile */}
+          <IconButton
+            onClick={() => setIsSidebarOpen(true)}
+            sx={{
+              display: { xs: 'block', md: 'none' },
+              position: 'fixed',
+              top: 80,
+              left: 16,
+              zIndex: 50,
+              bgcolor: 'white',
+              boxShadow: 2
+            }}
+          >
+            <MenuIcon />
+          </IconButton>
+
           <div className="flex justify-between items-center mb-4 sm:mb-6">
             <div>
               <Typography variant="h4" component="h2" className="font-bold">
@@ -1509,6 +1529,14 @@ const EventTrackingAdmin = () => {
         onClose={() => setViewMapModal(false)}
         location={selectedLocation}
       />
+
+      <Drawer
+        anchor="left"
+        open={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+      >
+        <AdminSideBar />
+      </Drawer>
     </div>
   )
 }

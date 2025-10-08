@@ -45,7 +45,7 @@ export const AuthProvider = ({ children }) => {
 
         // If we get here, the token is valid and we have user data
         console.log("Token verified successfully")
-        
+
         // Set the user data
         setUser(response.data)
       } catch (error) {
@@ -108,7 +108,6 @@ export const AuthProvider = ({ children }) => {
       }
       throw new Error(response.data.message)
     } catch (error) {
-      console.log(error)
     }
   }
 
@@ -126,7 +125,6 @@ export const AuthProvider = ({ children }) => {
         },
       )
     } catch (error) {
-      console.error("Logout failed:", error)
     } finally {
       // Always clear local state regardless of API response
       setToken("")

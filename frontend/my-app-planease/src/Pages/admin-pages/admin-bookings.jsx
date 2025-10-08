@@ -9,6 +9,8 @@ import axios from "axios"
 import MapViewModal from "../../Components/MapViewModal.jsx"
 import MapIcon from '@mui/icons-material/Map';
 import IconButton from '@mui/material/IconButton';
+import MenuIcon from "@mui/icons-material/Menu"
+import Drawer from "@mui/material/Drawer"
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -41,6 +43,7 @@ const AdminBookings = () => {
   const [searchQuery, setSearchQuery] = useState('')
   const [filteredTransactions, setFilteredTransactions] = useState([])
   const [eventTypes, setEventTypes] = useState([])
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
   // Debug logging for selectedRequest data
   useEffect(() => {
@@ -254,6 +257,21 @@ const AdminBookings = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
+      {/* Hamburger menu for mobile */}
+      <IconButton
+        onClick={() => setIsSidebarOpen(true)}
+        sx={{
+          display: { xs: 'block', md: 'none' },
+          position: 'fixed',
+          top: 80,
+          left: 16,
+          zIndex: 50,
+          bgcolor: 'white',
+          boxShadow: 2
+        }}
+      >
+        <MenuIcon />
+      </IconButton>
       <div className="flex flex-1 overflow-hidden">
         <aside className="hidden md:block w-64 border-r bg-white">
           <AdminSideBar />
@@ -954,6 +972,14 @@ const AdminBookings = () => {
         onClose={() => setViewMapModal(false)}
         location={selectedRequest?.transactionVenue}
       />
+
+      <Drawer
+        anchor="left"
+        open={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+      >
+        <AdminSideBar />
+      </Drawer>
     </div>
   )
 }

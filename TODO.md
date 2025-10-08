@@ -1,17 +1,9 @@
-# Transaction Creation Update Plan
+# TODO: Implement Mobile Detection for Google OAuth Redirect Flow
 
-## Overview
-Update transaction creation to connect transactions directly to subcontractor services entity instead of subcontractors, so transaction -> service -> subcontractor.
-
-## Tasks
-- [ ] Create TransactionServiceEntity.java (new join entity)
-- [ ] Update TransactionService.java createBookingTransaction method
-- [ ] Update BookingTransactionDTO.java to include serviceIds
-- [ ] Update frontend selectservice-page.jsx to send service IDs
-- [ ] Test transaction creation with multiple services
-- [ ] Update admin pages if needed for consistency
-
-## Current Status
-- Analysis completed
-- Plan approved by user
-- Ready to implement changes
+## Steps to Complete
+- [x] Add mobile detection utility function in login-page.jsx
+- [ ] Modify handleSocialLogin to use initTokenClient with ux_mode 'redirect' for mobile devices
+- [ ] Add useEffect to check for OAuth callback parameters (access_token) on component mount
+- [ ] Integrate callback handling with existing login logic
+- [ ] Test implementation on mobile devices/emulators
+- [ ] Ensure desktop popup flow remains functional

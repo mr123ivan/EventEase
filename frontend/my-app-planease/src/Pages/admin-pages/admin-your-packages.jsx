@@ -5,11 +5,13 @@ import axios from "axios"
 import AdminSideBar from "../../Components/admin-sidebar.jsx"
 import { Dialog } from "@headlessui/react"
 import Navbar from "../../Components/Navbar"
-import { Snackbar, Alert } from "@mui/material"
+import { Snackbar, Alert, IconButton, Drawer } from "@mui/material"
+import MenuIcon from "@mui/icons-material/Menu"
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const AdminPackages = () => {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [packages, setPackages] = useState([])
   const [allSubcontractors, setAllSubcontractors] = useState([])
   const [selectedPackage, setSelectedPackage] = useState(null)
@@ -638,6 +640,22 @@ const AdminPackages = () => {
         </div>
       </Dialog>
 
+      {/* Hamburger menu for mobile */}
+      <IconButton
+        onClick={() => setIsSidebarOpen(true)}
+        sx={{
+          display: { xs: 'block', md: 'none' },
+          position: 'fixed',
+          top: 80,
+          left: 16,
+          zIndex: 50,
+          bgcolor: 'white',
+          boxShadow: 2
+        }}
+      >
+        <MenuIcon />
+      </IconButton>
+
       <Snackbar
         open={snackbar.open}
         autoHideDuration={6000}
@@ -648,6 +666,14 @@ const AdminPackages = () => {
           {snackbar.message}
         </Alert>
       </Snackbar>
+
+      <Drawer
+        anchor="left"
+        open={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+      >
+        <AdminSideBar />
+      </Drawer>
     </div>
   )
 }

@@ -4,7 +4,8 @@ import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import Navbar from '../../Components/Navbar';
 import NavPanel from "../../Components/subcon-navpanel";
-import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Button, TextField } from '@mui/material';
+import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Button, TextField, IconButton, Drawer } from '@mui/material';
+import { Menu as MenuIcon } from '@mui/icons-material';
 import { AuthContext } from '../../Components/AuthProvider';
 import axios from 'axios';
 import '../../index.css';
@@ -30,6 +31,9 @@ const SubcontractorCalendar = () => {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  // Mobile sidebar state
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Load unavailable dates from backend on component mount
   useEffect(() => {
@@ -378,6 +382,21 @@ const SubcontractorCalendar = () => {
     <>
       <Navbar />
       <div className="h-screen grid grid-rows-[auto_1fr]">
+        {/* Hamburger menu for mobile */}
+        <IconButton
+          onClick={() => setIsSidebarOpen(true)}
+          sx={{
+            display: { xs: 'block', md: 'none' },
+            position: 'fixed',
+            top: 80,
+            left: 16,
+            zIndex: 50,
+            bgcolor: 'white',
+            boxShadow: 2
+          }}
+        >
+          <MenuIcon />
+        </IconButton>
         <div className="grid lg:grid-cols-[1fr_3fr]">
           <div className="shadow hidden lg:block p-5">
             <NavPanel />
@@ -500,6 +519,15 @@ const SubcontractorCalendar = () => {
           </div>
         </div>
       </div>
+
+      {/* Mobile Sidebar Drawer */}
+      <Drawer
+        anchor="left"
+        open={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+      >
+        <NavPanel />
+      </Drawer>
     </>
   );
 };
