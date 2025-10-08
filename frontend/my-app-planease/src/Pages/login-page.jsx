@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, useRef } from "react"
 import { Eye, EyeOff } from "lucide-react"
 import { Link, useNavigate } from "react-router-dom"
 import CustomInput from "../Components/CustomInput"
@@ -10,6 +10,11 @@ import axios from "axios" // Make sure axios is imported
 import { motion, AnimatePresence } from "framer-motion" // Import framer-motion
 
 import { useAuth } from "../Components/AuthProvider"
+
+// Mobile detection utility
+const isMobileDevice = () => {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+}
 
 export default function LoginPage() {
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -28,6 +33,8 @@ export default function LoginPage() {
   const [forgotError, setForgotError] = useState('')
   const [forgotLoading, setForgotLoading] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
+
+  const timeoutRef = useRef(null)
 
   // Tips rotation state - Slowed down to 8 seconds
   const [currentTipIndex, setCurrentTipIndex] = useState(0)
@@ -147,6 +154,83 @@ export default function LoginPage() {
     }
   }, [])
 
+  // Handle OAuth redirect callback
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search)
+    const accessToken = urlParams.get('access_token')
+    const state = urlParams.get('state')
+
+    if (accessToken) {
+      // Clear the URL parameters
+      window.history.replaceState({}, document.title, window.location.pathname)
+
+      setError("")
+      setIsLoading(true)
+
+      // Get user profile using the access token
+      fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      })
+        .then(response => response.json())
+        .then(async (profile) => {
+          try {
+            // Check if user exists in the database
+            const checkUserResponse = await axios.get(`${API_BASE_URL}/user/check-user`, {
+              params: { email: profile.email },
+            })
+
+            if (checkUserResponse.data.exists) {
+              const credentials = {
+                email: profile.email,
+                password: profile.sub, // Use Google ID as temporary password
+              }
+              await loginAction(credentials, navigate)
+            } else {
+              const registrationData = {
+                firstname: profile.given_name,
+                lastname: profile.family_name,
+                email: profile.email,
+                password: profile.sub,
+                phoneNumber: null,
+                region: null,
+                province: null,
+                cityAndMul: null,
+                barangay: null,
+                role: "User",
+                profilePicture: profile.picture,
+                isGoogle: true,
+                isFacebook: false,
+              }
+              const registerResponse = await axios.post(`${API_BASE_URL}/user/register`, registrationData)
+              try {
+                await axios.post(`${API_BASE_URL}/regularuser/create`, { userId: registerResponse.data.userId })
+              } catch (error) {
+                console.error("Regular user creation error:", error)
+              }
+              const loginCredentials = {
+                email: profile.email,
+                password: profile.sub,
+              }
+              await loginAction(loginCredentials, navigate)
+            }
+            window.dispatchEvent(new Event("storage"))
+          } catch (err) {
+            console.error("Login/registration error:", err)
+            setError("An error occurred during login.")
+          } finally {
+            setIsLoading(false)
+          }
+        })
+        .catch((err) => {
+          console.error("Profile fetch error:", err)
+          setError("Failed to get user profile")
+          setIsLoading(false)
+        })
+    }
+  }, [API_BASE_URL, loginAction, navigate])
+
   const handleSocialLogin = async (provider) => {
     if (provider === "Google") {
       try {
@@ -163,10 +247,14 @@ export default function LoginPage() {
         setIsLoading(true)
 
         // Initialize Google Identity Services
+        const isMobile = isMobileDevice()
         const client = window.google.accounts.oauth2.initTokenClient({
           client_id: clientGoogleId,
           scope: "profile email",
+          ux_mode: isMobile ? 'redirect' : 'popup',
+          redirect_uri: isMobile ? `${window.location.origin}/login` : undefined,
           callback: async (response) => {
+            clearTimeout(timeoutRef.current)
             if (response.error) {
               console.error("Google login error:", response.error)
               if (response.error === "popup_closed_by_user" || response.error === "access_denied") {
@@ -236,6 +324,7 @@ export default function LoginPage() {
             }
           },
           error_callback: (error) => {
+            clearTimeout(timeoutRef.current)
             console.error("Google OAuth error:", error)
             setError("Google login was cancelled or failed")
             setIsLoading(false)
@@ -244,7 +333,14 @@ export default function LoginPage() {
 
         try {
           client.requestAccessToken()
+          timeoutRef.current = setTimeout(() => {
+            if (isLoading) {
+              setIsLoading(false)
+              setError("Google login timed out. Please try again.")
+            }
+          }, 15000)
         } catch (popupError) {
+          clearTimeout(timeoutRef.current)
           console.error("Popup blocked or failed:", popupError)
           setError("Please allow popups for Google login to work")
           setIsLoading(false)

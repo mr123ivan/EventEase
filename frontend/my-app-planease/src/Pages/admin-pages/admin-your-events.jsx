@@ -5,11 +5,13 @@ import axios from "axios"
 import AdminSideBar from "../../Components/admin-sidebar.jsx"
 import { Dialog } from "@headlessui/react"
 import Navbar from "../../Components/Navbar"
-import { Snackbar, Alert, CircularProgress } from "@mui/material"
+import { Snackbar, Alert, CircularProgress, IconButton, Drawer } from "@mui/material"
+import MenuIcon from "@mui/icons-material/Menu"
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const YourEvents = () => {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [events, setEvents] = useState([])
   const [selectedEvent, setSelectedEvent] = useState(null)
   const [showModal, setShowModal] = useState(false)
@@ -100,6 +102,7 @@ const YourEvents = () => {
       imageFile: undefined,
     })
     setServiceSections([])
+    setSelectedEvent(null)
     setIsEditing(false)
     setShowModal(true)
   }
@@ -265,6 +268,21 @@ const YourEvents = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
+      {/* Hamburger menu for mobile */}
+      <IconButton
+        onClick={() => setIsSidebarOpen(true)}
+        sx={{
+          display: { xs: 'block', md: 'none' },
+          position: 'fixed',
+          top: 80,
+          left: 16,
+          zIndex: 50,
+          bgcolor: 'white',
+          boxShadow: 2
+        }}
+      >
+        <MenuIcon />
+      </IconButton>
       <div className="flex flex-1 overflow-hidden">
         <aside className="hidden md:block w-64 border-r bg-white">
           <AdminSideBar />
@@ -704,6 +722,14 @@ const YourEvents = () => {
           {snackbar.message}
         </Alert>
       </Snackbar>
+
+      <Drawer
+        anchor="left"
+        open={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+      >
+        <AdminSideBar />
+      </Drawer>
     </div>
   )
 }
