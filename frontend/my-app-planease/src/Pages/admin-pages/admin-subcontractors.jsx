@@ -11,6 +11,7 @@ import Navbar from "../../Components/Navbar"
 import Typography from "@mui/material/Typography"
 import AddIcon from "@mui/icons-material/Add"
 import CloseIcon from "@mui/icons-material/Close"
+import MenuIcon from "@mui/icons-material/Menu"
 import AdminSideBar from "../../Components/admin-sidebar.jsx"
 import "../../index.css"
 import {
@@ -31,6 +32,7 @@ import {
   MenuItem,
   InputAdornment,
   Chip,
+  Drawer,
 } from "@mui/material"
 import { useTheme } from "@mui/material/styles"
 import axios from "axios"
@@ -140,6 +142,9 @@ const AdminSubContractors = () => {
   // Loading states for delete and view profile operations
   const [isDeletingSubcontractor, setIsDeletingSubcontractor] = useState(false)
   const [isViewingProfile, setIsViewingProfile] = useState(false)
+
+  // Sidebar state
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
   // Helpers for dynamic services list
   const handleServiceItemChange = (index, field, value) => {
@@ -760,6 +765,22 @@ const AdminSubContractors = () => {
         </aside>
 
         <main className="flex-1 p-4 sm:p-6 md:p-10 bg-gray-50 overflow-auto">
+          {/* Hamburger menu for mobile */}
+          <IconButton
+            onClick={() => setIsSidebarOpen(true)}
+            sx={{
+              display: { xs: 'block', md: 'none' },
+              position: 'fixed',
+              top: 80,
+              left: 16,
+              zIndex: 50,
+              bgcolor: 'white',
+              boxShadow: 2
+            }}
+          >
+            <MenuIcon />
+          </IconButton>
+
           <h2 className="text-2xl font-bold mb-6">Create Account for Subcontractors</h2>
 
           {/* Manage Subcontractors Section */}
@@ -1001,6 +1022,15 @@ const AdminSubContractors = () => {
           </div>
         </main>
       </div>
+
+      {/* Mobile Drawer */}
+      <Drawer
+        anchor="left"
+        open={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+      >
+        <AdminSideBar />
+      </Drawer>
 
        <Dialog
       open={openModal}

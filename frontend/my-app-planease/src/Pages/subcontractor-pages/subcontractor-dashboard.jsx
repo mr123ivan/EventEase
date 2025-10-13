@@ -8,11 +8,12 @@ import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
 import EditIcon from '@mui/icons-material/Edit';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import { Menu as MenuIcon } from '@mui/icons-material';
 import NavPanel from "../../Components/subcon-navpanel";
 import ClickAwayListener from '@mui/material/ClickAwayListener';
 import imageCompression from 'browser-image-compression';
 import '../../index.css';
-import { Box, IconButton, Modal, Stack, TextField, Button } from '@mui/material';
+import { Box, IconButton, Modal, Stack, TextField, Button, Drawer } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
@@ -70,6 +71,9 @@ const SubcontractorDashboard = () => {
     const [completedTransactions, setCompletedTransactions] = useState(0);
     const [recentActivity, setRecentActivity] = useState([]);
     const [isLoadingOverview, setIsLoadingOverview] = useState(false);
+
+    // Mobile sidebar state
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     useEffect(()=>{
         console.log("selectedImage", selectedImage);
@@ -620,17 +624,48 @@ const SubcontractorDashboard = () => {
     return (
         <div className="h-screen grid grid-rows-[auto_1fr]">
             <Navbar />
+            {/* Hamburger menu for mobile */}
+            <IconButton
+                onClick={() => setIsSidebarOpen(true)}
+                sx={{
+                    display: { xs: 'block', md: 'none' },
+                    position: 'fixed',
+                    top: 80,
+                    left: 16,
+                    zIndex: 50,
+                    bgcolor: 'white',
+                    boxShadow: 2
+                }}
+            >
+                <MenuIcon />
+            </IconButton>
             <div className="grid lg:grid-cols-[1fr_3fr]">
                 <div className="shadow hidden lg:block p-5">
                     <NavPanel />
                 </div>
                 <div className="flex flex-col direct rounded-lg gap-4 bg-gray-100 md:px-10 md:py-10">
                     <div className="flex items-center bg-white p-5 md:p-10 shadow-lg">
-                        <img
-                            src={userdetails.profile_image}
-                            alt="Profile"
-                            className="w-20 h-20 rounded-full object-cover"
-                        />
+                        {userdetails.profile_image && userdetails.profile_image.trim() !== '' ? (
+                            <img
+                                src={userdetails.profile_image}
+                                alt="Profile"
+                                className="w-20 h-20 rounded-full object-cover"
+                                onError={(e) => {
+                                    e.target.style.display = 'none';
+                                    e.target.nextSibling.style.display = 'flex';
+                                }}
+                            />
+                        ) : null}
+                        <div
+                            className={`w-20 h-20 rounded-full flex items-center justify-center text-white font-bold text-xl ${
+                                userdetails.profile_image && userdetails.profile_image.trim() !== '' ? 'hidden' : 'bg-blue-500'
+                            }`}
+                            style={{
+                                display: userdetails.profile_image && userdetails.profile_image.trim() !== '' ? 'none' : 'flex'
+                            }}
+                        >
+                            {userdetails.fullname ? userdetails.fullname.charAt(0).toUpperCase() : 'U'}
+                        </div>
                         <div className="ml-4">
                             <h2 className="text-lg font-semibold">{userdetails.fullname}</h2>
                             <p className="text-gray-500">{userdetails.service_name}</p>
@@ -1091,6 +1126,17 @@ const SubcontractorDashboard = () => {
                     )}
                 </Box>
             </Modal>
+
+            {/* Mobile Drawer for Sidebar */}
+            <Drawer
+                anchor="left"
+                open={isSidebarOpen}
+                onClose={() => setIsSidebarOpen(false)}
+            >
+                <Box sx={{ width: 250, p: 2 }}>
+                    <NavPanel />
+                </Box>
+            </Drawer>
 
         </div>
     );

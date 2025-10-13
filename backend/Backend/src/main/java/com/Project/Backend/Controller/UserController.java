@@ -29,6 +29,7 @@ import com.Project.Backend.DTO.LoginRequest;
 import com.Project.Backend.Entity.UserEntity;
 import com.Project.Backend.Service.TokenService;
 import com.Project.Backend.Service.UserService;
+import com.Project.Backend.Service.OtpService;
 
 import jakarta.servlet.http.HttpSession;
 
@@ -38,6 +39,9 @@ import jakarta.servlet.http.HttpSession;
 public class UserController {
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private OtpService otpService;
 
     private final TokenService tokenService;
     
@@ -251,5 +255,30 @@ public class UserController {
         return ResponseEntity.ok(Collections.singletonMap("match", matches));
     }
 
-    
+    @PostMapping("/reset-password")
+    public ResponseEntity<String> resetPassword(@RequestBody Map<String, String> request) {
+        String email = request.get("email");
+        String otp = request.get("otp");
+        String newPassword = request.get("newPassword");
+
+        if (email == null || otp == null || newPassword == null) {
+            return ResponseEntity.badRequest().body("Email, OTP, and new password are required");
+        }
+
+        // Validate OTP
+        boolean isValidOtp = otpService.validateOtp(email, otp);
+        if (!isValidOtp) {
+            return ResponseEntity.badRequest().body("Invalid or expired OTP");
+        }
+
+        try {
+            userService.updateUserPassword(email, newPassword);
+            otpService.clearOtp(email); // Clear OTP after successful reset
+            return ResponseEntity.ok("Password reset successfully");
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
+        }
+    }
+
+
 }

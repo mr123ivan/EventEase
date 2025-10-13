@@ -6,6 +6,7 @@ public class EventUpsertDTO {
     private Integer event_Id; // for update
     private String event_name;
     private String event_summary;
+    private String event_description;
     private Boolean event_isAvailable;
     private String event_image; // optional
     private List<EventSectionDTO> event_sections;
@@ -18,6 +19,9 @@ public class EventUpsertDTO {
 
     public String getEvent_summary() { return event_summary; }
     public void setEvent_summary(String event_summary) { this.event_summary = event_summary; }
+
+    public String getEvent_description() { return event_description; }
+    public void setEvent_description(String event_description) { this.event_description = event_description; }
 
     public Boolean getEvent_isAvailable() { return event_isAvailable; }
     public void setEvent_isAvailable(Boolean event_isAvailable) { this.event_isAvailable = event_isAvailable; }

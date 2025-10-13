@@ -39,8 +39,6 @@ const UserBookingsPage = () => {
           { headers: token ? { Authorization: `Bearer ${token}` } : {} }
         );
         
-        console.log("Fetched detailed booking info:", response.data);
-        
         // Merge the details with existing booking data
         // This ensures we don't lose any data that might only exist in one place
         setSelectedBooking({...booking, ...response.data});
@@ -63,7 +61,6 @@ const UserBookingsPage = () => {
         `${API_BASE_URL}/api/transactions/event-progress/${transactionId}`,
         { headers: token ? { Authorization: `Bearer ${token}` } : {} }
       );
-      console.log("Fetched event progress data:", response.data);
       setProgressData(response.data);
     } catch (error) {
       console.error("Failed to fetch event progress:", error);
@@ -82,33 +79,26 @@ const UserBookingsPage = () => {
 
   // Get user email from auth context only
   useEffect(() => {
-    console.log("User Bookings Page - User state:", user);
-    
     if (user?.email) {
-      console.log("User Bookings Page - User email found from context:", user.email);
       setUserEmail(user.email);
     } else {
       // If no user in context but we're authenticated, try to get email from local storage token
       if (isAuthenticated && localStorage.getItem('token')) {
         const token = localStorage.getItem('token') || localStorage.getItem("token");
         // Use a fallback if you can access the token directly
-        console.log("User Bookings Page - Trying to fetch user data directly");
-        
+
         // Make a direct API call to get user info
         axios.get(`${API_BASE_URL}/user/getuser`, {
           headers: { Authorization: `Bearer ${token}` },
         })
         .then(response => {
-          console.log("User data fetched directly:", response.data);
           if (response.data?.email) {
             setUserEmail(response.data.email);
           }
         })
         .catch(error => {
-          console.log("Failed to fetch user data directly:", error);
         });
       } else {
-        console.log("User Bookings Page - No user email available in auth context");
       }
     }
   }, [user, isAuthenticated]);
@@ -116,9 +106,7 @@ const UserBookingsPage = () => {
   // Fetch bookings once we have the email
   useEffect(() => {
     if (userEmail) {
-      console.log("User Bookings Page - Fetching with email:", userEmail);
       const token = localStorage.getItem("token") || localStorage.getItem("token");
-      console.log("User Bookings Page - Token exists:", !!token);
       fetchUserBookings(token, userEmail);
     }
   }, [userEmail]);
@@ -126,28 +114,19 @@ const UserBookingsPage = () => {
   const fetchUserBookings = async (token, email) => {
     setLoading(true);
     try {
-      console.log("User Bookings Page - Fetching bookings for email:", email);
-      
       const apiUrl = `${API_BASE_URL}/api/transactions/getAllUserTransactionsByEmail/${email}`;
-      console.log("User Bookings Page - API URL:", apiUrl);
-      console.log("User Bookings Page - Using token:", token?.substring(0, 10) + "...");
-      
+
       // Ensure headers are properly set for the request
       const headers = {};
       if (token) {
         headers.Authorization = `Bearer ${token}`;
       }
-      
+
       // Use the correct API endpoint for fetching user transactions
-      console.log("User Bookings Page - About to make API call with headers:", headers);
       const response = await axios.get(apiUrl, { headers });
-      
-      console.log("User Bookings Page - API response received:", response.status);
-      console.log("User Bookings Page - API response data:", response.data);
-      
+
       // Categorize bookings by status
       const transactions = response.data || [];
-      console.log("User Bookings Page - Total transactions found:", transactions.length);
       
       // The backend is filtering out PENDING, CANCELLED, and DECLINED statuses already
       // So we need to categorize what we get, which is only ONGOING and COMPLETED bookings
@@ -191,22 +170,13 @@ const UserBookingsPage = () => {
         return status === "CANCELLED" || status === "DECLINED";
       });
       
-      console.log("User Bookings Page - Pending bookings:", pendingBookings.length);
-      console.log("User Bookings Page - Ongoing bookings:", ongoingBookings.length);
-      console.log("User Bookings Page - Completed bookings:", completedBookings.length);
-      console.log("User Bookings Page - Cancelled bookings:", cancelledBookings.length);
-      
       // Log a sample booking to see its structure
       if (transactions.length > 0) {
-        console.log("User Bookings Page - Sample booking data structure:", transactions[0]);
-        
         // Find the exact status field name used in the backend response
-        const statusField = transactions[0].status ? "status" : 
-                           transactions[0].Status ? "Status" : 
+        const statusField = transactions[0].status ? "status" :
+                           transactions[0].Status ? "Status" :
                            transactions[0].transactionStatus ? "transactionStatus" : "unknown";
-        console.log("User Bookings Page - Status field name being used:", statusField);
       } else {
-        console.log("User Bookings Page - No transactions returned from backend. Note: Pending, Cancelled, and Declined bookings are filtered out by the backend.");
       }
       
       setBookings({
@@ -217,12 +187,6 @@ const UserBookingsPage = () => {
       });
       setLoading(false);
     } catch (error) {
-      console.error("User Bookings Page - Failed to fetch bookings:", error);
-      console.log("User Bookings Page - Error details:", {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status
-      });
       setLoading(false);
     }
   };

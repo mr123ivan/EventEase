@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, useRef } from "react"
 import { Eye, EyeOff } from "lucide-react"
 import { Link, useNavigate } from "react-router-dom"
 import CustomInput from "../Components/CustomInput"
@@ -11,6 +11,11 @@ import { motion, AnimatePresence } from "framer-motion" // Import framer-motion
 
 import { useAuth } from "../Components/AuthProvider"
 
+// Mobile detection utility
+const isMobileDevice = () => {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+}
+
 export default function LoginPage() {
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const [showPassword, setShowPassword] = useState(false)
@@ -18,6 +23,18 @@ export default function LoginPage() {
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
+
+  // Forgot password states
+  const [mode, setMode] = useState('login') // 'login', 'forgotEmail', 'forgotCode', 'forgotNewPassword'
+  const [forgotEmail, setForgotEmail] = useState('')
+  const [forgotOtp, setForgotOtp] = useState('')
+  const [forgotNewPassword, setForgotNewPassword] = useState('')
+  const [forgotConfirmPassword, setForgotConfirmPassword] = useState('')
+  const [forgotError, setForgotError] = useState('')
+  const [forgotLoading, setForgotLoading] = useState(false)
+  const [successMessage, setSuccessMessage] = useState('')
+
+  const timeoutRef = useRef(null)
 
   // Tips rotation state - Slowed down to 8 seconds
   const [currentTipIndex, setCurrentTipIndex] = useState(0)
@@ -137,6 +154,83 @@ export default function LoginPage() {
     }
   }, [])
 
+  // Handle OAuth redirect callback
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search)
+    const accessToken = urlParams.get('access_token')
+    const state = urlParams.get('state')
+
+    if (accessToken) {
+      // Clear the URL parameters
+      window.history.replaceState({}, document.title, window.location.pathname)
+
+      setError("")
+      setIsLoading(true)
+
+      // Get user profile using the access token
+      fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      })
+        .then(response => response.json())
+        .then(async (profile) => {
+          try {
+            // Check if user exists in the database
+            const checkUserResponse = await axios.get(`${API_BASE_URL}/user/check-user`, {
+              params: { email: profile.email },
+            })
+
+            if (checkUserResponse.data.exists) {
+              const credentials = {
+                email: profile.email,
+                password: profile.sub, // Use Google ID as temporary password
+              }
+              await loginAction(credentials, navigate)
+            } else {
+              const registrationData = {
+                firstname: profile.given_name,
+                lastname: profile.family_name,
+                email: profile.email,
+                password: profile.sub,
+                phoneNumber: null,
+                region: null,
+                province: null,
+                cityAndMul: null,
+                barangay: null,
+                role: "User",
+                profilePicture: profile.picture,
+                isGoogle: true,
+                isFacebook: false,
+              }
+              const registerResponse = await axios.post(`${API_BASE_URL}/user/register`, registrationData)
+              try {
+                await axios.post(`${API_BASE_URL}/regularuser/create`, { userId: registerResponse.data.userId })
+              } catch (error) {
+                console.error("Regular user creation error:", error)
+              }
+              const loginCredentials = {
+                email: profile.email,
+                password: profile.sub,
+              }
+              await loginAction(loginCredentials, navigate)
+            }
+            window.dispatchEvent(new Event("storage"))
+          } catch (err) {
+            console.error("Login/registration error:", err)
+            setError("An error occurred during login.")
+          } finally {
+            setIsLoading(false)
+          }
+        })
+        .catch((err) => {
+          console.error("Profile fetch error:", err)
+          setError("Failed to get user profile")
+          setIsLoading(false)
+        })
+    }
+  }, [API_BASE_URL, loginAction, navigate])
+
   const handleSocialLogin = async (provider) => {
     if (provider === "Google") {
       try {
@@ -153,10 +247,14 @@ export default function LoginPage() {
         setIsLoading(true)
 
         // Initialize Google Identity Services
+        const isMobile = isMobileDevice()
         const client = window.google.accounts.oauth2.initTokenClient({
           client_id: clientGoogleId,
           scope: "profile email",
+          ux_mode: isMobile ? 'redirect' : 'popup',
+          redirect_uri: isMobile ? `${window.location.origin}/login` : undefined,
           callback: async (response) => {
+            clearTimeout(timeoutRef.current)
             if (response.error) {
               console.error("Google login error:", response.error)
               if (response.error === "popup_closed_by_user" || response.error === "access_denied") {
@@ -226,6 +324,7 @@ export default function LoginPage() {
             }
           },
           error_callback: (error) => {
+            clearTimeout(timeoutRef.current)
             console.error("Google OAuth error:", error)
             setError("Google login was cancelled or failed")
             setIsLoading(false)
@@ -234,7 +333,14 @@ export default function LoginPage() {
 
         try {
           client.requestAccessToken()
+          timeoutRef.current = setTimeout(() => {
+            if (isLoading) {
+              setIsLoading(false)
+              setError("Google login timed out. Please try again.")
+            }
+          }, 15000)
         } catch (popupError) {
+          clearTimeout(timeoutRef.current)
           console.error("Popup blocked or failed:", popupError)
           setError("Please allow popups for Google login to work")
           setIsLoading(false)
@@ -331,6 +437,96 @@ export default function LoginPage() {
         setIsLoading(false)
         setError("An error occurred during login.")
       }
+    }
+  }
+
+  // Forgot password functions
+  const handleSendOtp = async () => {
+    setForgotError('')
+    if (!forgotEmail) {
+      setForgotError('Please enter your email')
+      return
+    }
+    setForgotLoading(true)
+    try {
+      // Clear any existing OTP first
+      await axios.post(`${API_BASE_URL}/email/clear-otp`, null, {
+        params: { email: forgotEmail }
+      })
+
+      // Then send new OTP
+      const response = await axios.get(`${API_BASE_URL}/email/send-email/${forgotEmail}`)
+      if (response.data === 'HTML email with logo sent successfully!') {
+        setMode('forgotCode')
+        setForgotOtp('') // Clear the OTP input field for the new code
+      } else {
+        setForgotError(response.data || 'Failed to send OTP')
+      }
+    } catch (error) {
+      setForgotError(error.response?.data || 'Failed to send OTP')
+    } finally {
+      setForgotLoading(false)
+    }
+  }
+
+  const handleVerifyOtp = async () => {
+    setForgotError('')
+    if (!forgotOtp) {
+      setForgotError('Please enter the OTP')
+      return
+    }
+    setForgotLoading(true)
+    try {
+      const response = await axios.get(`${API_BASE_URL}/email/validate-otp`, {
+        params: { email: forgotEmail, OTP: forgotOtp }
+      })
+      if (response.data === true) {
+        setMode('forgotNewPassword')
+      } else {
+        setForgotError('Invalid OTP')
+      }
+    } catch (error) {
+      setForgotError('Failed to verify OTP')
+    } finally {
+      setForgotLoading(false)
+    }
+  }
+
+  const handleResetPassword = async () => {
+    setForgotError('')
+    if (!forgotOtp) {
+      setForgotError('Please enter the OTP')
+      return
+    }
+    if (!forgotNewPassword || !forgotConfirmPassword) {
+      setForgotError('Please enter both passwords')
+      return
+    }
+    if (forgotNewPassword !== forgotConfirmPassword) {
+      setForgotError('Passwords do not match')
+      return
+    }
+    setForgotLoading(true)
+    try {
+      const response = await axios.post(`${API_BASE_URL}/user/reset-password`, {
+        email: forgotEmail,
+        otp: forgotOtp,
+        newPassword: forgotNewPassword
+      })
+      if (response.data === 'Password reset successfully') {
+        setSuccessMessage('Password reset successfully! Please log in with your new password.')
+        setMode('login')
+        setForgotEmail('')
+        setForgotOtp('')
+        setForgotNewPassword('')
+        setForgotConfirmPassword('')
+      } else {
+        setForgotError(response.data || 'Failed to reset password')
+      }
+    } catch (error) {
+      setForgotError(error.response?.data || 'Failed to reset password')
+    } finally {
+      setForgotLoading(false)
     }
   }
 
@@ -587,127 +783,329 @@ export default function LoginPage() {
             <p className="mt-2 text-gray-600">Please sign in to continue</p>
           </div>
 
-          <form onSubmit={handleLogin} className="space-y-6">
-            {/* Login Buttons Container */}
-            <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
-              {/* Google Login Button (Styled) */}
-              <motion.button
-                type="button"
-                onClick={() => handleSocialLogin("Google")}
-                className="flex items-center justify-center w-full h-12 border rounded-lg shadow-sm hover:shadow-md transition text-gray-700 hover:bg-gray-50"
-                whileHover={{ scale: 1.02, boxShadow: "0 4px 6px rgba(0,0,0,0.1)" }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <FcGoogle size={24} className="mr-2" />
-                <span className="hidden sm:inline">Login with Google</span>
-                <span className="sm:hidden">Google</span>
-              </motion.button>
+          {/* Success message */}
+          {successMessage && (
+            <motion.div
+              className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded relative"
+              role="alert"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <span className="block sm:inline">{successMessage}</span>
+            </motion.div>
+          )}
 
-              {/* Facebook Login Button (Styled) */}
-              {/*<motion.button
-                type="button"
-                onClick={() => handleSocialLogin("Facebook")}
-                className="flex items-center justify-center w-full h-12 border rounded-lg shadow-sm hover:shadow-md transition text-gray-700 hover:bg-gray-50"
-                whileHover={{ scale: 1.02, boxShadow: "0 4px 6px rgba(0,0,0,0.1)" }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <FaFacebook size={24} className="mr-2 text-blue-600" />
-                <span className="hidden sm:inline">Login with Facebook</span>
-                <span className="sm:hidden">Facebook</span>
-              </motion.button>*/}
-            </div>
+          {mode === 'login' && (
+            <form onSubmit={handleLogin} className="space-y-6">
+              {/* Login Buttons Container */}
+              <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+                {/* Google Login Button (Styled) */}
+                <motion.button
+                  type="button"
+                  onClick={() => handleSocialLogin("Google")}
+                  className="flex items-center justify-center w-full h-12 border rounded-lg shadow-sm hover:shadow-md transition text-gray-700 hover:bg-gray-50"
+                  whileHover={{ scale: 1.02, boxShadow: "0 4px 6px rgba(0,0,0,0.1)" }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <FcGoogle size={24} className="mr-2" />
+                  <span className="hidden sm:inline">Login with Google</span>
+                  <span className="sm:hidden">Google</span>
+                </motion.button>
 
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300"></div>
+                {/* Facebook Login Button (Styled) */}
+                {/*<motion.button
+                  type="button"
+                  onClick={() => handleSocialLogin("Facebook")}
+                  className="flex items-center justify-center w-full h-12 border rounded-lg shadow-sm hover:shadow-md transition text-gray-700 hover:bg-gray-50"
+                  whileHover={{ scale: 1.02, boxShadow: "0 4px 6px rgba(0,0,0,0.1)" }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <FaFacebook size={24} className="mr-2 text-blue-600" />
+                  <span className="hidden sm:inline">Login with Facebook</span>
+                  <span className="sm:hidden">Facebook</span>
+                </motion.button>*/}
               </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">Or continue with</span>
-              </div>
-            </div>
 
-            {/* Email input */}
-            <div className="space-y-1">
-              <label htmlFor="email" className="text-sm font-medium text-gray-700">
-                Email
-              </label>
-              <CustomInput
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                hint="planease@gmail.com"
-                className="w-full"
-                required
-              />
-            </div>
-
-            {/* Password input */}
-            <div className="space-y-1">
-              <label htmlFor="password" className="text-sm font-medium text-gray-700">
-                Password
-              </label>
               <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-300"></div>
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-white text-gray-500">Or continue with</span>
+                </div>
+              </div>
+
+              {/* Email input */}
+              <div className="space-y-1">
+                <label htmlFor="email" className="text-sm font-medium text-gray-700">
+                  Email
+                </label>
                 <CustomInput
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  hint="Enter your password"
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  hint="planease@gmail.com"
                   className="w-full"
                   required
                 />
+              </div>
+
+              {/* Password input */}
+              <div className="space-y-1">
+                <label htmlFor="password" className="text-sm font-medium text-gray-700">
+                  Password
+                </label>
+                <div className="relative">
+                  <CustomInput
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    hint="Enter your password"
+                    className="w-full"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Forgot password link */}
+              <div className="flex justify-end">
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
-                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  onClick={() => setMode('forgotEmail')}
+                  className="text-sm text-gray-600 hover:text-amber-500"
                 >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  Forgot password?
+                </button>
+              </div>
+
+              {/* Error message - Moved to appear above the login button */}
+              {error && (
+                <motion.div
+                  className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative"
+                  role="alert"
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <span className="block sm:inline">{error}</span>
+                </motion.div>
+              )}
+
+              {/* Login button */}
+              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <CustomButton
+                  type="submit"
+                  className="w-full h-12 bg-gray-800 hover:bg-gray-900 text-white"
+                  fontSize="text-sm"
+                  disabled={isLoading}
+                >
+                  {isLoading ? "LOGGING IN..." : "LOGIN"}
+                </CustomButton>
+              </motion.div>
+
+              {/* Sign up link */}
+              <div className="text-center text-sm text-gray-600">
+                Don&apos;t have an account?{" "}
+                <Link to="/register" className="text-amber-500 hover:underline">
+                  Sign up
+                </Link>
+              </div>
+            </form>
+          )}
+
+          {mode === 'forgotEmail' && (
+            <div className="space-y-6">
+              <div className="text-center">
+                <h2 className="text-xl font-medium text-gray-800">Forgot Password</h2>
+                <p className="mt-2 text-gray-600">Enter your email to receive a reset code</p>
+              </div>
+
+              <div className="space-y-1">
+                <label htmlFor="forgotEmail" className="text-sm font-medium text-gray-700">
+                  Email
+                </label>
+                <CustomInput
+                  id="forgotEmail"
+                  type="email"
+                  value={forgotEmail}
+                  onChange={(e) => setForgotEmail(e.target.value)}
+                  hint="Enter your email"
+                  className="w-full"
+                />
+              </div>
+
+              {forgotError && (
+                <motion.div
+                  className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative"
+                  role="alert"
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <span className="block sm:inline">{forgotError}</span>
+                </motion.div>
+              )}
+
+              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <CustomButton
+                  onClick={handleSendOtp}
+                  className="w-full h-12 bg-gray-800 hover:bg-gray-900 text-white"
+                  fontSize="text-sm"
+                  disabled={forgotLoading}
+                >
+                  {forgotLoading ? "SENDING..." : "SEND RESET CODE"}
+                </CustomButton>
+              </motion.div>
+
+              <div className="text-center text-sm text-gray-600">
+                <button
+                  type="button"
+                  onClick={() => setMode('login')}
+                  className="text-amber-500 hover:underline"
+                >
+                  Back to Login
                 </button>
               </div>
             </div>
+          )}
 
-            {/* Forgot password link */}
-            <div className="flex justify-end">
-              <Link to="/forgot-password" className="text-sm text-gray-600 hover:text-amber-500">
-                Forgot password?
-              </Link>
-            </div>
+          {mode === 'forgotCode' && (
+            <div className="space-y-6">
+              <div className="text-center">
+                <h2 className="text-xl font-medium text-gray-800">Enter Reset Code</h2>
+                <p className="mt-2 text-gray-600">Check your email for the 6-digit code</p>
+              </div>
 
-            {/* Error message - Moved to appear above the login button */}
-            {error && (
-              <motion.div
-                className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative"
-                role="alert"
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-              >
-                <span className="block sm:inline">{error}</span>
+              <div className="space-y-1">
+                <label htmlFor="forgotOtp" className="text-sm font-medium text-gray-700">
+                  Reset Code
+                </label>
+                <CustomInput
+                  id="forgotOtp"
+                  type="text"
+                  value={forgotOtp}
+                  onChange={(e) => setForgotOtp(e.target.value)}
+                  hint="Enter 6-digit code"
+                  className="w-full"
+                  maxLength={6}
+                />
+              </div>
+
+              {forgotError && (
+                <motion.div
+                  className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative"
+                  role="alert"
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <span className="block sm:inline">{forgotError}</span>
+                </motion.div>
+              )}
+
+              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <CustomButton
+                  onClick={handleVerifyOtp}
+                  className="w-full h-12 bg-gray-800 hover:bg-gray-900 text-white"
+                  fontSize="text-sm"
+                  disabled={forgotLoading}
+                >
+                  {forgotLoading ? "VERIFYING..." : "VERIFY CODE"}
+                </CustomButton>
               </motion.div>
-            )}
 
-            {/* Login button */}
-            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-              <CustomButton
-                type="submit"
-                className="w-full h-12 bg-gray-800 hover:bg-gray-900 text-white"
-                fontSize="text-sm"
-                disabled={isLoading}
-              >
-                {isLoading ? "LOGGING IN..." : "LOGIN"}
-              </CustomButton>
-            </motion.div>
-
-            {/* Sign up link */}
-            <div className="text-center text-sm text-gray-600">
-              Don&apos;t have an account?{" "}
-              <Link to="/register" className="text-amber-500 hover:underline">
-                Sign up
-              </Link>
+              <div className="text-center text-sm text-gray-600">
+                <button
+                  type="button"
+                  onClick={() => setMode('forgotEmail')}
+                  className="text-amber-500 hover:underline"
+                >
+                  Resend Code
+                </button>
+              </div>
             </div>
-          </form>
+          )}
+
+          {mode === 'forgotNewPassword' && (
+            <div className="space-y-6">
+              <div className="text-center">
+                <h2 className="text-xl font-medium text-gray-800">New Password</h2>
+                <p className="mt-2 text-gray-600">Enter your new password</p>
+              </div>
+
+              <div className="space-y-1">
+                <label htmlFor="forgotNewPassword" className="text-sm font-medium text-gray-700">
+                  New Password
+                </label>
+                <CustomInput
+                  id="forgotNewPassword"
+                  type="password"
+                  value={forgotNewPassword}
+                  onChange={(e) => setForgotNewPassword(e.target.value)}
+                  hint="Enter new password"
+                  className="w-full"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label htmlFor="forgotConfirmPassword" className="text-sm font-medium text-gray-700">
+                  Confirm Password
+                </label>
+                <CustomInput
+                  id="forgotConfirmPassword"
+                  type="password"
+                  value={forgotConfirmPassword}
+                  onChange={(e) => setForgotConfirmPassword(e.target.value)}
+                  hint="Confirm new password"
+                  className="w-full"
+                />
+              </div>
+
+              {forgotError && (
+                <motion.div
+                  className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative"
+                  role="alert"
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <span className="block sm:inline">{forgotError}</span>
+                </motion.div>
+              )}
+
+              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <CustomButton
+                  onClick={handleResetPassword}
+                  className="w-full h-12 bg-gray-800 hover:bg-gray-900 text-white"
+                  fontSize="text-sm"
+                  disabled={forgotLoading}
+                >
+                  {forgotLoading ? "RESETTING..." : "RESET PASSWORD"}
+                </CustomButton>
+              </motion.div>
+
+              <div className="text-center text-sm text-gray-600">
+                <button
+                  type="button"
+                  onClick={() => setMode('forgotCode')}
+                  className="text-amber-500 hover:underline"
+                >
+                  Back
+                </button>
+              </div>
+            </div>
+          )}
         </motion.div>
       </div>
     </div>

@@ -31,10 +31,14 @@ import {
   Grid,
   Box,
   CircularProgress,
+  IconButton,
+  Drawer,
 } from "@mui/material"
-import { Edit as EditIcon, Refresh as RefreshIcon, Work as WorkIcon } from "@mui/icons-material"
+import { Edit as EditIcon, Refresh as RefreshIcon, Work as WorkIcon, Menu as MenuIcon } from "@mui/icons-material"
+import MapViewModal from "../../Components/MapViewModal.jsx"
 
 const SubcontractorProgress = () => {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [transactions, setTransactions] = useState([])
   const [selectedTransaction, setSelectedTransaction] = useState(null)
   const [showUpdateModal, setShowUpdateModal] = useState(false)
@@ -46,6 +50,8 @@ const SubcontractorProgress = () => {
   const [existingImageUrl, setExistingImageUrl] = useState(null)
   const [userEmail, setUserEmail] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [viewMapModal, setViewMapModal] = useState(false)
+  const [selectedLocation, setSelectedLocation] = useState("")
 
   useEffect(() => {
     const token = localStorage.getItem("token")
@@ -56,7 +62,6 @@ const SubcontractorProgress = () => {
         setUserEmail(payload.email || payload.sub)
         fetchSubcontractorProgress(payload.email || payload.sub)
       } catch (error) {
-        console.error("Failed to decode token:", error)
       }
     }
   }, [])
@@ -68,10 +73,7 @@ const SubcontractorProgress = () => {
         headers: { Authorization: `Bearer ${token}` },
       })
 
-      console.log("API Response:", response.data) // Debug log API response
-
       const progressData = response.data.map((progress) => {
-        console.log("Progress item:", progress) // Debug log each progress item
         return {
           id: progress.subcontractorProgressId ? progress.subcontractorProgressId.toString() : progress.transaction_Id.toString(), // Use unique subcontractorProgressId as key, fallback to transaction_Id
           transactionId: progress.transactionId ? progress.transactionId.toString() : progress.transaction_Id.toString(), // Keep transactionId for API calls, fallback to transaction_Id
@@ -95,10 +97,8 @@ const SubcontractorProgress = () => {
           lastUpdate: progress.updatedAt || new Date().toLocaleString(),
         }
       })
-      console.log("Mapped progress data:", progressData) // Debug log mapped data
       setTransactions(progressData)
     } catch (error) {
-      console.error("Failed to fetch subcontractor progress:", error)
     }
   }
 
@@ -187,8 +187,6 @@ const SubcontractorProgress = () => {
         setUpdateData({ images: [], description: "" })
         setSelectedFiles([])
       } catch (error) {
-        console.error("Failed to submit check-in:", error)
-        console.error("Error details:", error.response?.data)
       } finally {
         setIsSubmitting(false)
       }
@@ -228,6 +226,21 @@ const SubcontractorProgress = () => {
   return (
     <div className="h-screen grid grid-rows-[auto_1fr]">
       <Navbar />
+      {/* Hamburger menu for mobile */}
+      <IconButton
+        onClick={() => setIsSidebarOpen(true)}
+        sx={{
+          display: { xs: 'block', md: 'none' },
+          position: 'fixed',
+          top: 80,
+          left: 16,
+          zIndex: 50,
+          bgcolor: 'white',
+          boxShadow: 2
+        }}
+      >
+        <MenuIcon />
+      </IconButton>
       <div className="grid lg:grid-cols-[1fr_3fr]">
         <div className="shadow hidden lg:block p-5">
           <NavPanel />
@@ -333,7 +346,21 @@ const SubcontractorProgress = () => {
                           <Typography variant="body2" className="font-medium">
                             {transaction.eventName}
                           </Typography>
-                          <Typography variant="caption" color="text.secondary">
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            sx={{
+                              cursor: 'pointer',
+                              '&:hover': {
+                                color: '#FFB22C',
+                                textDecoration: 'underline',
+                              },
+                            }}
+                            onClick={() => {
+                              setSelectedLocation(transaction.location);
+                              setViewMapModal(true);
+                            }}
+                          >
                             {transaction.location}
                           </Typography>
                           <br />
@@ -615,6 +642,29 @@ const SubcontractorProgress = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      <MapViewModal
+        open={viewMapModal}
+        onClose={() => setViewMapModal(false)}
+        location={selectedLocation}
+      />
+
+      <Drawer
+        anchor="left"
+        open={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+        sx={{
+          '& .MuiDrawer-paper': {
+            width: 280,
+            backgroundColor: '#f8f9fa',
+            borderRight: '1px solid #e0e0e0'
+          }
+        }}
+      >
+        <div className="p-5">
+          <NavPanel />
+        </div>
+      </Drawer>
     </div>
   )
 }

@@ -23,12 +23,16 @@ import {
   TableHead,
   TableRow,
   IconButton,
-  Chip
+  Chip,
+  Drawer
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import FilterListIcon from "@mui/icons-material/FilterList";
+import MapIcon from '@mui/icons-material/Map';
+import { Menu as MenuIcon } from '@mui/icons-material';
+import MapViewModal from "../../Components/MapViewModal.jsx";
 
 const style = {
   position: 'absolute',
@@ -52,6 +56,10 @@ export default function SubcontractorBookings() {
   const [filterMenuOpen, setFilterMenuOpen] = useState(false);
   const filterRef = useRef(null);
   const bookingsPerPage = 10;
+  const [viewMapModal, setViewMapModal] = useState(false);
+
+  // Mobile sidebar state
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   
   const handleOpen = (row) => {
     setSelectedRow(row);
@@ -235,6 +243,21 @@ export default function SubcontractorBookings() {
   return (
     <div className="h-screen grid grid-rows-[auto_1fr]">
       <Navbar />
+      {/* Hamburger menu for mobile */}
+      <IconButton
+        onClick={() => setIsSidebarOpen(true)}
+        sx={{
+          display: { xs: 'block', md: 'none' },
+          position: 'fixed',
+          top: 80,
+          left: 16,
+          zIndex: 50,
+          bgcolor: 'white',
+          boxShadow: 2
+        }}
+      >
+        <MenuIcon />
+      </IconButton>
       <div className="grid lg:grid-cols-[1fr_3fr]">
         <div className="shadow hidden lg:block p-5">
           <NavPanel />
@@ -505,12 +528,20 @@ export default function SubcontractorBookings() {
 
         <Grid container spacing={2}>
           <Grid item xs={6}>
-            <TextField
-              fullWidth
-              label="Location"
-              value={selectedRow.place}
-              InputProps={{ readOnly: true }}
-            />
+            <div className="flex items-center gap-2">
+              <TextField
+                fullWidth
+                label="Location"
+                value={selectedRow.place}
+                InputProps={{ readOnly: true }}
+              />
+              <IconButton
+                onClick={() => setViewMapModal(true)}
+                sx={{ color: '#FFB22C', '&:hover': { backgroundColor: '#f0f0f0' } }}
+              >
+                <MapIcon />
+              </IconButton>
+            </div>
           </Grid>
           <Grid item xs={6}>
             <TextField
@@ -541,6 +572,29 @@ export default function SubcontractorBookings() {
     )}
   </Box>
 </Modal>
+
+<MapViewModal
+  open={viewMapModal}
+  onClose={() => setViewMapModal(false)}
+  location={selectedRow?.place}
+/>
+
+<Drawer
+  anchor="left"
+  open={isSidebarOpen}
+  onClose={() => setIsSidebarOpen(false)}
+  sx={{
+    '& .MuiDrawer-paper': {
+      width: 250,
+      backgroundColor: '#f9fafb',
+      boxShadow: 3
+    }
+  }}
+>
+  <div className="p-5">
+    <NavPanel />
+  </div>
+</Drawer>
 
     </div>
   );

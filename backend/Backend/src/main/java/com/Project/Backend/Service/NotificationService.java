@@ -7,6 +7,7 @@ import com.Project.Backend.Repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -159,6 +160,7 @@ public class NotificationService {
             notification.setUser(user);
             notification.setNotificationMessage(message);
             notification.setNotificationType("system");
+            notification.setNotificationDate(new Date());
             notification.setRead(false);
             notificationRepository.save(notification);
         }
@@ -174,6 +176,7 @@ public class NotificationService {
             notification.setUser(subcontractor);
             notification.setNotificationMessage(message);
             notification.setNotificationType("system");
+            notification.setNotificationDate(new Date());
             notification.setRead(false);
             notificationRepository.save(notification);
         }
@@ -192,6 +195,7 @@ public class NotificationService {
                 notification.setNotificationMessage(message);
                 notification.setNotificationType("system");
                 notification.setNotificationRecipientType("SubContractor");
+                notification.setNotificationDate(new Date());
                 notification.setRead(false);
                 notification =  notificationRepository.save(notification);
             }

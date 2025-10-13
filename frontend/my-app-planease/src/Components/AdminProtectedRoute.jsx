@@ -24,7 +24,6 @@ const AdminProtectedRoute = ({ children }) => {
 
                 setHasAuthority(response.data.role === "Admin"); // Set true only if Admin
             } catch (error) {
-                console.error("Error fetching role:", error.response?.data || error.message);
                 setHasAuthority(false);
             } finally {
                 setLoading(false); // Only update loading here

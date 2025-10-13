@@ -6,6 +6,11 @@ import AdminSideBar from "../../Components/admin-sidebar.jsx"
 import { Dialog } from "@headlessui/react"
 import Navbar from "../../Components/Navbar"
 import axios from "axios"
+import MapViewModal from "../../Components/MapViewModal.jsx"
+import MapIcon from '@mui/icons-material/Map';
+import IconButton from '@mui/material/IconButton';
+import MenuIcon from "@mui/icons-material/Menu"
+import Drawer from "@mui/material/Drawer"
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -15,6 +20,7 @@ const AdminBookings = () => {
   const [viewPaymentModal, setViewPaymentModal] = useState(false)
   const [transactions, setTransactions] = useState([])
   const [viewReasonModal, setViewReasonModal] = useState(false)
+  const [viewMapModal, setViewMapModal] = useState(false)
   const [isValidating, setIsValidating] = useState(false)
   
   // Cancel confirmation modal states
@@ -25,6 +31,10 @@ const AdminBookings = () => {
   const [showCompleteModal, setShowCompleteModal] = useState(false)
   const [completeConfirmText, setCompleteConfirmText] = useState('')
   const [showCompleteSuccess, setShowCompleteSuccess] = useState(false)
+
+  // Delete confirmation modal states
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [deleteConfirmText, setDeleteConfirmText] = useState('')
   
   // Filter states
   const [statusFilter, setStatusFilter] = useState('')
@@ -33,6 +43,7 @@ const AdminBookings = () => {
   const [searchQuery, setSearchQuery] = useState('')
   const [filteredTransactions, setFilteredTransactions] = useState([])
   const [eventTypes, setEventTypes] = useState([])
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
   // Debug logging for selectedRequest data
   useEffect(() => {
@@ -176,6 +187,33 @@ const AdminBookings = () => {
   const handleCloseSuccessModal = () => {
     setShowCompleteSuccess(false)
   }
+
+  const handleDeleteClick = () => {
+    setShowDeleteModal(true)
+    setDeleteConfirmText('')
+  }
+
+  const handleCloseDeleteModal = () => {
+    setShowDeleteModal(false)
+    setDeleteConfirmText('')
+  }
+
+  const handleSubmitDelete = async () => {
+    if (deleteConfirmText.trim().toLowerCase() === 'delete') {
+      setIsValidating(true)
+      try {
+        await axios.delete(`http://localhost:8080/api/transactions/${selectedRequest?.transaction_Id}`)
+        await fetchData()
+        setShowDeleteModal(false)
+        setSelectedRequest(null)
+      } catch (error) {
+        console.error('Error deleting booking:', error.response?.data || error.message)
+        // Optionally show an error message here
+      } finally {
+        setIsValidating(false)
+      }
+    }
+  }
   
   const handleSubmitComplete = () => {
     if (completeConfirmText.trim().toLowerCase() === 'success') {
@@ -219,6 +257,21 @@ const AdminBookings = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
+      {/* Hamburger menu for mobile */}
+      <IconButton
+        onClick={() => setIsSidebarOpen(true)}
+        sx={{
+          display: { xs: 'block', md: 'none' },
+          position: 'fixed',
+          top: 80,
+          left: 16,
+          zIndex: 50,
+          bgcolor: 'white',
+          boxShadow: 2
+        }}
+      >
+        <MenuIcon />
+      </IconButton>
       <div className="flex flex-1 overflow-hidden">
         <aside className="hidden md:block w-64 border-r bg-white">
           <AdminSideBar />
@@ -466,12 +519,20 @@ const AdminBookings = () => {
                     <div className="flex flex-col gap-2 w-auto">
                       <div>
                         <label className="text-sm font-medium text-gray-500 block mb-1">Location</label>
-                        <input
-                          type="text"
-                          className="border p-2 rounded w-full"
-                          value={selectedRequest.transactionVenue}
-                          readOnly
-                        />
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            className="border p-2 rounded flex-1"
+                            value={selectedRequest.transactionVenue}
+                            readOnly
+                          />
+                          <IconButton
+                            onClick={() => setViewMapModal(true)}
+                            sx={{ color: '#FFB22C', '&:hover': { backgroundColor: '#f0f0f0' } }}
+                          >
+                            <MapIcon />
+                          </IconButton>
+                        </div>
                       </div>
                       <div>
                         <label className="text-sm font-medium text-gray-500 block mb-1">Date</label>
@@ -551,6 +612,24 @@ const AdminBookings = () => {
                           </>
                         ) : (
                           "COMPLETE"
+                        )}
+                      </button>
+                    </div>
+                  )}
+                {selectedRequest && (selectedRequest.transactionStatus === "COMPLETED" || selectedRequest.transactionStatus === "DECLINED") && (
+                    <div className="flex flex-col sm:flex-row justify-end gap-4 pt-4">
+                      <button
+                        className="bg-red-600 text-white px-4 py-2 rounded w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        onClick={handleDeleteClick}
+                        disabled={isValidating}
+                      >
+                        {isValidating ? (
+                          <>
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            DELETING...
+                          </>
+                        ) : (
+                          "DELETE BOOKING"
                         )}
                       </button>
                     </div>
@@ -830,6 +909,77 @@ const AdminBookings = () => {
           </Dialog.Panel>
         </div>
       </Dialog>
+
+      {/* Delete Confirmation Modal */}
+      <Dialog
+        open={showDeleteModal}
+        onClose={handleCloseDeleteModal}
+        className="fixed z-1200 shadow-md inset-0 overflow-y-auto"
+      >
+        <div className="flex items-center justify-center min-h-screen px-4">
+          <Dialog.Panel className="bg-white w-full max-w-md rounded-lg shadow-lg p-6">
+            <div className="flex justify-between items-center border-b pb-3">
+              <h3 className="text-xl font-semibold text-red-600">Delete Booking</h3>
+              <button onClick={handleCloseDeleteModal} className="text-gray-500 hover:text-gray-700 text-xl">
+                ×
+              </button>
+            </div>
+
+            <div className="py-6">
+              <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-4">
+                <p className="text-red-700">
+                  Are you sure you want to delete this booking? This action cannot be undone and all associated data will be permanently removed.
+                  <span className="font-bold block mt-2">!!This action is irreversible!!</span>
+                </p>
+              </div>
+
+              <div className="mt-6">
+                <label className="block text-gray-700 font-medium mb-2">
+                  Type 'delete' to confirm:
+                </label>
+                <input
+                  type="text"
+                  value={deleteConfirmText}
+                  onChange={(e) => setDeleteConfirmText(e.target.value)}
+                  className="w-full border border-gray-300 p-3 rounded focus:outline-none focus:ring-2 focus:ring-red-500"
+                  placeholder="Type 'delete' here"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={handleCloseDeleteModal}
+                className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
+              >
+                Go Back
+              </button>
+              <button
+                onClick={handleSubmitDelete}
+                className={`px-4 py-2 bg-red-600 text-white rounded ${deleteConfirmText.trim().toLowerCase() === 'delete' ? 'hover:bg-red-700' : 'opacity-50 cursor-not-allowed'}`}
+                disabled={deleteConfirmText.trim().toLowerCase() !== 'delete'}
+              >
+                Confirm Delete
+              </button>
+            </div>
+          </Dialog.Panel>
+        </div>
+      </Dialog>
+
+      {/* Map View Modal */}
+      <MapViewModal
+        open={viewMapModal}
+        onClose={() => setViewMapModal(false)}
+        location={selectedRequest?.transactionVenue}
+      />
+
+      <Drawer
+        anchor="left"
+        open={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+      >
+        <AdminSideBar />
+      </Drawer>
     </div>
   )
 }

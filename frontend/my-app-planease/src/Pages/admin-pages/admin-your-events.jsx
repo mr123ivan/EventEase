@@ -5,20 +5,26 @@ import axios from "axios"
 import AdminSideBar from "../../Components/admin-sidebar.jsx"
 import { Dialog } from "@headlessui/react"
 import Navbar from "../../Components/Navbar"
-import { Snackbar, Alert, CircularProgress } from "@mui/material"
+import { Snackbar, Alert, CircularProgress, IconButton, Drawer } from "@mui/material"
+import MenuIcon from "@mui/icons-material/Menu"
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const YourEvents = () => {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [events, setEvents] = useState([])
   const [selectedEvent, setSelectedEvent] = useState(null)
   const [showModal, setShowModal] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [deleteWarningMessage, setDeleteWarningMessage] = useState("")
   const [isEditing, setIsEditing] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
   // Basic event info (simplified)
   const [formData, setFormData] = useState({
     event_name: "",
     event_summary: "",
+    event_description: "",
     event_isAvailable: true,
     event_image: "",
     imageFile: undefined,
@@ -90,11 +96,13 @@ const YourEvents = () => {
     setFormData({
       event_name: "",
       event_summary: "",
+      event_description: "",
       event_isAvailable: true,
       event_image: "",
       imageFile: undefined,
     })
     setServiceSections([])
+    setSelectedEvent(null)
     setIsEditing(false)
     setShowModal(true)
   }
@@ -104,6 +112,7 @@ const YourEvents = () => {
       event_Id: event.event_Id,
       event_name: event.event_name,
       event_summary: event.event_summary,
+      event_description: event.event_description || "",
       event_isAvailable: event.event_isAvailable,
       event_image: event.event_image || "",
       imageFile: undefined,
@@ -232,22 +241,48 @@ const YourEvents = () => {
     }
   }
 
-  const handleDeleteEvent = async () => {
-    if (window.confirm("Are you sure you want to delete this event?")) {
-      try {
-        await axios.delete(`${API_BASE_URL}/api/events/${selectedEvent.event_Id}`)
-        fetchEvents()
-        setShowModal(false)
-        setSelectedEvent(null)
-      } catch (error) {
-        console.error("Error deleting event:", error)
-      }
+  const handleDeleteEvent = () => {
+    setShowDeleteModal(true)
+    setDeleteWarningMessage("")
+  }
+
+  const confirmDeleteEvent = async () => {
+    setIsDeleting(true)
+    try {
+      await axios.delete(`${API_BASE_URL}/api/events/${selectedEvent.event_Id}`)
+      fetchEvents()
+      setShowModal(false)
+      setSelectedEvent(null)
+      setShowDeleteModal(false)
+    } catch (error) {
+      console.error("Error deleting event:", error)
+    } finally {
+      setIsDeleting(false)
     }
+  }
+
+  const cancelDeleteEvent = () => {
+    setShowDeleteModal(false)
   }
 
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
+      {/* Hamburger menu for mobile */}
+      <IconButton
+        onClick={() => setIsSidebarOpen(true)}
+        sx={{
+          display: { xs: 'block', md: 'none' },
+          position: 'fixed',
+          top: 80,
+          left: 16,
+          zIndex: 50,
+          bgcolor: 'white',
+          boxShadow: 2
+        }}
+      >
+        <MenuIcon />
+      </IconButton>
       <div className="flex flex-1 overflow-hidden">
         <aside className="hidden md:block w-64 border-r bg-white">
           <AdminSideBar />
@@ -311,7 +346,7 @@ const YourEvents = () => {
         className="fixed z-1150 shadow-md inset-0 overflow-y-auto"
       >
         <div className="flex items-center justify-center min-h-screen px-4">
-          <Dialog.Panel className="bg-white w-full max-w-2xl rounded-lg shadow-lg p-4 sm:p-6">
+          <Dialog.Panel className="bg-white w-full max-w-5xl rounded-lg shadow-lg p-4 sm:p-6">
             <div className="flex justify-between items-center border-b pb-2 mb-6">
               <h3 className="text-xl font-semibold">{isEditing ? "Edit Event" : "Add New Event"}</h3>
               <button onClick={() => setShowModal(false)} className="text-xl hover:cursor-pointer">
@@ -320,271 +355,286 @@ const YourEvents = () => {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Basic Info */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-500 block mb-1">Event Name</label>
-                  <input
-                    type="text"
-                    name="event_name"
-                    value={formData.event_name}
-                    onChange={handleInputChange}
-                    className="border p-2 rounded w-full"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-500 block mb-1">Event Summary</label>
-                  <input
-                    type="text"
-                    name="event_summary"
-                    value={formData.event_summary}
-                    onChange={handleInputChange}
-                    className="border p-2 rounded w-full"
-                    required
-                  />
-                </div>
-              </div>
-
-              {/* Event Image Upload */}
-              <div>
-                <label className="text-sm font-medium text-gray-500 block mb-1">Event Image</label>
-                <div className="space-y-3">
-                  {(formData.event_image || selectedEvent?.event_image) && (
-                    <div className="relative">
-                      <img
-                        src={formData.event_image || selectedEvent?.event_image}
-                        alt="Event preview"
-                        className="w-full h-32 object-cover rounded-lg border"
+              {/* Two Column Layout: Left - Basic Info & Available Services, Right - Event Image & Service Sections */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Left Column: Basic Info & Available Services */}
+                <div className="space-y-6">
+                  {/* Basic Info */}
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 block mb-1">Event Name</label>
+                      <input
+                        type="text"
+                        name="event_name"
+                        value={formData.event_name}
+                        onChange={handleInputChange}
+                        className="border p-2 rounded w-full"
+                        required
                       />
-                      <button
-                        type="button"
-                        onClick={() => setFormData((prev) => ({ ...prev, event_image: "", imageFile: undefined }))}
-                        className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
-                      >
-                        ×
-                      </button>
                     </div>
-                  )}
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 block mb-1">Event Summary</label>
+                      <input
+                        type="text"
+                        name="event_summary"
+                        value={formData.event_summary}
+                        onChange={handleInputChange}
+                        className="border p-2 rounded w-full"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-500 block mb-1">Event Description</label>
+                      <textarea
+                        name="event_description"
+                        value={formData.event_description}
+                        onChange={handleInputChange}
+                        className="border p-2 rounded w-full resize-none overflow-hidden"
+                        rows={3}
+                        onInput={(e) => {
+                          e.target.style.height = 'auto';
+                          e.target.style.height = e.target.scrollHeight + 'px';
+                        }}
+                        placeholder="Enter detailed description of the event..."
+                      />
+                    </div>
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        name="event_isAvailable"
+                        checked={!!formData.event_isAvailable}
+                        onChange={handleInputChange}
+                        className="mr-2"
+                      />
+                      <label className="text-sm font-medium text-gray-500">Event is Available</label>
+                    </div>
+                  </div>
 
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-gray-400 transition-colors">
+                  {/* Available Services */}
+                  <div className="border rounded-lg p-3 bg-[#F9FAFB]">
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-semibold text-sm">Available Services</h4>
+                      <span className="text-xs text-gray-500">{allServices.length}</span>
+                    </div>
                     <input
-                      type="file"
-                      id="event-image-upload"
-                      className="hidden"
-                      accept="image/*"
-                      onChange={handleImageUpload}
+                      type="text"
+                      placeholder="Search services..."
+                      className="w-full border p-2 rounded text-sm mb-2"
+                      value={serviceFilter}
+                      onChange={(e) => setServiceFilter(e.target.value)}
                     />
-                    <label htmlFor="event-image-upload" className="cursor-pointer flex flex-col items-center">
-                      <div className="text-gray-400 mb-2">
-                        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                          />
-                        </svg>
-                      </div>
-                      <span className="text-sm text-gray-600">Click to upload event image</span>
-                      <span className="text-xs text-gray-400 mt-1">PNG, JPG, GIF up to 10MB</span>
-                    </label>
-                  </div>
-                </div>
-              </div>
-
-              {/* Availability Toggle */}
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  name="event_isAvailable"
-                  checked={!!formData.event_isAvailable}
-                  onChange={handleInputChange}
-                  className="mr-2"
-                />
-                <label className="text-sm font-medium text-gray-500">Event is Available</label>
-              </div>
-
-              {/* Services Builder: Drag services into sections */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                {/* Left: Services Palette */}
-                <div className="lg:col-span-1 border rounded-lg p-3 bg-[#F9FAFB]">
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="font-semibold text-sm">Available Services</h4>
-                    <span className="text-xs text-gray-500">{allServices.length}</span>
-                  </div>
-                  <input
-                    type="text"
-                    placeholder="Search services..."
-                    className="w-full border p-2 rounded text-sm mb-2"
-                    value={serviceFilter}
-                    onChange={(e) => setServiceFilter(e.target.value)}
-                  />
-                  {(() => {
-                    const assignedServiceIds = new Set(
-                      serviceSections.flatMap((sec) => (sec.serviceIds || []).map((id) => String(id)))
-                    )
-                    const availableServices = allServices.filter((s) => {
-                      const sid = s.serviceId ?? s.id
-                      return !assignedServiceIds.has(String(sid))
-                    })
-                    return (
-                      <div className="max-h-72 overflow-auto space-y-2 pr-1">
-                        {availableServices
-                          .filter((s) => (s.name || '').toLowerCase().includes(serviceFilter.toLowerCase()))
-                          .map((svc) => (
-                            <div
-                              key={svc.id}
-                              draggable
-                              onDragStart={() => {
-                                setDragServiceId(svc.serviceId ?? svc.id)
-                              }}
-                              className="bg-white border rounded px-2 py-1 text-sm cursor-grab hover:bg-gray-50"
-                              title={`${svc.subcontractorName || ''}`}
-                            >
-                              <div className="font-medium">{svc.name}</div>
-                              <div className="text-xs text-gray-500">{svc.subcontractorName || 'Subcontractor'}</div>
-                            </div>
-                          ))}
-                        {availableServices.length === 0 && (
-                          <div className="text-xs text-gray-500">No services available.</div>
-                        )}
-                      </div>
-                    )
-                  })()}
-                </div>
-
-                {/* Right: Services Builder */}
-                <div className="lg:col-span-2 space-y-6">
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center mb-4">
-                      <h4 className="font-semibold text-sm">Service Sections (drag services into sections)</h4>
-                      <button
-                        type="button"
-                        onClick={() => setServiceSections((prev) => [...prev, { title: "", required: false, multi: false, serviceIds: [] }])}
-                        className="flex items-center gap-1 text-sm bg-[#FFB22C] hover:bg-[#e6a028] text-white px-4 py-2 rounded-md"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                          <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
-                        </svg>
-                        Add Section
-                      </button>
-                    </div>
-                    {serviceSections.length === 0 && (
-                      <div className="bg-gray-50 border border-gray-200 rounded-md p-8 text-center">
-                        <div className="text-gray-400 mb-2">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" viewBox="0 0 16 16">
-                            <path d="M12.5 16a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Zm.5-5v1h1a.5.5 0 0 1 0 1h-1v1a.5.5 0 0 1-1 0v-1h-1a.5.5 0 0 1 0-1h1v-1a.5.5 0 0 1 1 0Z"/>
-                            <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5Zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5h-2Z"/>
-                          </svg>
+                    {(() => {
+                      const assignedServiceIds = new Set(
+                        serviceSections.flatMap((sec) => (sec.serviceIds || []).map((id) => String(id)))
+                      )
+                      const availableServices = allServices.filter((s) => {
+                        const sid = s.serviceId ?? s.id
+                        return !assignedServiceIds.has(String(sid))
+                      })
+                      return (
+                        <div className="max-h-72 overflow-auto space-y-2 pr-1">
+                          {availableServices
+                            .filter((s) => (s.name || '').toLowerCase().includes(serviceFilter.toLowerCase()))
+                            .map((svc) => (
+                              <div
+                                key={svc.id}
+                                draggable
+                                onDragStart={() => {
+                                  setDragServiceId(svc.serviceId ?? svc.id)
+                                }}
+                                className="bg-white border rounded px-2 py-1 text-sm cursor-grab hover:bg-gray-50"
+                                title={`${svc.subcontractorName || ''}`}
+                              >
+                                <div className="font-medium">{svc.name}</div>
+                                <div className="text-xs text-gray-500">{svc.subcontractorName || 'Subcontractor'}</div>
+                              </div>
+                            ))}
+                          {availableServices.length === 0 && (
+                            <div className="text-xs text-gray-500">No services available.</div>
+                          )}
                         </div>
-                        <p className="text-sm text-gray-600 mb-1">No sections defined yet</p>
-                        <p className="text-xs text-gray-500">Click "Add Section" to create your first section</p>
+                      )
+                    })()}
+                  </div>
+                </div>
+
+                {/* Right Column: Event Image & Service Sections */}
+                <div className="space-y-6">
+                  {/* Event Image */}
+                  <div className="space-y-3">
+                    <label className="text-sm font-medium text-gray-500 block mb-1">Event Image</label>
+                    {(formData.event_image || selectedEvent?.event_image) && (
+                      <div className="relative">
+                        <img
+                          src={formData.event_image || selectedEvent?.event_image}
+                          alt="Event preview"
+                          className="w-full h-32 object-cover rounded-lg border"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setFormData((prev) => ({ ...prev, event_image: "", imageFile: undefined }))}
+                          className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+                        >
+                          ×
+                        </button>
                       </div>
                     )}
-                    {serviceSections.map((sec, idx) => (
-                      <div key={`svc-sec-${idx}`} className="border rounded-lg p-4 bg-white shadow-sm mb-4">
-                        <div className="flex flex-col gap-3 mb-3">
-                          {/* Section Title Input */}
-                          <div className="w-full">
-                            <label className="block text-xs font-medium text-gray-500 mb-1">Section Title</label>
-                            <input
-                              type="text"
-                              placeholder="Enter section title"
-                              className="border border-gray-300 p-2 rounded-md w-full text-sm focus:border-[#FFB22C] focus:ring-1 focus:ring-[#FFB22C] focus:outline-none transition-colors"
-                              value={sec.title}
-                              onChange={(e) => {
-                                const val = e.target.value
-                                setServiceSections((prev) => prev.map((s, i) => (i === idx ? { ...s, title: val } : s)))
-                              }}
+
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-gray-400 transition-colors">
+                      <input
+                        type="file"
+                        id="event-image-upload"
+                        className="hidden"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                      />
+                      <label htmlFor="event-image-upload" className="cursor-pointer flex flex-col items-center">
+                        <div className="text-gray-400 mb-2">
+                          <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
                             />
-                          </div>
-                          
-                          {/* Options Row */}
-                          <div className="flex flex-wrap justify-between items-center gap-2 border-b border-gray-100 pb-3">
-                            <div className="flex flex-wrap gap-4">
-                              <label className="flex items-center gap-1.5 cursor-pointer">
-                                <input
-                                  type="checkbox"
-                                  checked={!!sec.required}
-                                  onChange={(e) =>
-                                    setServiceSections((prev) => prev.map((s, i) => (i === idx ? { ...s, required: e.target.checked } : s)))
-                                  }
-                                  className="accent-[#FFB22C] h-4 w-4"
-                                />
-                                <span className="text-sm">Required</span>
-                              </label>
-                              
-                              <label className="flex items-center gap-1.5 cursor-pointer">
-                                <input
-                                  type="checkbox"
-                                  checked={!!sec.multi}
-                                  onChange={(e) =>
-                                    setServiceSections((prev) => prev.map((s, i) => (i === idx ? { ...s, multi: e.target.checked } : s)))
-                                  }
-                                  className="accent-[#FFB22C] h-4 w-4"
-                                />
-                                <span className="text-sm">Multi-select</span>
-                              </label>
-                            </div>
-                            
-                            <button
-                              type="button"
-                              onClick={() => setServiceSections((prev) => prev.filter((_, i) => i !== idx))}
-                              className="text-xs text-red-500 hover:text-red-700 flex items-center gap-1"
-                            >
-                              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16">
-                                <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
-                                <path fillRule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
-                              </svg>
-                              Remove Section
-                            </button>
-                          </div>
+                          </svg>
                         </div>
-                        <div
-                          className="mt-3 min-h-[100px] border-2 border-dashed border-gray-300 rounded-md p-3 bg-gray-50"
-                          onDragOver={(e) => e.preventDefault()}
-                          onDrop={(e) => {
-                            e.preventDefault()
-                            if (dragServiceId) {
-                              setServiceSections((prev) =>
-                                prev.map((s, i) =>
-                                  i === idx ? { ...s, serviceIds: [...new Set([...(s.serviceIds || []), dragServiceId])] } : s,
-                                ),
-                              )
-                            }
-                            setDragServiceId(null)
-                          }}
-                        >
-                          {(!sec.serviceIds || sec.serviceIds.length === 0) && (
-                            <div className="text-center py-4 text-sm text-gray-400">Drop services here</div>
-                          )}
-                          <div className="flex flex-wrap gap-2">
-                            {(sec.serviceIds || []).map((sid, si) => {
-                              const svc = allServices.find((x) => (x.serviceId ?? x.id) === sid)
-                              return (
-                                <div key={`${sid}-${si}`} className="flex items-center justify-between gap-2 text-sm bg-white border border-gray-200 px-3 py-1.5 rounded-md shadow-sm">
-                                  <span>{svc?.name || 'Service'}</span>
-                                  <button
-                                    type="button"
-                                    className="ml-2 text-red-500 hover:text-red-700"
-                                    onClick={() =>
-                                      setServiceSections((prev) =>
-                                        prev.map((s, i) =>
-                                          i === idx ? { ...s, serviceIds: s.serviceIds.filter((_, j) => j !== si) } : s,
-                                        ),
-                                      )
-                                    }
-                                  >
-                                    ×
-                                  </button>
-                                </div>
-                              )
-                            })}
+                        <span className="text-sm text-gray-600">Click to upload event image</span>
+                        <span className="text-xs text-gray-400 mt-1">PNG, JPG, GIF up to 10MB</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Service Sections */}
+                  <div className="space-y-3">
+                  <div className="flex justify-between items-center mb-4">
+                    <h4 className="font-semibold text-sm">Service Sections (drag services into sections)</h4>
+                    <button
+                      type="button"
+                      onClick={() => setServiceSections((prev) => [...prev, { title: "", required: false, multi: false, serviceIds: [] }])}
+                      className="flex items-center gap-1 text-sm bg-[#FFB22C] hover:bg-[#e6a028] text-white px-4 py-2 rounded-md"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+                      </svg>
+                      Add Section
+                    </button>
+                  </div>
+                  {serviceSections.length === 0 && (
+                    <div className="bg-gray-50 border border-gray-200 rounded-md p-8 text-center">
+                      <div className="text-gray-400 mb-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" viewBox="0 0 16 16">
+                          <path d="M12.5 16a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Zm.5-5v1h1a.5.5 0 0 1 0 1h-1v1a.5.5 0 0 1-1 0v-1h-1a.5.5 0 0 1 0-1h1v-1a.5.5 0 0 1 1 0Z"/>
+                          <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5Zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5h-2Z"/>
+                        </svg>
+                      </div>
+                      <p className="text-sm text-gray-600 mb-1">No sections defined yet</p>
+                      <p className="text-xs text-gray-500">Click "Add Section" to create your first section</p>
+                    </div>
+                  )}
+                  {serviceSections.map((sec, idx) => (
+                    <div key={`svc-sec-${idx}`} className="border rounded-lg p-4 bg-white shadow-sm mb-4">
+                      <div className="flex flex-col gap-3 mb-3">
+                        {/* Section Title Input */}
+                        <div className="w-full">
+                          <label className="block text-xs font-medium text-gray-500 mb-1">Section Title</label>
+                          <input
+                            type="text"
+                            placeholder="Enter section title"
+                            className="border border-gray-300 p-2 rounded-md w-full text-sm focus:border-[#FFB22C] focus:ring-1 focus:ring-[#FFB22C] focus:outline-none transition-colors"
+                            value={sec.title}
+                            onChange={(e) => {
+                              const val = e.target.value
+                              setServiceSections((prev) => prev.map((s, i) => (i === idx ? { ...s, title: val } : s)))
+                            }}
+                          />
+                        </div>
+
+                        {/* Options Row */}
+                        <div className="flex flex-wrap justify-between items-center gap-2 border-b border-gray-100 pb-3">
+                          <div className="flex flex-wrap gap-4">
+                            <label className="flex items-center gap-1.5 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={!!sec.required}
+                                onChange={(e) =>
+                                  setServiceSections((prev) => prev.map((s, i) => (i === idx ? { ...s, required: e.target.checked } : s)))
+                                }
+                                className="accent-[#FFB22C] h-4 w-4"
+                              />
+                              <span className="text-sm">Required</span>
+                            </label>
+
+                            <label className="flex items-center gap-1.5 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={!!sec.multi}
+                                onChange={(e) =>
+                                  setServiceSections((prev) => prev.map((s, i) => (i === idx ? { ...s, multi: e.target.checked } : s)))
+                                }
+                                className="accent-[#FFB22C] h-4 w-4"
+                              />
+                              <span className="text-sm">Multi-select</span>
+                            </label>
                           </div>
+
+                          <button
+                            type="button"
+                            onClick={() => setServiceSections((prev) => prev.filter((_, i) => i !== idx))}
+                            className="text-xs text-red-500 hover:text-red-700 flex items-center gap-1"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16">
+                              <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
+                              <path fillRule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+                            </svg>
+                            Remove Section
+                          </button>
                         </div>
                       </div>
-                    ))}
+                      <div
+                        className="mt-3 min-h-[100px] border-2 border-dashed border-gray-300 rounded-md p-3 bg-gray-50"
+                        onDragOver={(e) => e.preventDefault()}
+                        onDrop={(e) => {
+                          e.preventDefault()
+                          if (dragServiceId) {
+                            setServiceSections((prev) =>
+                              prev.map((s, i) =>
+                                i === idx ? { ...s, serviceIds: [...new Set([...(s.serviceIds || []), dragServiceId])] } : s,
+                              ),
+                            )
+                          }
+                          setDragServiceId(null)
+                        }}
+                      >
+                        {(!sec.serviceIds || sec.serviceIds.length === 0) && (
+                          <div className="text-center py-4 text-sm text-gray-400">Drop services here</div>
+                        )}
+                        <div className="flex flex-wrap gap-2">
+                          {(sec.serviceIds || []).map((sid, si) => {
+                            const svc = allServices.find((x) => (x.serviceId ?? x.id) === sid)
+                            return (
+                              <div key={`${sid}-${si}`} className="flex items-center justify-between gap-2 text-sm bg-white border border-gray-200 px-3 py-1.5 rounded-md shadow-sm">
+                                <span>{svc?.name || 'Service'}</span>
+                                <button
+                                  type="button"
+                                  className="ml-2 text-red-500 hover:text-red-700"
+                                  onClick={() =>
+                                    setServiceSections((prev) =>
+                                      prev.map((s, i) =>
+                                        i === idx ? { ...s, serviceIds: s.serviceIds.filter((_, j) => j !== si) } : s,
+                                      ),
+                                    )
+                                  }
+                                >
+                                  ×
+                                </button>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                   </div>
                 </div>
               </div>
@@ -619,6 +669,49 @@ const YourEvents = () => {
           </Dialog.Panel>
         </div>
       </Dialog>
+
+      {/* Delete Event Modal */}
+      <Dialog
+        open={showDeleteModal}
+        onClose={cancelDeleteEvent}
+        className="fixed z-1200 shadow-md inset-0 overflow-y-auto"
+      >
+        <div className="flex items-center justify-center min-h-screen px-4">
+          <Dialog.Panel className="bg-white w-full max-w-md rounded-lg shadow-lg p-6">
+            <div className="text-center">
+              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                <svg className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Delete Event</h3>
+              <p className="text-sm text-gray-500 mb-6">
+                {deleteWarningMessage
+                  ? deleteWarningMessage
+                  : "Are you sure you want to delete this event? This action cannot be undone."}
+              </p>
+              <div className="flex justify-center gap-4">
+                <button
+                  onClick={cancelDeleteEvent}
+                  disabled={isDeleting}
+                  className="bg-gray-200 hover:bg-gray-300 disabled:bg-gray-100 disabled:cursor-not-allowed text-gray-700 px-4 py-2 rounded font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDeleteEvent}
+                  disabled={isDeleting || (deleteWarningMessage && deleteWarningMessage.includes("cannot delete"))}
+                  className="bg-red-500 hover:bg-red-600 disabled:bg-red-300 disabled:cursor-not-allowed text-white px-4 py-2 rounded font-medium flex items-center justify-center gap-2"
+                >
+                  {isDeleting ? <CircularProgress size={16} color="inherit" /> : null}
+                  {isDeleting ? "Deleting..." : "Delete"}
+                </button>
+              </div>
+            </div>
+          </Dialog.Panel>
+        </div>
+      </Dialog>
+
       <Snackbar
         open={snackbar.open}
         autoHideDuration={6000}
@@ -629,6 +722,14 @@ const YourEvents = () => {
           {snackbar.message}
         </Alert>
       </Snackbar>
+
+      <Drawer
+        anchor="left"
+        open={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+      >
+        <AdminSideBar />
+      </Drawer>
     </div>
   )
 }
