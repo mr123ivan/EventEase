@@ -160,7 +160,12 @@ public class SecurityConfig {
     @Bean
     CorsConfigurationSource configurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:5173","http://capstone-planease.s3-website-ap-southeast-1.amazonaws.com/"));
+        configuration.setAllowedOrigins(List.of(
+                "http://localhost:5173",
+                "http://54.179.192.129",
+                "https://eventsease.app",
+                "https://www.eventsease.app"
+        ));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE"));
         configuration.setAllowCredentials(true);
         configuration.setAllowedHeaders(List.of("*"));
