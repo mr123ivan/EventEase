@@ -158,7 +158,7 @@ export default function SignUpPage() {
   useEffect(() => {
     const fetchRegionsAndSetDefaults = async () => {
       try {
-        const regionsResponse = await axios.get("https://psgc.gitlab.io/api/regions/")
+        const regionsResponse = await axios.get(`${API_BASE_URL}/location/regions`)
         setRegions(regionsResponse.data)
 
         // Find Masbate region (Region V - Bicol Region)
@@ -172,7 +172,7 @@ export default function SignUpPage() {
 
           // Fetch provinces for Bicol region
           const provincesResponse = await axios.get(
-            `https://psgc.gitlab.io/api/regions/${masbateRegion.code}/provinces/`,
+            `${API_BASE_URL}/location/regions/${masbateRegion.code}/provinces`,
           )
           setProvinces(provincesResponse.data)
 
@@ -185,7 +185,7 @@ export default function SignUpPage() {
 
             // Fetch cities/municipalities for Masbate
             const citiesResponse = await axios.get(
-              `https://psgc.gitlab.io/api/provinces/${masbateProvince.code}/cities-municipalities/`,
+              `${API_BASE_URL}/location/provinces/${masbateProvince.code}/cities-municipalities`,
             )
             setCitiesMunicipalities(citiesResponse.data)
           }
@@ -249,7 +249,7 @@ export default function SignUpPage() {
     setBarangays([])
 
     if (regionCode) {
-      const { data } = await axios.get(`https://psgc.gitlab.io/api/regions/${regionCode}/provinces/`)
+      const { data } = await axios.get(`${API_BASE_URL}/location/regions/${regionCode}/provinces`)
       setProvinces(data)
     }
   }
@@ -271,7 +271,7 @@ export default function SignUpPage() {
     setBarangays([])
 
     if (provinceCode) {
-      const { data } = await axios.get(`https://psgc.gitlab.io/api/provinces/${provinceCode}/cities-municipalities/`)
+      const { data } = await axios.get(`${API_BASE_URL}/location/provinces/${provinceCode}/cities-municipalities`)
       setCitiesMunicipalities(data)
     }
   }
@@ -290,7 +290,7 @@ export default function SignUpPage() {
     setBarangays([])
 
     if (cityCode) {
-      const { data } = await axios.get(`https://psgc.gitlab.io/api/cities-municipalities/${cityCode}/barangays/`)
+      const { data } = await axios.get(`${API_BASE_URL}/location/cities-municipalities/${cityCode}/barangays`)
       setBarangays(data)
     }
   }
@@ -453,12 +453,12 @@ export default function SignUpPage() {
     setIsSendingOTP(true)
 
     try {
-      const response = await axios.get(`${API_BASE_URL}/email/send-email/${email}`)
+      const response = await axios.get(`${API_BASE_URL}/email/send-registration-otp/${email}`)
       if (response && response.data) {
-        console.log("OTP email response:", response.data)
+        console.log("Registration OTP email response:", response.data)
       }
     } catch (err) {
-      console.error("Failed to send OTP:", err)
+      console.error("Failed to send registration OTP:", err)
       setOtpError("Failed to send OTP. Please try again.")
     } finally {
       setIsSendingOTP(false)
@@ -1178,9 +1178,9 @@ export default function SignUpPage() {
                               setOtpError("")
                               setOtpValue("")
                               try {
-                                const response = await axios.get(`${API_BASE_URL}/email/send-email/${email}`)
+                                const response = await axios.get(`${API_BASE_URL}/email/send-registration-otp/${email}`)
                                 if (response && response.data) {
-                                  console.log("OTP email response:", response.data)
+                                  console.log("Registration OTP email response:", response.data)
                                 }
                               } catch (err) {
                                 setOtpError("Failed to resend OTP. Please try again.")
