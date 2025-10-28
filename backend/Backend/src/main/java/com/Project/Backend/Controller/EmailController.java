@@ -38,7 +38,7 @@ public class EmailController {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
 
-            helper.setFrom("no-reply@eventease.com");
+            helper.setFrom("no-reply@eventsease.com");
             helper.setTo(recipient);
             helper.setSubject("EventEase OTP Request");
             String otp = otpService.generateOtp(recipient);
