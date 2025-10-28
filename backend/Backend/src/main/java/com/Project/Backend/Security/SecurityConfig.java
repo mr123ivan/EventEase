@@ -86,6 +86,7 @@ public class SecurityConfig {
                         .requestMatchers("/user/reset-password").permitAll()
                         .requestMatchers("/user/verify-token").permitAll()
                         .requestMatchers("/user/getcurrentuser").authenticated()
+                        .requestMatchers("/regularuser/create").permitAll()
                         .requestMatchers("/subcontractor/create", "/subcontractor/login").permitAll()
                         // Subcontractor admin-only endpoints
                         .requestMatchers(HttpMethod.GET, "/subcontractor/getall").permitAll()
@@ -143,6 +144,7 @@ public class SecurityConfig {
                         .requestMatchers("/payment/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers("/form-draft/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers("/email/**").permitAll() //temporary
+                        .requestMatchers("/location/**").permitAll()
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
