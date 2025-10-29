@@ -65,6 +65,7 @@ public class EventService {
         EventEntity event = new EventEntity();
         event.setEvent_name(dto.getEvent_name());
         event.setEvent_summary(dto.getEvent_summary());
+        event.setEvent_description(dto.getEvent_description());
         if (dto.getEvent_isAvailable() != null) {
             event.setEvent_isAvailable(dto.getEvent_isAvailable());
         }
@@ -83,6 +84,7 @@ public class EventService {
             .orElseThrow(() -> new RuntimeException("Event not found!"));
         event.setEvent_name(dto.getEvent_name());
         event.setEvent_summary(dto.getEvent_summary());
+        event.setEvent_description(dto.getEvent_description());
         if (dto.getEvent_isAvailable() != null) {
             event.setEvent_isAvailable(dto.getEvent_isAvailable());
         }
