@@ -12,8 +12,7 @@ const Footer = () => {
               Event<span className="text-blue-500">Ease</span>
             </h2>
             <p className="text-sm text-gray-300 leading-relaxed">
-              Amet minim mollit non deserunt ullamc est sit aliqua dolor amet sint. Amet minim mollit non deserunt
-              ullamco est sit aliqua.
+              A comprehensive service platform designed to simplify and streamline all aspects of event planning and management.
             </p>
           </div>
 
@@ -93,7 +92,7 @@ const Footer = () => {
 
         {/* Copyright */}
         <div className="border-t border-gray-700 mt-10 pt-6 text-center text-sm text-gray-400">
-          Copyright By PlanEase @ 2023. All Rights Reserved
+          Copyright By EventEase @ 2025. All Rights Reserved
         </div>
       </div>
     </footer>

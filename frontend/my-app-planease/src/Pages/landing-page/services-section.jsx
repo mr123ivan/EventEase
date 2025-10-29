@@ -75,12 +75,12 @@ export default function ServicesSection() {
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
             viewport={{ once: true }}
-            className="text-amber-500 uppercase tracking-wider font-medium mb-2"
+            className="text-amber-500 uppercase tracking-wider font-medium text-3xl mb-2"
           >
             RELIABLE SERVICES
           </motion.p>
 
-          <motion.h2
+          {/* <motion.h2
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
@@ -88,7 +88,7 @@ export default function ServicesSection() {
             className="text-4xl font-bold text-gray-900"
           >
             What We Offer
-          </motion.h2>
+          </motion.h2> */}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -110,12 +110,12 @@ export default function ServicesSection() {
             transition={{ duration: 0.5, delay: 0.3 }}
             viewport={{ once: true }}
           >
-            <Link
+            {/* <Link
               to="#"
               className="bg-amber-500 hover:bg-amber-600 text-white rounded-md px-6 py-3 inline-flex items-center font-medium uppercase text-sm"
             >
               Explore Services <ArrowRight className="ml-2 h-4 w-4" />
-            </Link>
+            </Link> */}
           </motion.div>
         </div>
       </div>
