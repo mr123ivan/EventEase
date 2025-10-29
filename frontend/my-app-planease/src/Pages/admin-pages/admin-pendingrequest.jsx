@@ -396,33 +396,15 @@ const AdminPendingRequest = () => {
                   <h4 className="font-semibold mt-6 mb-2 text-[#FFB22C]">Event Detail</h4>
                   <div className="grid sm:grid-cols-1 md:grid-cols-2 gap-2 w-auto">
                     <div className="flex flex-col gap-2 w-auto">
-                      {selectedRequest.packages != null ? (
-                        <>
-                          <div>
-                            <label className="text-sm font-medium text-gray-500 block mb-1">Event Type</label>
-                            <input type="text" className="border p-2 rounded w-full"
-                                   value={"Wedding"} readOnly/>
-                          </div>
-                          <div>
-                            <label className="text-sm font-medium text-gray-500 block mb-1">Package Type</label>
-                            <input type="text" className="border p-2 rounded w-full"
-                                   value={selectedRequest.packages} readOnly/>
-                          </div>
-                        </>
-                      ) : (
-                        <>
-                          <div>
-                            <label className="text-sm font-medium text-gray-500 block mb-1">Event Type</label>
-                            <input type="text" className="border p-2 rounded w-full"
-                                   value={selectedRequest.eventName} readOnly/>
-                          </div>
-                          <div>
-                            <label className="text-sm font-medium text-gray-500 block mb-1">Package Type</label>
-                            <input type="text" className="border p-2 rounded w-full"
-                                   value={"N/A"} readOnly/>
-                          </div>
-                        </>
-                      )}
+                      <div>
+                        <label className="text-sm font-medium text-gray-500 block mb-1">Event Type</label>
+                        <input
+                          type="text"
+                          className="border p-2 rounded w-full"
+                          value={selectedRequest.packages != null ? "Wedding" : selectedRequest.eventName}
+                          readOnly
+                        />
+                      </div>
                       <div>
                         <label className="text-sm font-medium text-gray-500 block mb-1">Name of Celebrant(s)</label>
                         <input type="text" className="border p-2 rounded w-full" 
