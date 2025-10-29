@@ -103,7 +103,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/transactions/getAllTransactions").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/transactions/validateTransaction").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/transactions/getAllPendingTransactions").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/api/transactions/event-progress/{id}").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/transactions/event-progress/{id}").hasAnyRole("ADMIN","USER")
                         .requestMatchers(HttpMethod.GET, "/api/transactions/subcontractor-progress/{id}").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/transactions/updateProgress/{id}").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/transactions/subcontractor-progress/id/{id}").hasRole("ADMIN")

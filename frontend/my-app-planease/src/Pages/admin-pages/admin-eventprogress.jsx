@@ -134,7 +134,7 @@ const EventTrackingAdmin = () => {
               }
             )
             const eventProgressData = eventProgressResponse.data
-            console.log(`DEBUG: Event progress data for transaction ${transaction.transaction_Id}:`, eventProgressData)
+            // console.log(`DEBUG: Event progress data for transaction ${transaction.transaction_Id}:`, eventProgressData)
 
             // Fetch subcontractor progress data for each transaction
             const subcontractorProgressResponse = await axios.get(
@@ -144,7 +144,7 @@ const EventTrackingAdmin = () => {
               }
             )
             const subcontractorProgressData = subcontractorProgressResponse.data
-            console.log(`DEBUG: Subcontractor progress data for transaction ${transaction.transaction_Id}:`, subcontractorProgressData)
+            // console.log(`DEBUG: Subcontractor progress data for transaction ${transaction.transaction_Id}:`, subcontractorProgressData)
 
             // Merge subcontractor data with progress data
             const subcontractors = transaction.subcontractors.map((sub) => {

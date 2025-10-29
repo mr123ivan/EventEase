@@ -45,16 +45,7 @@ const AdminBookings = () => {
   const [eventTypes, setEventTypes] = useState([])
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
-  // Debug logging for selectedRequest data
-  useEffect(() => {
-    if (selectedRequest) {
-      console.log("Selected request data:", selectedRequest);
-      console.log("Celebrant name:", selectedRequest.celebrantName);
-      console.log("Additional celebrants:", selectedRequest.additionalCelebrants);
-      console.log("Projected attendees:", selectedRequest.projectedAttendees);
-      console.log("Budget:", selectedRequest.budget);
-    }
-  }, [selectedRequest]);
+
   
   // Apply filters when transactions or filter values change
   useEffect(() => {
@@ -111,7 +102,6 @@ const AdminBookings = () => {
           uniqueEventTypes.unshift('Wedding')
         }
         setEventTypes(uniqueEventTypes)
-        console.log('Available event types:', uniqueEventTypes)
       }
     } catch (error) {
       console.error('Error fetching event types:', error)
@@ -133,8 +123,6 @@ const AdminBookings = () => {
         const nonPendingTransactions = res.data.filter(transaction => transaction.transactionStatus !== "PENDING")
         setTransactions(nonPendingTransactions)
         setFilteredTransactions(nonPendingTransactions)
-        console.log('All transactions:', res.data)
-        console.log('Non-pending transactions:', nonPendingTransactions)
         
         // Extract unique event types for filter dropdown
         const eventTypes = new Set()
@@ -148,11 +136,11 @@ const AdminBookings = () => {
       })
       .catch((err) => {
         if (err.response) {
-          console.log(`[ERROR] Status: ${err.response.status}, Message: ${err.response.data?.message || "No message"}`)
+          // Error handling without logging
         } else if (err.request) {
-          console.log("[ERROR] No response from server")
+          // Error handling without logging
         } else {
-          console.log(`[ERROR] ${err.message}`)
+          // Error handling without logging
         }
       })
   }
@@ -207,7 +195,6 @@ const AdminBookings = () => {
         setShowDeleteModal(false)
         setSelectedRequest(null)
       } catch (error) {
-        console.error('Error deleting booking:', error.response?.data || error.message)
         // Optionally show an error message here
       } finally {
         setIsValidating(false)
@@ -241,10 +228,8 @@ const AdminBookings = () => {
           },
         },
       )
-      console.log(response.data)
       await fetchData()
     } catch (error) {
-      console.error(error.response?.data || error.message)
       // Optionally show an error message here
     } finally {
       setIsValidating(false)
@@ -472,39 +457,15 @@ const AdminBookings = () => {
                   <h4 className="font-semibold mt-6 mb-2 text-[#FFB22C]">Event Detail</h4>
                   <div className="grid sm:grid-cols-1 md:grid-cols-2 gap-2 w-auto">
                     <div className="flex flex-col gap-2 w-auto">
-                      {selectedRequest.packages != null ? (
-                        <>
-                          <div>
-                            <label className="text-sm font-medium text-gray-500 block mb-1">Event Type</label>
-                            <input type="text" className="border p-2 rounded w-full" value={"Wedding"} readOnly />
-                          </div>
-                          <div>
-                            <label className="text-sm font-medium text-gray-500 block mb-1">Package Type</label>
-                            <input
-                              type="text"
-                              className="border p-2 rounded w-full"
-                              value={selectedRequest.packages}
-                              readOnly
-                            />
-                          </div>
-                        </>
-                      ) : (
-                        <>
-                          <div>
-                            <label className="text-sm font-medium text-gray-500 block mb-1">Event Type</label>
-                            <input
-                              type="text"
-                              className="border p-2 rounded w-full"
-                              value={selectedRequest.eventName}
-                              readOnly
-                            />
-                          </div>
-                          <div>
-                            <label className="text-sm font-medium text-gray-500 block mb-1">Package Type</label>
-                            <input type="text" className="border p-2 rounded w-full" value={"N/A"} readOnly />
-                          </div>
-                        </>
-                      )}
+                      <div>
+                        <label className="text-sm font-medium text-gray-500 block mb-1">Event Type</label>
+                        <input
+                          type="text"
+                          className="border p-2 rounded w-full"
+                          value={selectedRequest.packages != null ? "Wedding" : selectedRequest.eventName}
+                          readOnly
+                        />
+                      </div>
                       <div>
                         <label className="text-sm font-medium text-gray-500 block mb-1">Name of Celebrant(s)</label>
                         <input type="text" className="border p-2 rounded w-full" 

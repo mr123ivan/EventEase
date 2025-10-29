@@ -133,7 +133,7 @@ public class NotificationService {
         return createNotification(
             userEmail,
             "User",
-            "Your booking has been approved by the event contractor. Your ₹" + amount + " downpayment has been confirmed.",
+            "Your booking has been approved by the event contractor.",
             "booking-approved"
         );
     }
