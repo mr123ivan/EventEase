@@ -97,15 +97,15 @@ const Navbar = () => {
   // Separate effect for fetching bookings after user data is loaded
   useEffect(() => {
     if (user.email) {
-      console.log("DEBUG: User email is available, fetching bookings", user.email)
+      //console.log("DEBUG: User email is available, fetching bookings", user.email)
       const token = localStorage.getItem("token")
       if (token) {
         fetchUserBookings(token)
       } else {
-        console.error("DEBUG: No token available for bookings fetch")
+        //console.error("DEBUG: No token available for bookings fetch")
       }
     } else {
-      console.log("DEBUG: User email not available yet")
+      //console.log("DEBUG: User email not available yet")
     }
   }, [user.email])
 
@@ -168,14 +168,14 @@ const Navbar = () => {
     try {
       // Get user email from stored user data
       const userEmail = user.email;
-      console.log("DEBUG: Fetching bookings for user email:", userEmail);
+      //console.log("DEBUG: Fetching bookings for user email:", userEmail);
       if (!userEmail) {
         console.error("User email not found");
         setBookingsLoading(false);
         return;
       }
       
-      console.log(`DEBUG: Making API request to: ${API_BASE_URL}/api/transactions/getTransactionByEmail/${userEmail}`);
+      //console.log(`DEBUG: Making API request to: ${API_BASE_URL}/api/transactions/getTransactionByEmail/${userEmail}`);
       
       // Use the correct API endpoint for fetching user transactions
       const response = await axios.get(`${API_BASE_URL}/api/transactions/getTransactionByEmail/${userEmail}`, {
@@ -183,17 +183,17 @@ const Navbar = () => {
       })
       
       // Log the response for debugging
-      console.log("DEBUG: API response received:", response);
-      console.log("DEBUG: Response data:", response.data);
+      //console.log("DEBUG: API response received:", response);
+      //console.log("DEBUG: Response data:", response.data);
       
       // Categorize bookings by status
       const transactions = response.data || [];
-      console.log("DEBUG: Number of transactions:", transactions.length);
+      //console.log("DEBUG: Number of transactions:", transactions.length);
       
       // Log each transaction to check their structure
       transactions.forEach((transaction, index) => {
-        console.log(`DEBUG: Transaction ${index}:`, transaction);
-        console.log(`DEBUG: Transaction ${index} status:`, transaction.status);
+        //console.log(`DEBUG: Transaction ${index}:`, transaction);
+        //console.log(`DEBUG: Transaction ${index} status:`, transaction.status);
       });
       
       // Try both casing variations for status field
@@ -215,9 +215,9 @@ const Navbar = () => {
         (transaction.status?.toUpperCase() === "COMPLETED" ||
          transaction.Status?.toUpperCase() === "COMPLETED"));
       
-      console.log("DEBUG: Pending bookings:", pendingBookings.length);
-      console.log("DEBUG: Ongoing bookings:", ongoingBookings.length);
-      console.log("DEBUG: Completed bookings:", completedBookings.length);
+      //console.log("DEBUG: Pending bookings:", pendingBookings.length);
+      //console.log("DEBUG: Ongoing bookings:", ongoingBookings.length);
+      //console.log("DEBUG: Completed bookings:", completedBookings.length);
       
       setBookings({
         pending: pendingBookings,
