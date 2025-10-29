@@ -81,9 +81,9 @@ export default function EventHighlightsSection() {
             </motion.h2>
           </div>
 
-          <Link to="#" className="w-10 h-10 rounded-full border border-white flex items-center justify-center">
+          {/* <Link to="#" className="w-10 h-10 rounded-full border border-white flex items-center justify-center">
             <Facebook className="h-5 w-5" />
-          </Link>
+          </Link> */}
         </div>
 
         <div className="relative">
@@ -93,9 +93,9 @@ export default function EventHighlightsSection() {
             ))}
           </div>
 
-          <button className="absolute top-1/2 -right-4 transform -translate-y-1/2 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg z-10">
+          {/* <button className="absolute top-1/2 -right-4 transform -translate-y-1/2 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg z-10">
             <ChevronRight className="h-5 w-5 text-gray-900" />
-          </button>
+          </button> */}
         </div>
       </div>
     </section>

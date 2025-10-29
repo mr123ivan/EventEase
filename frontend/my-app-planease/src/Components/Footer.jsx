@@ -12,7 +12,7 @@ const Footer = () => {
               Event<span className="text-blue-500">Ease</span>
             </h2>
             <p className="text-sm text-gray-300 leading-relaxed">
-              A comprehensive service platform designed to simplify and streamline all aspects of event planning and management. We provide a seamless, end-to-end solution for organizing everything from small corporate meetings to large public gatherings, ensuring your event is executed with efficiency, precision, and flair.
+              A comprehensive service platform designed to simplify and streamline all aspects of event planning and management.
             </p>
           </div>
 

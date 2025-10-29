@@ -110,12 +110,12 @@ export default function ServicesSection() {
             transition={{ duration: 0.5, delay: 0.3 }}
             viewport={{ once: true }}
           >
-            <Link
+            {/* <Link
               to="#"
               className="bg-amber-500 hover:bg-amber-600 text-white rounded-md px-6 py-3 inline-flex items-center font-medium uppercase text-sm"
             >
               Explore Services <ArrowRight className="ml-2 h-4 w-4" />
-            </Link>
+            </Link> */}
           </motion.div>
         </div>
       </div>
