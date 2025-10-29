@@ -20,8 +20,8 @@ const EventCard = ({ title, image, date, views }) => {
         <h3 className="font-medium text-gray-900 mb-2">{title}</h3>
         {date && views && (
           <div className="flex items-center justify-between text-sm">
-            <span className="text-amber-500">{date}</span>
-            <span className="text-gray-500">{views} views</span>
+            {/* <span className="text-amber-500">{date}</span>
+            <span className="text-gray-500">{views} views</span> */}
           </div>
         )}
       </div>
