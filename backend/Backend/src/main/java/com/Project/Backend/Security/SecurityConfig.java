@@ -85,6 +85,7 @@ public class SecurityConfig {
                         .requestMatchers("/user/check-user").permitAll()
                         .requestMatchers("/user/reset-password").permitAll()
                         .requestMatchers("/user/verify-token").permitAll()
+                        .requestMatchers("/user/getCustomers").hasRole("ADMIN")
                         .requestMatchers("/user/getcurrentuser").authenticated()
                         .requestMatchers("/regularuser/create").permitAll()
                         .requestMatchers("/subcontractor/create", "/subcontractor/login").permitAll()

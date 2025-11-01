@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -280,5 +281,21 @@ public class UserController {
         }
     }
 
+    @GetMapping("/getCustomers")
+    public ResponseEntity<List<UserEntity>> getCustomerUser() {
+        List<UserEntity> customers = userService.getAllUsers()
+            .stream()
+            .filter(u -> u != null && u.getRole() != null && u.getRole().equalsIgnoreCase("User"))
+            .collect(Collectors.toList());
+
+        // Do not expose passwords in the API response
+        customers.forEach(u -> {
+            if (u != null) {
+                u.setPassword(null);
+            }
+        });
+
+        return ResponseEntity.ok(customers);
+    }
 
 }
