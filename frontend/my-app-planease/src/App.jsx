@@ -33,6 +33,7 @@ import AdminPackages from './Pages/admin-pages/admin-your-packages.jsx'
 import UserBookingsPage from './Pages/user-bookings.jsx'
 import EventTrackingAdmin from './Pages/admin-pages/admin-eventprogress.jsx'
 import SubcontractorProgress from './Pages/subcontractor-pages/subcontractor-progress.jsx'
+import AdminCustomers from './Pages/admin-pages/admin-customers.jsx'
 import NotFound from './Pages/page-not-found'
 
 function App() {
@@ -142,6 +143,12 @@ function App() {
             <Route path="/admin/bookings" element={
                  <AdminProtectedRoute>
                 <AdminBookings/>
+                 </AdminProtectedRoute>
+            }/>
+
+            <Route path="/admin/customers" element={
+                 <AdminProtectedRoute>
+                <AdminCustomers/>
                  </AdminProtectedRoute>
             }/>
 
