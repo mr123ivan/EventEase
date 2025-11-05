@@ -594,10 +594,10 @@ const EventTrackingAdmin = () => {
         }
       )
 
-      console.log("DEBUG: API Response:", response)
+      // console.log("DEBUG: API Response:", response)
 
       if (response.status === 200) {
-        console.log("DEBUG: Updating state locally after subcontractor marked incomplete")
+        // console.log("DEBUG: Updating state locally after subcontractor marked incomplete")
         // Update the state locally to reflect the change immediately
         setEvents((prevEvents) =>
           prevEvents.map((e) =>
@@ -626,11 +626,11 @@ const EventTrackingAdmin = () => {
               : e
           )
         )
-        console.log("DEBUG: State updated locally after marking incomplete")
+        // console.log("DEBUG: State updated locally after marking incomplete")
 
         // Refetch the events data to get the updated status from backend
         await fetchEventsProgress()
-        console.log("DEBUG: Events data refetched successfully after marking incomplete")
+        // console.log("DEBUG: Events data refetched successfully after marking incomplete")
 
         // Close the modal after successful completion
         setShowIndividualUpdateModal(false)
