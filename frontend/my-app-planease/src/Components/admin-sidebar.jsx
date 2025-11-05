@@ -8,7 +8,7 @@ const AdminSideBar = () => {
   const { admin_page } = useParams()
 
   useEffect(() => {
-    console.log(admin_page)
+    // console.log(admin_page) // COMMENTED OUT - Development debug message
   }, [admin_page])
 
   return (

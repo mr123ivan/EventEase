@@ -9,8 +9,8 @@ const BookingSidePanel = ({ activeStep }) => {
   const eventDate = getEventDetails.eventDate;
 
   useEffect(() => {
-    console.log("event date: ", getEventDetails.eventDate);
-    console.log("current event name: ", currentEventName);
+    // console.log("event date: ", getEventDetails.eventDate); // COMMENTED OUT - Development debug info
+    // console.log("current event name: ", currentEventName); // COMMENTED OUT - Development debug info may reveal session data
   }, []);
 
 
