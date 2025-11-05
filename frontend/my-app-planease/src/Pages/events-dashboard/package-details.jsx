@@ -51,7 +51,7 @@ const PackageDetails = () => {
               Authorization: `Bearer ${token}`,
             },
           })
-          console.log("serviceAttachmentsResponse", serviceAttachmentsResponse.data)
+          // console.log("serviceAttachmentsResponse", serviceAttachmentsResponse.data) // COMMENTED OUT - Exposes API response data with service details
           setPackageServices(serviceAttachmentsResponse.data || [])
         } catch (attachmentError) {
           console.error("Error fetching service attachments:", attachmentError)
@@ -163,12 +163,12 @@ const PackageDetails = () => {
       sessionStorage.setItem("currentEventId", packageData.packageId.toString())
       sessionStorage.setItem("currentEventName", packageData.packageName)
 
-      console.log("Stored package data for booking:", {
-        packageId: packageData.packageId,
-        packageName: packageData.packageName,
-        packagePrice: packageData.packagePrice,
-        mappedPackage: mappedPackage,
-      })
+      // console.log("Stored package data for booking:", {
+      //   packageId: packageData.packageId,
+      //   packageName: packageData.packageName,
+      //   packagePrice: packageData.packagePrice,
+      //   mappedPackage: mappedPackage,
+      // }) // COMMENTED OUT - Exposes sensitive package data structure and IDs
 
       // Navigate to the booking flow with the package name
       navigate(`/book/${encodeURIComponent(packageData.packageName)}/package/inputdetails`)

@@ -42,11 +42,11 @@ const AdminPendingRequest = () => {
     // Debug logging for selectedRequest data
     useEffect(() => {
         if (selectedRequest) {
-            console.log("Selected request data:", selectedRequest);
-            console.log("Celebrant name:", selectedRequest.celebrantName);
-            console.log("Additional celebrants:", selectedRequest.additionalCelebrants);
-            console.log("Projected attendees:", selectedRequest.projectedAttendees);
-            console.log("Budget:", selectedRequest.budget);
+            // console.log("Selected request data:", selectedRequest); // COMMENTED OUT - May expose sensitive user data
+            // console.log("Celebrant name:", selectedRequest.celebrantName); // COMMENTED OUT - PII
+            // console.log("Additional celebrants:", selectedRequest.additionalCelebrants); // COMMENTED OUT - PII
+            // console.log("Projected attendees:", selectedRequest.projectedAttendees); // COMMENTED OUT - Sensitive
+            // console.log("Budget:", selectedRequest.budget); // COMMENTED OUT - Sensitive financial info
         }
     }, [selectedRequest]);
     const [transactions, setTransactions] = useState([]);
@@ -72,20 +72,20 @@ const AdminPendingRequest = () => {
         axios.get(`${API_BASE_URL}/api/transactions/getAllPendingTransactions`)
             .then((res) => {
                     setTransactions(res.data);
-                    console.log("All pending transactions:", res.data);
+                    // console.log("All pending transactions:", res.data); // COMMENTED OUT - API response may contain sensitive data
                     
                     // Check if we have any data with the new fields
                     if (res.data && res.data.length > 0) {
-                        console.log("First transaction details:", {
-                            celebrantName: res.data[0].celebrantName,
-                            additionalCelebrants: res.data[0].additionalCelebrants,
-                            projectedAttendees: res.data[0].projectedAttendees,
-                            budget: res.data[0].budget
-                        });
+                        // console.log("First transaction details:", {
+                        //     celebrantName: res.data[0].celebrantName,
+                        //     additionalCelebrants: res.data[0].additionalCelebrants,
+                        //     projectedAttendees: res.data[0].projectedAttendees,
+                        //     budget: res.data[0].budget
+                        // });
                     }
             })
             .catch((err) => {
-                console.log("Error fetching transactions:", err);
+                // console.log("Error fetching transactions:", err); // COMMENTED OUT - Error logged with details may expose internals
             });
 
     }
@@ -141,10 +141,10 @@ const AdminPendingRequest = () => {
           },
         })
       } catch (err) {
-        console.log(err)
+        // console.log(err) // COMMENTED OUT - May expose internal error object
       }
-      console.log(refundReceipt)
-      console.log(selectedRequest)
+      // console.log(refundReceipt) // COMMENTED OUT - May expose file metadata
+      // console.log(selectedRequest) // COMMENTED OUT - May expose sensitive user data
     }
 
     // Make the API call to decline the transaction
@@ -159,7 +159,7 @@ const AdminPendingRequest = () => {
         },
       )
       .then((response) => {
-        console.log(response.data)
+        // console.log(response.data) // COMMENTED OUT - API response may contain sensitive data
         setDeclineSuccess(true)
         setDeclineStep(4) // Move to success message
         axios
@@ -170,7 +170,7 @@ const AdminPendingRequest = () => {
             },
           })
           .then(() => {
-            console.log("Booking rejection notification sent.")
+            // console.log("Booking rejection notification sent.") // COMMENTED OUT - Development debug message
           })
           .catch((err) => {
             console.error("Failed to send booking rejection notification:", err)
@@ -179,11 +179,11 @@ const AdminPendingRequest = () => {
       })
       .catch((err) => {
         if (err.response) {
-          console.log(`[ERROR] Status: ${err.response.status}, Message: ${err.response.data?.message || "No message"}`)
+          // console.log(`[ERROR] Status: ${err.response.status}, Message: ${err.response.data?.message || "No message"}`) // COMMENTED OUT - Use error handling without logging
         } else if (err.request) {
-          console.log("[ERROR] No response from server")
+          // console.log("[ERROR] No response from server") // COMMENTED OUT - Development log
         } else {
-          console.log(`[ERROR] ${err.message}`)
+          // console.log(`[ERROR] ${err.message}`) // COMMENTED OUT - Development log
         }
       })
       .finally(() => {
@@ -202,7 +202,7 @@ const AdminPendingRequest = () => {
 
     setIsApproving(true)
 
-    console.log(selectedRequest)
+    // console.log(selectedRequest) // COMMENTED OUT - May expose sensitive user data
 
 
     // For approve or other actions, continue with the original flow
@@ -217,7 +217,7 @@ const AdminPendingRequest = () => {
         },
       )
       .then((response) => {
-        console.log(response.data)
+        // console.log(response.data) // COMMENTED OUT - API response may contain sensitive transaction data
         // After validating transaction, create notification for user by email
         if (validate === "APPROVED") {
           axios
@@ -228,15 +228,15 @@ const AdminPendingRequest = () => {
               },
             })
             .then(() => {
-              console.log(selectedRequest?.subcontractors)
+              // console.log(selectedRequest?.subcontractors) // COMMENTED OUT - Exposes subcontractor data
 
               // Ensure there are subcontractors before running the loop
               if (selectedRequest?.subcontractors?.length > 0) {
                 ;(async () => {
                   for (const subcontractor of selectedRequest.subcontractors) {
                     try {
-                      console.log(subcontractor.subcontractorUserId)
-                      console.log(selectedRequest.eventName)
+                      // console.log(subcontractor.subcontractorUserId) // COMMENTED OUT - Exposes subcontractor ID
+                      // console.log(selectedRequest.eventName) // COMMENTED OUT - Exposes event details
                       const response = await axios.post(
                         `${API_BASE_URL}/api/notifications/notify-subcontractors-byid`,
                         null,
@@ -247,14 +247,14 @@ const AdminPendingRequest = () => {
                           },
                         },
                       )
-                      console.log(response.data)
+                      // console.log(response.data) // COMMENTED OUT - Exposes notification API response data
                     } catch (error) {
                       console.error(`Failed to notify subcontractor (id: ${subcontractor?.subcontractorId}):`, error)
                     }
                   }
                 })()
               } else {
-                console.log("No subcontractors to notify.")
+                // console.log("No subcontractors to notify.") // COMMENTED OUT - Development debug message
               }
             })
             .catch((err) => {
@@ -268,7 +268,7 @@ const AdminPendingRequest = () => {
               },
             })
             .then(() => {
-              console.log("Booking rejection notification sent.")
+              // console.log("Booking rejection notification sent.") // COMMENTED OUT - Development debug message
             })
             .catch((err) => {
               console.error("Failed to send booking rejection notification:", err)
@@ -278,11 +278,11 @@ const AdminPendingRequest = () => {
       })
       .catch((err) => {
         if (err.response) {
-          console.log(`[ERROR] Status: ${err.response.status}, Message: ${err.response.data?.message || "No message"}`)
+          // console.log(`[ERROR] Status: ${err.response.status}, Message: ${err.response.data?.message || "No message"}`) // COMMENTED OUT - Exposes detailed error internals
         } else if (err.request) {
-          console.log("[ERROR] No response from server")
+          // console.log("[ERROR] No response from server") // COMMENTED OUT - Exposes server connectivity details
         } else {
-          console.log(`[ERROR] ${err.message}`)
+          // console.log(`[ERROR] ${err.message}`) // COMMENTED OUT - Exposes error details
         }
       })
       .finally(() => {

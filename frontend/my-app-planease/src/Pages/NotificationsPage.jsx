@@ -45,7 +45,7 @@ const NotificationsPage = () => {
       const response = await axios.get(`${API_BASE_URL}${endpoint}?userEmail=${userEmail}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
-      console.log("Notifications:",  response.data)
+      // console.log("Notifications:",  response.data)
       setNotifications(response.data)
     } catch (error) {
       console.error("Failed to fetch notifications:", error)

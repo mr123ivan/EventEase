@@ -370,7 +370,7 @@ export default function LoginPage() {
             if (response.authResponse) {
               // Explicitly set redirect URI for development
               const redirectUri = window.location.origin
-              console.log("Using redirect URI:", redirectUri)
+              // console.log("Using redirect URI:", redirectUri)
 
               window.FB.api("/me", { fields: "id,name,email,picture" }, async (profile) => {
                 try {

@@ -68,8 +68,8 @@ const SubcontractorCalendar = () => {
           }
         });
 
-        console.log(response.data);
-        
+        // console.log(response.data); // COMMENTED OUT - Exposes calendar/schedule API response data
+
         // Transform dates from the backend into the format needed by the calendar
         const formattedDates = response.data.map(item => ({
           start: new Date(item.date),
@@ -181,8 +181,8 @@ const SubcontractorCalendar = () => {
   const handleConfirmUnavailability = async () => {
     const selectedDate = confirmDialog.date;
 
-    console.log(selectedDate);
-    
+    // console.log(selectedDate); // COMMENTED OUT - Exposes selected date information
+
     try {
       // First, directly store it in the local state to give immediate feedback
       const tempDate = {

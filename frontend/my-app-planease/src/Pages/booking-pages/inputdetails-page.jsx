@@ -110,7 +110,7 @@ const InputDetailsPage = () => {
       });
   
       const { personalInfo, eventDetails, selectedServices } = response.data;
-      console.log(response.data)
+      // console.log(response.data) // COMMENTED OUT - Exposes sensitive form data including personal information
       if (personalInfo) setPersonalInfo(personalInfo);
       if (eventDetails) setEventDetails(eventDetails);
       if (selectedServices) {
@@ -148,12 +148,12 @@ const InputDetailsPage = () => {
       })
     }
 
-    console.log(body)
+    // console.log(body) // COMMENTED OUT - Exposes form submission data including personal info
     axios.post(`${API_BASE_URL}/form-draft/save`, body, {
       headers: { Authorization: `Bearer ${token}` },
     })
     .then((response) => {
-      console.log(response.data)
+      // console.log(response.data) // COMMENTED OUT - Exposes API response data
     })
     .catch((error) => {
       console.error("Error fetching form progress:", error)
@@ -233,9 +233,9 @@ const InputDetailsPage = () => {
     savePersonalInfo(personalInfo)
     saveEventDetails(eventDetails)
 
-    console.log("Personal Info:", personalInfo)
-    console.log("Event Details:", eventDetails)
-    console.log("Event Name:", eventName.toLowerCase())
+    // console.log("Personal Info:", personalInfo) // COMMENTED OUT - Exposes sensitive personal information
+    // console.log("Event Details:", eventDetails) // COMMENTED OUT - Exposes event details including dates and venues
+    // console.log("Event Name:", eventName.toLowerCase()) // COMMENTED OUT - Exposes event information
     // Navigate to services page with event name
     if (!eventName.toLowerCase().includes("package")) {
       navigate(`/book/${encodeURIComponent(eventName)}/services`)

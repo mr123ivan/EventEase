@@ -47,15 +47,15 @@ const PaymentProofPagePackage = () => {
     setBookingData(refreshedData)
 
     if (!refreshedData.servicesData.livePackageData && !refreshedData.servicesData.selectedPackage) {
-      console.warn("No package data found in payment page, redirecting to input details")
+      // console.warn("No package data found in payment page, redirecting to input details") // COMMENTED OUT - Exposes system routing behavior
       showModal("Package information is missing. Please start the booking process again.", true)
       return
     }
 
     // Log package information for debugging
     if (refreshedData.servicesData.livePackageData) {
-      console.log("Payment page - Package ID:", refreshedData.servicesData.livePackageData.packageId)
-      console.log("Payment page - Package Data:", refreshedData.servicesData.livePackageData)
+      // console.log("Payment page - Package ID:", refreshedData.servicesData.livePackageData.packageId) // COMMENTED OUT - Exposes internal package ID
+      // console.log("Payment page - Package Data:", refreshedData.servicesData.livePackageData) // COMMENTED OUT - Exposes complete package data structure
     }
   }, [packageName, currentPackageName, navigate])
 
@@ -158,7 +158,7 @@ const PaymentProofPagePackage = () => {
     if (servicesData.livePackageData && servicesData.livePackageData.packageId) {
       // Ensure packageId is a number (not a string)
       const packageId = Number.parseInt(servicesData.livePackageData.packageId, 10)
-      console.log("Using live package ID (numeric):", packageId)
+      // console.log("Using live package ID (numeric):", packageId) // COMMENTED OUT - Exposes internal package ID
       return isNaN(packageId) ? null : packageId
     }
 
@@ -170,7 +170,7 @@ const PaymentProofPagePackage = () => {
     }
 
     const staticId = packageMap[servicesData.selectedPackage]
-    console.log("Using static package ID:", staticId, "for package:", servicesData.selectedPackage)
+    // console.log("Using static package ID:", staticId, "for package:", servicesData.selectedPackage) // COMMENTED OUT - Exposes internal package mapping system
     return staticId || null
   }
 
@@ -271,8 +271,8 @@ const PaymentProofPagePackage = () => {
       })
       const userEmail = userResponse.data.email
 
-      console.log("User email:", userEmail)
-      console.log("Package booking data:", bookingData)
+      // console.log("User email:", userEmail) // COMMENTED OUT - Exposes personal email address
+      // console.log("Package booking data:", bookingData) // COMMENTED OUT - Exposes sensitive booking and personal data
 
       // Get the package ID with validation
       const packageId = getPackageId()
@@ -282,7 +282,7 @@ const PaymentProofPagePackage = () => {
         return
       }
 
-      console.log("Final package ID for submission:", packageId)
+      // console.log("Final package ID for submission:", packageId) // COMMENTED OUT - Exposes internal package ID
 
       // Prepare booking transaction data for PACKAGE booking
       const transactionData = {
@@ -311,11 +311,11 @@ const PaymentProofPagePackage = () => {
       }
 
       // Add this debug code right after creating transactionData
-      console.log("FINAL TRANSACTION DATA CHECK:", {
-        packageId: transactionData.packageId,
-        eventId: transactionData.eventId,
-        typeOfPackageId: typeof transactionData.packageId,
-      })
+      // console.log("FINAL TRANSACTION DATA CHECK:", {
+      //   packageId: transactionData.packageId,
+      //   eventId: transactionData.eventId,
+      //   typeOfPackageId: typeof transactionData.packageId,
+      // }) // COMMENTED OUT - Exposes transaction data structure and internal IDs
 
       // If packageId is null or undefined, show an error and abort
       if (transactionData.packageId === null || transactionData.packageId === undefined) {
@@ -324,21 +324,21 @@ const PaymentProofPagePackage = () => {
         return
       }
 
-      console.log("=== PACKAGE TRANSACTION DATA DEBUG ===")
-      console.log("Package ID:", transactionData.packageId)
-      console.log("Package Name:", currentPackageName)
-      console.log("Payment Amount:", formatAsPeso(paymentAmount))
-      console.log("Transaction Date:", transactionData.transactionDate)
-      console.log("Complete transaction data:", transactionData)
+      // console.log("=== PACKAGE TRANSACTION DATA DEBUG ===") // COMMENTED OUT - Debug section exposes sensitive data
+      // console.log("Package ID:", transactionData.packageId) // COMMENTED OUT - Exposes internal package ID
+      // console.log("Package Name:", currentPackageName) // COMMENTED OUT - Exposes package details
+      // console.log("Payment Amount:", formatAsPeso(paymentAmount)) // COMMENTED OUT - Exposes payment amount
+      // console.log("Transaction Date:", transactionData.transactionDate) // COMMENTED OUT - Exposes transaction timing
+      // console.log("Complete transaction data:", transactionData) // COMMENTED OUT - Exposes complete sensitive transaction data
 
       // Create FormData for multipart request
       const formData = new FormData()
       formData.append("paymentProof", uploadedFile)
       formData.append("packageBookingData", JSON.stringify(transactionData))
 
-      console.log("FormData contents:")
-      console.log("- paymentProof file:", uploadedFile.name, uploadedFile.type, uploadedFile.size)
-      console.log("- bookingData JSON:", JSON.stringify(transactionData))
+      // console.log("FormData contents:") // COMMENTED OUT - Exposes form structure
+      // console.log("- paymentProof file:", uploadedFile.name, uploadedFile.type, uploadedFile.size) // COMMENTED OUT - Exposes file details
+      // console.log("- bookingData JSON:", JSON.stringify(transactionData)) // COMMENTED OUT - Exposes transaction data structure
 
       // Submit to the backend endpoint
       const response = await axios.post(`${API_BASE_URL}/api/transactions/createPackageBooking`, formData, {
@@ -348,7 +348,7 @@ const PaymentProofPagePackage = () => {
         },
       })
 
-      console.log("Response:", response.data)
+      // console.log("Response:", response.data) // COMMENTED OUT - API response may contain sensitive booking data
 
       if (response.data.success) {
         setSubmitSuccess(true)
