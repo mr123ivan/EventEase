@@ -30,8 +30,8 @@ const Footer = () => {
             <h2 className="text-3xl font-bold">
               Event<span className="text-blue-500">Ease</span>
             </h2>
-            <p className="text-sm text-gray-400">
-              Your one-stop solution for seamless event planning and management.
+            <p className="text-sm text-gray-300 leading-relaxed">
+              A comprehensive service platform designed to simplify and streamline all aspects of event planning and management.
             </p>
           </div>
 
@@ -87,17 +87,9 @@ const Footer = () => {
           </div>
         </div>
 
-        {/* Separator */}
-        <div className="border-t border-gray-700 mt-10 mb-6"></div>
-
-        {/* Creators/Copyright combined */}
-        <div className="text-center text-sm text-gray-400">
-            <p className="mb-2">
-                Created by: Dave Crystal, Aeron Espina, Ivan Adoptante, Miklos Bolarde, Mikael Cuyugan
-            </p>
-            <p>
-                &copy; {currentYear} EventEase. All Rights Reserved.
-            </p>
+        {/* Copyright */}
+        <div className="border-t border-gray-700 mt-10 pt-6 text-center text-sm text-gray-400">
+          Copyright By EventEase @ 2025. All Rights Reserved
         </div>
       </div>
     </footer>

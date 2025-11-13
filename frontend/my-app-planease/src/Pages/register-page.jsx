@@ -28,6 +28,7 @@ export default function SignUpPage() {
   const [showOTPModal, setShowOTPModal] = useState(false)
   const [otpValue, setOtpValue] = useState("")
   const [otpError, setOtpError] = useState("")
+  const [otpSuccess, setOtpSuccess] = useState("")
   const [otpTimer, setOtpTimer] = useState(300)
   const [isResendingOTP, setIsResendingOTP] = useState(false)
   const [isSendingOTP, setIsSendingOTP] = useState(false)
@@ -203,6 +204,7 @@ export default function SignUpPage() {
     if (showOTPModal) {
       setOtpValue("")
       setOtpError("")
+      setOtpSuccess("")
       if (otpTimerRef.current) clearInterval(otpTimerRef.current)
     }
   }, [showOTPModal])
@@ -467,7 +469,7 @@ export default function SignUpPage() {
   }
 
   return (
-    <div className="flex h-screen w-full">
+    <div className="min-h-screen w-full flex">
       {/* Left side - Background image section with overlay */}
       <div className="hidden md:flex md:w-1/2 flex-col relative overflow-hidden">
         {/* Background image with direct URL from public folder */}
@@ -670,19 +672,20 @@ export default function SignUpPage() {
       </div>
 
       {/* Right side - Sign Up form */}
-      <div className="w-full md:w-1/2 flex items-center justify-center p-6 bg-gradient-to-br from-amber-50 to-white overflow-y-auto">
-        <motion.div
-          className="w-full max-w-md space-y-6 py-6"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
-        >
-          <div className="text-center">
-            <h1 className="text-2xl font-medium text-gray-800">
-              Welcome to Event<span className="text-amber-500">Ease</span>!
-            </h1>
-            <p className="mt-2 text-gray-600">Create your account to get started</p>
-          </div>
+      <div className="w-full md:w-1/2 flex flex-col bg-gradient-to-br from-amber-50 to-white min-h-screen">
+        <div className="flex-1 flex items-start justify-center px-4 py-6 sm:px-6 lg:px-8">
+          <motion.div
+            className="w-full max-w-md space-y-4 sm:space-y-6"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+          >
+            <div className="text-center pt-4 sm:pt-8">
+              <h1 className="text-xl sm:text-2xl font-medium text-gray-800">
+                Welcome to Event<span className="text-amber-500">Ease</span>!
+              </h1>
+              <p className="mt-2 text-sm sm:text-base text-gray-600">Create your account to get started</p>
+            </div>
 
           {/* Error message */}
           {errorMessage && (
@@ -697,9 +700,9 @@ export default function SignUpPage() {
             </motion.div>
           )}
 
-          <form onSubmit={handleRegister} className="space-y-5">
+          <form onSubmit={handleRegister} className="space-y-4">
             {/* Firstname and Lastname in the same row */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               {/* Firstname */}
               <div className="space-y-1">
                 <label htmlFor="firstname" className="text-sm font-medium text-gray-700">
@@ -941,9 +944,9 @@ export default function SignUpPage() {
             )}
 
             {/* Location Section with Masbate Default */}
-            <div className="space-y-4">
+            <div className="space-y-3">
               {/* Checkbox for outside Masbate */}
-              <div className="inline-flex items-center mb-4">
+              <div className="inline-flex items-center">
                 <input
                   type="checkbox"
                   id="outsideMasbate"
@@ -958,7 +961,7 @@ export default function SignUpPage() {
 
               {/* Conditionally show Region and Province if outside Masbate */}
               {isOutsideMasbate && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   {/* Region */}
                   <div className="space-y-1">
                     <label className="text-sm font-medium text-gray-700">Region</label>
@@ -999,7 +1002,7 @@ export default function SignUpPage() {
               )}
 
               {/* Always show City/Municipality and Barangay */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 {/* City/Municipality */}
                 <div className="space-y-1">
                   <label className="text-sm font-medium text-gray-700">
@@ -1046,16 +1049,16 @@ export default function SignUpPage() {
             <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
               <CustomButton
                 type="submit"
-                className="w-full h-12 bg-gray-800 hover:bg-gray-900 text-white"
+                className="w-full h-11 bg-gray-800 hover:bg-gray-900 text-white"
                 fontSize="text-sm"
-                disabled={isSubmitting}
+                disabled={isSubmitting || passwordStrength !== 3 || !passwordsMatch}
               >
-                {isSubmitting ? "SENDING OTP..." : "SIGN UP"}
+                {isSubmitting ? "Creating Account..." : "SIGN UP"}
               </CustomButton>
             </motion.div>
 
             {/* Link to Login */}
-            <div className="text-center text-sm text-gray-600">
+            <div className="text-center text-sm text-gray-600 pb-4">
               Already have an account?{" "}
               <Link to="/login" className="text-amber-500 hover:underline">
                 Log in
@@ -1063,6 +1066,7 @@ export default function SignUpPage() {
             </div>
           </form>
         </motion.div>
+        </div>
       </div>
 
       {/* OTP Modal */}
@@ -1104,10 +1108,14 @@ export default function SignUpPage() {
                   {otpError && (
                     <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-md">{otpError}</div>
                   )}
+                  {otpSuccess && (
+                    <div className="mb-4 p-3 bg-green-50 border border-green-200 text-green-700 rounded-md">{otpSuccess}</div>
+                  )}
                   <form
                     onSubmit={async (e) => {
                       e.preventDefault()
                       setOtpError("")
+                      setOtpSuccess("")
                       if (!otpValue || otpValue.length !== 6) {
                         setOtpError("Please enter the 6-digit OTP.")
                         return
@@ -1117,7 +1125,9 @@ export default function SignUpPage() {
                           params: { email: email, OTP: otpValue },
                         })
                         if (response.data === true) {
-                          // OTP is valid, proceed with registration
+                          // OTP is valid, show success message
+                          setOtpSuccess("OTP verified successfully! Creating your account...")
+                          // Proceed with registration
                           try {
                             const registerResponse = await axios.post(
                               `${API_BASE_URL}/user/register`,
@@ -1137,6 +1147,7 @@ export default function SignUpPage() {
                             }
                           } catch (error) {
                             console.error("Registration Error:", error)
+                            setOtpSuccess("")
                             setOtpError("Registration failed. Please try again.")
                           }
                         } else {
@@ -1176,6 +1187,7 @@ export default function SignUpPage() {
                               setIsResendingOTP(true)
                               setIsSendingOTP(true)
                               setOtpError("")
+                              setOtpSuccess("")
                               setOtpValue("")
                               try {
                                 const response = await axios.get(`${API_BASE_URL}/email/send-registration-otp/${email}`)
@@ -1208,7 +1220,11 @@ export default function SignUpPage() {
                       </div>
                       <button
                         type="submit"
-                        className="px-4 py-2 bg-amber-600 text-white rounded-md hover:bg-amber-700 disabled:opacity-70"
+                        className={`px-4 py-2 text-white rounded-md font-medium transition-all duration-200 cursor-pointer ${
+                          otpValue.length !== 6
+                            ? "bg-gray-400"
+                            : "bg-amber-500 hover:bg-amber-600 hover:shadow-lg active:bg-amber-700"
+                        }`}
                         disabled={otpValue.length !== 6}
                       >
                         Verify & Register

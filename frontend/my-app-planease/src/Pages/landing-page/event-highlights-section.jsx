@@ -18,11 +18,11 @@ const EventCard = ({ title, image, date }) => {
         <img src={image || "/placeholder-event.jpg"} alt={title} className="w-full h-[200px] object-cover" /> 
       </div>
       <div className="p-4">
-        <h3 className="font-bold text-gray-900 mb-2 truncate">{title}</h3>
-        {/* Only displays date now, the flex class is removed as there is no 'views' element */}
-        {date && (
-          <div className="text-sm">
-            <span className="text-amber-600 font-medium">{date}</span>
+        <h3 className="font-medium text-gray-900 mb-2">{title}</h3>
+        {date && views && (
+          <div className="flex items-center justify-between text-sm">
+            {/* <span className="text-amber-500">{date}</span>
+            <span className="text-gray-500">{views} views</span> */}
           </div>
         )}
       </div>
@@ -86,16 +86,9 @@ export default function EventHighlightsSection() {
             </motion.h2>
           </div>
 
-          {/* Link to the main Facebook page */}
-          <a 
-            href={FACEBOOK_URL} 
-            target="_blank" 
-            rel="noopener noreferrer"
-            title="View our latest posts on Facebook"
-            className="w-12 h-12 rounded-full border border-white hover:bg-white hover:text-gray-900 transition-colors flex items-center justify-center"
-          >
-            <Facebook className="h-6 w-6" />
-          </a>
+          {/* <Link to="#" className="w-10 h-10 rounded-full border border-white flex items-center justify-center">
+            <Facebook className="h-5 w-5" />
+          </Link> */}
         </div>
 
         <div className="relative">
@@ -118,15 +111,9 @@ export default function EventHighlightsSection() {
             ))}
           </div>
 
-          <a 
-            href={FACEBOOK_URL}
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="absolute top-1/2 -right-4 transform -translate-y-1/2 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg z-10 hover:ring-2 ring-amber-500 transition-shadow"
-            title="See all highlights on Facebook"
-          >
+          {/* <button className="absolute top-1/2 -right-4 transform -translate-y-1/2 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg z-10">
             <ChevronRight className="h-5 w-5 text-gray-900" />
-          </a>
+          </button> */}
         </div>
       </div>
     </section>
