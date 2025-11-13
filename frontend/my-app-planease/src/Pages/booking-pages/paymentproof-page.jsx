@@ -613,13 +613,13 @@ const PaymentProofPage = () => {
         userEmail: userEmail,
       }
 
-      console.log("=== TRANSACTION DATA DEBUG ===")
-      console.log("Service Type:", transactionData.serviceType)
-      console.log("Package ID:", transactionData.packageId)
-      console.log("Service IDs (subcontractor IDs):", transactionData.serviceIds)
-      console.log("Payment Amount:", formatAsPeso(paymentAmount))
-      console.log("Transaction Date:", transactionData.transactionDate)
-      console.log("Complete transaction data:", transactionData)
+      // console.log("=== TRANSACTION DATA DEBUG ===")
+      // console.log("Service Type:", transactionData.serviceType)
+      // console.log("Package ID:", transactionData.packageId)
+      // console.log("Service IDs (subcontractor IDs):", transactionData.serviceIds)
+      // console.log("Payment Amount:", formatAsPeso(paymentAmount))
+      // console.log("Transaction Date:", transactionData.transactionDate)
+      // console.log("Complete transaction data:", transactionData)
 
       // Validate selection presence based on new model
       if (transactionData.serviceType === "PACKAGE" && transactionData.packageId === null) {

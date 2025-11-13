@@ -1,14 +1,33 @@
 import { Link } from "react-router-dom"
 import { Phone, Mail, MapPin } from "lucide-react"
+import { useAuth } from "./AuthProvider"
+
+// Import icons for social media (assuming you are using lucide-react or similar)
+// Note: If you don't have Facebook/Instagram icons in lucide-react,
+// you might need to use generic ones or import from a different library.
+// For this fix, I'll use simple text links as before, but ensure they are correctly placed.
 
 const Footer = () => {
+  const { isAuthenticated, user } = useAuth()
+  const currentYear = new Date().getFullYear()
+
+  const getHomePath = () => {
+    if (isAuthenticated && user) {
+      if (user.role === "User") return "/home"
+      if (user.role === "Admin") return "/admin/pendings"
+      if (user.role === "SubContractor") return "/subcontractor/dashboard"
+    }
+    return "/"
+  }
+
   return (
     <footer className="bg-[#1a2344] text-white py-12">
       <div className="container mx-auto px-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          {/* Logo and Description */}
-          <div className="space-y-4">
-            <h2 className="text-2xl font-medium">
+          
+          {/* Company Info/Logo */}
+          <div className="space-y-4 md:col-span-1">
+            <h2 className="text-3xl font-bold">
               Event<span className="text-blue-500">Ease</span>
             </h2>
             <p className="text-sm text-gray-300 leading-relaxed">
@@ -16,75 +35,53 @@ const Footer = () => {
             </p>
           </div>
 
-          {/* Services */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium border-b border-gray-600 pb-2 mb-2">Services</h3>
+          {/* Useful Links (NOW INCLUDES SOCIAL) */}
+          <div className="space-y-4 md:col-span-1">
+            <h3 className="text-lg font-semibold border-b border-gray-600 pb-2 mb-2">Useful Links</h3>
             <ul className="space-y-2">
               <li>
-                <Link to="/services/catering" className="text-sm text-gray-300 hover:text-blue-400">
-                  Catering Service
-                </Link>
-              </li>
-              <li>
-                <Link to="/services/videography" className="text-sm text-gray-300 hover:text-blue-400">
-                  Videography
-                </Link>
-              </li>
-              <li>
-                <Link to="/services/photography" className="text-sm text-gray-300 hover:text-blue-400">
-                  Photography
-                </Link>
-              </li>
-              <li>
-                <Link to="/services/wedding" className="text-sm text-gray-300 hover:text-blue-400">
-                  Wedding Event
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Useful Links */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium border-b border-gray-600 pb-2 mb-2">Useful Links</h3>
-            <ul className="space-y-2">
-              <li>
-                <Link to="/" className="text-sm text-gray-300 hover:text-blue-400">
+                <Link to={getHomePath()} className="text-sm text-gray-300 hover:text-blue-400 transition-colors">
                   Home Page
                 </Link>
               </li>
+              
+              {/* --- SOCIAL LINKS MOVED HERE --- */}
               <li>
-                <Link to="/services" className="text-sm text-gray-300 hover:text-blue-400">
-                  Service Page
-                </Link>
+                <a 
+                  href="https://www.facebook.com/chan.abella.5" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="text-sm text-gray-300 hover:text-blue-400 transition-colors">
+                  Facebook
+                </a>
               </li>
               <li>
-                <Link to="/faq" className="text-sm text-gray-300 hover:text-blue-400">
-                  FAQ's Page
-                </Link>
+                <a 
+                  href="https://www.instagram.com/richanabella" 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="text-sm text-gray-300 hover:text-blue-400 transition-colors">
+                  Instagram
+                </a>
               </li>
-              <li>
-                <Link to="/contact" className="text-sm text-gray-300 hover:text-blue-400">
-                  Contact Us
-                </Link>
-              </li>
+              {/* -------------------------------- */}
+
             </ul>
           </div>
 
-          {/* Contact */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium border-b border-gray-600 pb-2 mb-2">Contact</h3>
+          {/* Contact (Removed Social Links) */}
+          <div className="space-y-4 md:col-span-2">
+            <h3 className="text-lg font-semibold border-b border-gray-600 pb-2 mb-2">Contact Info</h3>
             <ul className="space-y-3">
               <li className="flex items-center text-sm text-gray-300">
-                <Phone size={16} className="mr-2" />
-                (+63) 900 000 0000
+                <MapPin size={18} className="mr-3 text-blue-400 flex-shrink-0" />
+                Masbate, Philippines
               </li>
               <li className="flex items-center text-sm text-gray-300">
-                <Mail size={16} className="mr-2" />
-                yahoo@gmail.com
-              </li>
-              <li className="flex items-center text-sm text-gray-300">
-                <MapPin size={16} className="mr-2" />
-                Cebu City
+                <Phone size={18} className="mr-3 text-blue-400 flex-shrink-0" />
+                <a href="tel:09198133158" className="hover:text-blue-400 transition-colors">
+                    +63 919 813 3158
+                </a>
               </li>
             </ul>
           </div>
@@ -100,4 +97,3 @@ const Footer = () => {
 }
 
 export default Footer
-

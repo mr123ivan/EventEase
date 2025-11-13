@@ -50,10 +50,26 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
 
           <Route path="/register" element={<RegisterPage />} />
-          <Route path="/book/:eventName/inputdetails" element={<InputDetailsPage />} />
-          <Route path="/book/:eventName/services" element={<SelectServicePage />} />
-          <Route path="/book/:eventName/preview" element={<PreviewBookingPage />} />
-          <Route path="/book/:eventName/payment" element={<PaymentProofPage />} />
+          <Route path="/book/:eventName/inputdetails" element={
+            <ProtectedRoute>
+              <InputDetailsPage/>
+            </ProtectedRoute>
+              } />
+          <Route path="/book/:eventName/services" element={
+            <ProtectedRoute>
+              <SelectServicePage/>
+            </ProtectedRoute>
+          } />
+          <Route path="/book/:eventName/preview" element={
+            <ProtectedRoute>
+              <PreviewBookingPage/>
+            </ProtectedRoute>
+            } />
+          <Route path="/book/:eventName/payment" element={
+            <ProtectedRoute>
+              <PaymentProofPage />
+            </ProtectedRoute>
+            } />
 
           <Route path="/book/:packageName/package/inputdetails" element={<InputDetailsPagePackage />} />
           {/* <Route path="/book/:packageName/package/preview" element={<PreviewBookingPagePackage />} />
