@@ -324,12 +324,12 @@ const PaymentProofPagePackage = () => {
         return
       }
 
-      console.log("=== PACKAGE TRANSACTION DATA DEBUG ===")
-      console.log("Package ID:", transactionData.packageId)
-      console.log("Package Name:", currentPackageName)
-      console.log("Payment Amount:", formatAsPeso(paymentAmount))
-      console.log("Transaction Date:", transactionData.transactionDate)
-      console.log("Complete transaction data:", transactionData)
+      // console.log("=== PACKAGE TRANSACTION DATA DEBUG ===")
+      // console.log("Package ID:", transactionData.packageId)
+      // console.log("Package Name:", currentPackageName)
+      // console.log("Payment Amount:", formatAsPeso(paymentAmount))
+      // console.log("Transaction Date:", transactionData.transactionDate)
+      // console.log("Complete transaction data:", transactionData)
 
       // Create FormData for multipart request
       const formData = new FormData()

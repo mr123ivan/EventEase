@@ -4,24 +4,25 @@ import { Link } from "react-router-dom"
 import { ChevronRight, Facebook } from "lucide-react"
 import { motion } from "framer-motion"
 
-const EventCard = ({ title, image, date, views }) => {
+// EventCard component updated: Removed 'views' prop and its rendering logic
+const EventCard = ({ title, image, date }) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
       viewport={{ once: true }}
-      className="bg-white rounded-lg overflow-hidden shadow-md"
+      className="bg-white rounded-lg overflow-hidden shadow-xl hover:shadow-2xl transition-shadow duration-300"
     >
       <div className="relative">
-        <img src={image || "/placeholder.svg"} alt={title} className="w-full h-[200px] object-cover" />
+        <img src={image || "/placeholder-event.jpg"} alt={title} className="w-full h-[200px] object-cover" /> 
       </div>
       <div className="p-4">
-        <h3 className="font-medium text-gray-900 mb-2">{title}</h3>
-        {date && views && (
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-amber-500">{date}</span>
-            <span className="text-gray-500">{views} views</span>
+        <h3 className="font-bold text-gray-900 mb-2 truncate">{title}</h3>
+        {/* Only displays date now, the flex class is removed as there is no 'views' element */}
+        {date && (
+          <div className="text-sm">
+            <span className="text-amber-600 font-medium">{date}</span>
           </div>
         )}
       </div>
@@ -30,35 +31,39 @@ const EventCard = ({ title, image, date, views }) => {
 }
 
 export default function EventHighlightsSection() {
+  
+  // Events data updated: Removed 'views' property
   const events = [
     {
       title: "The Wedding of Richard and Eve",
-      image: "/wedding1.png", // Update this path to match your public directory structure
-      date: "09 January 2022",
-      views: "11K views",
+      image: "/wedding1.png", 
+      date: "16 June 2023",
+      link: "https://www.facebook.com/share/p/1GmZ7sg9uV/" 
     },
     {
       title: "18th Birthday of Gwyneth Tayam",
-      image: "/bday.png", // Update this path to match your public directory structure
-      date: "",
-      views: "",
+      image: "/bday.png", 
+      date: "1 Oct 2020",
+      link: "https://www.facebook.com/share/p/1D9e6RaBKT/" 
     },
     {
       title: "Mark and Roxane's Wedding",
-      image: "/wedding2.png", // Update this path to match your public directory structure
-      date: "",
-      views: "",
+      image: "/wedding2.png", 
+      date: "6 Oct 2022",
+      link: "https://www.facebook.com/share/p/1RsnPduW8G/" 
     },
   ]
+  
+  const FACEBOOK_URL = "https://www.facebook.com/chan.abella.5"
 
   return (
     <section className="min-h-screen flex items-center py-16 bg-gray-900 text-white relative overflow-hidden">
       {/* Background circles */}
-      <div className="absolute top-0 left-0 w-64 h-64 rounded-full bg-gray-800 -translate-x-1/3 -translate-y-1/3"></div>
-      <div className="absolute bottom-0 right-0 w-64 h-64 rounded-full bg-gray-800 translate-x-1/3 translate-y-1/3"></div>
+      <div className="absolute top-0 left-0 w-64 h-64 rounded-full bg-gray-800 -translate-x-1/3 -translate-y-1/3 opacity-50"></div>
+      <div className="absolute bottom-0 right-0 w-64 h-64 rounded-full bg-gray-800 translate-x-1/3 -translate-y-1/3 opacity-50"></div>
 
       <div className="container mx-auto px-4 relative z-10">
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex justify-between items-center mb-10">
           <div>
             <motion.p
               initial={{ opacity: 0, y: 10 }}
@@ -81,21 +86,47 @@ export default function EventHighlightsSection() {
             </motion.h2>
           </div>
 
-          <Link to="#" className="w-10 h-10 rounded-full border border-white flex items-center justify-center">
-            <Facebook className="h-5 w-5" />
-          </Link>
+          {/* Link to the main Facebook page */}
+          <a 
+            href={FACEBOOK_URL} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            title="View our latest posts on Facebook"
+            className="w-12 h-12 rounded-full border border-white hover:bg-white hover:text-gray-900 transition-colors flex items-center justify-center"
+          >
+            <Facebook className="h-6 w-6" />
+          </a>
         </div>
 
         <div className="relative">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {events.map((event, index) => (
-              <EventCard key={index} title={event.title} image={event.image} date={event.date} views={event.views} />
+              <a 
+                key={index}
+                href={event.link} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                title={`View ${event.title} on Facebook`}
+              >
+                {/* EventCard call updated: Only passes title, image, and date */}
+                <EventCard 
+                  title={event.title} 
+                  image={event.image} 
+                  date={event.date} 
+                />
+              </a>
             ))}
           </div>
 
-          <button className="absolute top-1/2 -right-4 transform -translate-y-1/2 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg z-10">
+          <a 
+            href={FACEBOOK_URL}
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="absolute top-1/2 -right-4 transform -translate-y-1/2 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg z-10 hover:ring-2 ring-amber-500 transition-shadow"
+            title="See all highlights on Facebook"
+          >
             <ChevronRight className="h-5 w-5 text-gray-900" />
-          </button>
+          </a>
         </div>
       </div>
     </section>
