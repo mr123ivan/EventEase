@@ -18,7 +18,7 @@
 
 html {
   scroll-behavior: smooth;
-  scroll-snap-type: y proximity; 
+  scroll-snap-type: y proximity;
   overflow-y: scroll;
 }
 
@@ -29,7 +29,7 @@ body {
 
 .snap-section {
   scroll-snap-align: start;
-  min-height: 100vh;
+  min-height: 95vh;
   width: 100%;
 }
 

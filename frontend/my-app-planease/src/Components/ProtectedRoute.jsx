@@ -7,8 +7,8 @@ const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth()
 
   // Add console logs to help debug
-  // console.log("Protected Route - isAuthenticated:", isAuthenticated) // COMMENTED OUT - Development debug message
-  // console.log("Protected Route - isLoading:", isLoading) // COMMENTED OUT - Development debug message
+  //console.log("Protected Route - isAuthenticated:", isAuthenticated)
+  //console.log("Protected Route - isLoading:", isLoading)
 
   // Show loading indicator while checking authentication
   if (isLoading) {
