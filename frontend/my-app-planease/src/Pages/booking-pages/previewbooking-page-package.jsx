@@ -28,7 +28,7 @@ const PreviewBookingPagePackage = () => {
   useEffect(() => {
     const refreshedData = getCompleteBookingData()
     setBookingData(refreshedData)
-    console.log("Package booking data:", refreshedData) 
+    // console.log("Package booking data:", refreshedData) // COMMENTED OUT - Exposes sensitive booking and personal data
 
     // Validate that we have package data
     if (!refreshedData.servicesData.livePackageData && !refreshedData.servicesData.selectedPackage) {
@@ -108,7 +108,7 @@ const PreviewBookingPagePackage = () => {
     // Ensure package ID is properly stored before proceeding
     const { servicesData } = bookingData
     if (servicesData.livePackageData) {
-      console.log("Proceeding with package ID:", servicesData.livePackageData.packageId)
+      // console.log("Proceeding with package ID:", servicesData.livePackageData.packageId) // COMMENTED OUT - Exposes internal package ID
     }
 
     const validPackageName = packageName || currentPackageName

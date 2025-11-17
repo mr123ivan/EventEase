@@ -457,7 +457,7 @@ export default function SignUpPage() {
     try {
       const response = await axios.get(`${API_BASE_URL}/email/send-registration-otp/${email}`)
       if (response && response.data) {
-        console.log("Registration OTP email response:", response.data)
+        // console.log("Registration OTP email response:", response.data)
       }
     } catch (err) {
       console.error("Failed to send registration OTP:", err)
@@ -1192,7 +1192,7 @@ export default function SignUpPage() {
                               try {
                                 const response = await axios.get(`${API_BASE_URL}/email/send-registration-otp/${email}`)
                                 if (response && response.data) {
-                                  console.log("Registration OTP email response:", response.data)
+                                  // console.log("Registration OTP email response:", response.data)
                                 }
                               } catch (err) {
                                 setOtpError("Failed to resend OTP. Please try again.")

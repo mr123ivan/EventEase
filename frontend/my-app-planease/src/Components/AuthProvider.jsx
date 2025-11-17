@@ -44,17 +44,17 @@ export const AuthProvider = ({ children }) => {
         })
 
         // If we get here, the token is valid and we have user data
-        console.log("Token verified successfully")
+        // console.log("Token verified successfully") // COMMENTED OUT - Development debug message
 
         // Set the user data
         setUser(response.data)
       } catch (error) {
-        console.log("Token verification check:", error.response?.status)
+        // console.log("Token verification check:", error.response?.status) // COMMENTED OUT - Development debug message; may expose internal status
 
         // Only log out if we get a clear 401/403 unauthorized response
         // This prevents logouts due to network issues or server errors
         if (error.response && (error.response.status === 401 || error.response.status === 403)) {
-          console.log("Token invalid, logging out")
+          // console.log("Token invalid, logging out") // COMMENTED OUT - Internal flow detail not needed in production
           // Token is definitely invalid
           setIsAuthenticated(false)
           setToken("")
@@ -62,7 +62,7 @@ export const AuthProvider = ({ children }) => {
           localStorage.removeItem("token")
         } else {
           // For other errors (network, 500, etc.), keep the user logged in
-          console.log("Error checking token, but keeping user logged in:", error.message)
+          // console.log("Error checking token, but keeping user logged in:", error.message) // COMMENTED OUT - Development debug message
         }
       } finally {
         setIsLoading(false)

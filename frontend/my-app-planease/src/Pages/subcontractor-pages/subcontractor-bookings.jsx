@@ -97,8 +97,8 @@ export default function SubcontractorBookings() {
           }
         });
 
-        console.log(response.data);
-        
+        // console.log(response.data); // COMMENTED OUT - Exposes sensitive transaction/booking data
+
         // Map the transaction data to the format expected by the component
         // Replace the map logic inside fetchTransactions in SubcontractorBookings
         const formattedBookings = response.data.map(transaction => {

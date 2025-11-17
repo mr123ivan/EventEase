@@ -35,7 +35,7 @@ api.interceptors.response.use(
   response => response,
   error => {
     if (error.response && error.response.status === 401) {
-      console.log("Authentication error - You might need to log in again");
+      // console.log("Authentication error - You might need to log in again"); // COMMENTED OUT - Exposes authentication flow details
       // You could redirect to login here if needed
     }
     return Promise.reject(error);
@@ -476,7 +476,7 @@ const PaymentProofPage = () => {
       })
       .filter(id => id !== null);
     
-    console.log("Extracted service IDs:", numericIds);
+    // console.log("Extracted service IDs:", numericIds); // COMMENTED OUT - Exposes internal service ID structure
     return numericIds.length > 0 ? numericIds : null;
   }
 
@@ -569,11 +569,11 @@ const PaymentProofPage = () => {
         console.error("Error fetching user from API:", userError);
         // Fall back to the email from booking data
         userEmail = bookingData.personalInfo.email;
-        console.log("Using email from booking data:", userEmail);
+        // console.log("Using email from booking data:", userEmail); // COMMENTED OUT - Exposes personal email address
       }
 
-      console.log("User email for submission:", userEmail);
-      console.log("Booking data:", bookingData);
+      // console.log("User email for submission:", userEmail); // COMMENTED OUT - Exposes personal email address
+      // console.log("Booking data:", bookingData); // COMMENTED OUT - Exposes sensitive booking/personal data
 
       // Prepare booking transaction data matching the exact DTO structure
       const transactionData = {
@@ -613,13 +613,13 @@ const PaymentProofPage = () => {
         userEmail: userEmail,
       }
 
-      console.log("=== TRANSACTION DATA DEBUG ===")
-      console.log("Service Type:", transactionData.serviceType)
-      console.log("Package ID:", transactionData.packageId)
-      console.log("Service IDs (subcontractor IDs):", transactionData.serviceIds)
-      console.log("Payment Amount:", formatAsPeso(paymentAmount))
-      console.log("Transaction Date:", transactionData.transactionDate)
-      console.log("Complete transaction data:", transactionData)
+      // console.log("=== TRANSACTION DATA DEBUG ===") // COMMENTED OUT - Debug logging exposes sensitive data
+      // console.log("Service Type:", transactionData.serviceType) // COMMENTED OUT - Exposes internal service structure
+      // console.log("Package ID:", transactionData.packageId) // COMMENTED OUT - Exposes internal package IDs
+      // console.log("Service IDs (subcontractor IDs):", transactionData.serviceIds) // COMMENTED OUT - Exposes internal contractor IDs
+      // console.log("Payment Amount:", formatAsPeso(paymentAmount)) // COMMENTED OUT - Exposes payment amount
+      // console.log("Transaction Date:", transactionData.transactionDate) // COMMENTED OUT - Exposes transaction timing
+      // console.log("Complete transaction data:", transactionData) // COMMENTED OUT - Exposes complete sensitive transaction data
 
       // Validate selection presence based on new model
       if (transactionData.serviceType === "PACKAGE" && transactionData.packageId === null) {
@@ -639,7 +639,7 @@ const PaymentProofPage = () => {
         // Create an array of service names as a fallback
         const serviceNames = selectedItems.map(item => item.label).join(", ");
         transactionData.transactionNote += ` | Selected services: ${serviceNames}`;
-        console.log("Using service names as fallback in notes:", serviceNames);
+        // console.log("Using service names as fallback in notes:", serviceNames); // COMMENTED OUT - Exposes selected services data
       }
 
       // Create FormData for multipart request
@@ -647,12 +647,12 @@ const PaymentProofPage = () => {
       formData.append("paymentProof", uploadedFile)
       formData.append("bookingData", JSON.stringify(transactionData))
 
-      console.log("FormData contents:")
-      console.log("- paymentProof file:", uploadedFile.name, uploadedFile.type, uploadedFile.size)
-      console.log("- bookingData JSON:", JSON.stringify(transactionData))
+      // console.log("FormData contents:") // COMMENTED OUT - Exposes form structure
+      // console.log("- paymentProof file:", uploadedFile.name, uploadedFile.type, uploadedFile.size) // COMMENTED OUT - Exposes file details
+      // console.log("- bookingData JSON:", JSON.stringify(transactionData)) // COMMENTED OUT - Exposes complete transaction data structure
 
-      console.log("Submitting form data to backend...");
-      
+      // console.log("Submitting form data to backend..."); // COMMENTED OUT - Development debug message
+
       // Create a new custom axios instance for multipart form data
       const formApi = axios.create({
         baseURL: API_BASE_URL,
@@ -665,7 +665,7 @@ const PaymentProofPage = () => {
       // Submit to backend with modified headers for multipart data
       const response = await formApi.post("/api/transactions/createBookingTransaction", formData)
 
-      console.log("Response:", response.data)
+      // console.log("Response:", response.data) // COMMENTED OUT - API response may contain sensitive booking data
 
       if (response.data.success) {
         setSubmitSuccess(true)
@@ -683,7 +683,7 @@ const PaymentProofPage = () => {
             }
           )
         } catch (notifyError) {
-          console.log("Could not notify admins, but booking was successful:", notifyError.message)
+          // console.log("Could not notify admins, but booking was successful:", notifyError.message) // COMMENTED OUT - Exposes error details and system internals
           // Continue since this is optional
         }
         handleDeleteFormDraft()

@@ -12,7 +12,7 @@ const ShowcaseModal = ({ title, subcontractorId, onClose }) => {
             try {
                 const res = await axios.get(`${API_BASE_URL}/subcontractor/${subcontractorId}`);
                 setSubcontractor(res.data);
-                console.log(res.data);
+                // console.log(res.data); // COMMENTED OUT - API response may contain sensitive user data
             } catch (error) {
                 console.error("Failed to fetch subcontractor:", error);
             } finally {
