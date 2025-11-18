@@ -8,10 +8,18 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
-  server: {
-    host: true, // or "0.0.0.0" to accept external connections
-  },
-  preview: {
-    allowedHosts: ['eventsease.app', 'www.eventsease.app'],
-  },
+    server: {
+        host: '0.0.0.0',
+        allowedHosts: [
+            'eventsease.app',
+            'www.eventsease.app',
+        ],
+    },
+    preview: {
+        host: '0.0.0.0',
+        allowedHosts: [
+            'eventsease.app',
+            'www.eventsease.app',
+        ],
+    },
 })

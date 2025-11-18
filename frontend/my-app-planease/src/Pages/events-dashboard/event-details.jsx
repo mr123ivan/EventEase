@@ -60,9 +60,11 @@ const EventDetails = () => {
           className="rounded-xl object-cover w-full md:w-1/2 h-64 md:h-auto"
         />
 
-        <div className="flex-1">
-          <h1 className="text-3xl font-bold mb-4">{event.event_name || "Untitled Event"}</h1>
-          <p className="text-gray-600 mb-6">{event.event_description || "No description available."}</p>
+        <div className="flex-1 min-w-0">
+          <h1 className="text-3xl font-bold mb-4 break-words">{event.event_name || "Untitled Event"}</h1>
+          <p className="text-gray-600 mb-6 break-words whitespace-normal overflow-wrap-anywhere leading-relaxed">
+            {event.event_description || "No description available."}
+          </p>
           {/* <p className="text-xl font-semibold mb-4 text-green-600">
             {event.event_price != null ? `₱${event.event_price.toLocaleString()}` : "Price not available"}
           </p> */}
