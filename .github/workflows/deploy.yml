@@ -1,37 +1,148 @@
-name: Deploy React App to S3
+name: Build and Deploy to ECS Fargate
 
 on:
   push:
     branches:
-      - master  # or your branch name
+      - master
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: ap-southeast-1
+  AWS_ACCOUNT_ID: 998244282119
+  ECS_CLUSTER: Eventease-ecs-cluster
+  FE_SERVICE_NAME: eventease-frontend-ecs-service
+  BE_SERVICE_NAME: eventease-backend-ecs-service
 
 jobs:
-  build-and-deploy:
+  # ==========================================================
+  # 1. BUILD & PUSH JOB (Uses Matrix Strategy for efficiency)
+  # ==========================================================
+  build-and-push:
     runs-on: ubuntu-latest
+    # Define images to build, their location, repository names, and build arguments
+    strategy:
+      matrix:
+        include:
+          - name: backend
+            context: backend/Backend
+            repository: eventease-be
+            container_name: eventease-be
+            task_def_path: ecs-backend-task-definition.json
+            build_args: ""
+          - name: frontend
+            context: frontend/my-app-planease
+            repository: eventease-fe
+            container_name: eventease-fe
+            task_def_path: ecs-frontend-task-definition.json
+            # Pass the build argument for VITE_API_BASE_URL
+            build_args: "--build-arg VITE_API_BASE_URL=https://api.eventsease.app"
+
+    # Define job outputs so the deploy job can access the image tag and task definition paths
+    outputs:
+      image_tag: ${{ github.sha }}
+      be_task_def: ${{ steps.task-def-output.outputs.be_task_def }}
+      fe_task_def: ${{ steps.task-def-output.outputs.fe_task_def }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v2
         with:
-          node-version: '18'
+          role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/gh-actions-role
+          aws-region: ${{ env.AWS_REGION }}
 
-      - name: Install dependencies and build
-        working-directory: frontend/my-app-planease
-        run: |  
-          rm -rf node_modules package-lock.json
-          npm install
-          npm run build
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Deploy to S3
-        uses: jakejarvis/s3-sync-action@master
-        with:
-          args: --delete
+      - name: Build and push ${{ matrix.name }} Docker image
+        id: push-image
+        working-directory: ${{ matrix.context }}
         env:
-          AWS_S3_BUCKET: capstone-planease
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: ap-southeast-1
-          SOURCE_DIR: frontend/my-app-planease/dist
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ matrix.repository }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          # The ${{ matrix.build_args }} variable is correctly placed here
+          docker build ${{ matrix.build_args }} \
+            -t $ECR_REGISTRY/$ECR_REPOSITORY:latest \
+            -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          # Store the image URI for the deployment step
+          echo "IMAGE_URI=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_ENV
+          echo "CONTEXT=${{ matrix.name }}" >> $GITHUB_ENV
+
+      # Store matrix configuration for the deployment job
+      - name: Prepare task definition outputs
+        id: task-def-output
+        if: always()
+        run: |
+          if [ "${{ matrix.name }}" == "backend" ]; then
+            echo "be_task_def=${{ matrix.task_def_path }}" >> $GITHUB_OUTPUT
+          else
+            echo "fe_task_def=${{ matrix.task_def_path }}" >> $GITHUB_OUTPUT
+          fi
+
+
+  # ==========================================================
+  # 2. DEPLOY JOB (Runs after all images are built and pushed)
+  # ==========================================================
+  deploy-ecs:
+    runs-on: ubuntu-latest
+    # Wait for the build-and-push job to finish all matrix iterations
+    needs: build-and-push
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/gh-actions-role
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Get image tags and task definition paths
+        id: set-vars
+        run: |
+          # Since the matrix output structure is complex, we just need the image tag
+          echo "IMAGE_TAG=${{ needs.build-and-push.outputs.image_tag }}" >> $GITHUB_ENV
+
+      # --- 1. Deploy Frontend ---
+      - name: Fill frontend image URI in Task Definition
+        id: render-fe
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: ecs-frontend-task-definition.json
+          container-name: eventease-fe # Must match task definition name
+          image: ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/eventease-fe:${{ env.IMAGE_TAG }}
+
+      - name: Deploy frontend to ECS Service
+        uses: aws-actions/amazon-ecs-deploy@v1
+        with:
+          cluster: ${{ env.ECS_CLUSTER }}
+          service: ${{ env.FE_SERVICE_NAME }}
+          task-definition: ${{ steps.render-fe.outputs.task-definition }}
+
+
+      # --- 2. Deploy Backend ---
+      - name: Fill backend image URI in Task Definition
+        id: render-be
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: ecs-backend-task-definition.json
+          container-name: eventease-be # Must match task definition name
+          image: ${{ env.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/eventease-be:${{ env.IMAGE_TAG }}
+
+      - name: Deploy backend to ECS Service
+        uses: aws-actions/amazon-ecs-deploy@v1
+        with:
+          cluster: ${{ env.ECS_CLUSTER }}
+          service: ${{ env.BE_SERVICE_NAME }}
+          task-definition: ${{ steps.render-be.outputs.task-definition }}
