@@ -117,6 +117,7 @@ const YourEvents = () => {
       event_image: event.event_image || "",
       imageFile: undefined,
     })
+
     // If backend later provides persisted sections, hydrate them here
     try {
       const raw = event.event_sections
@@ -144,6 +145,7 @@ const YourEvents = () => {
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target
+
     setFormData((prev) => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value,
@@ -388,12 +390,7 @@ const YourEvents = () => {
                         name="event_description"
                         value={formData.event_description}
                         onChange={handleInputChange}
-                        className="border p-2 rounded w-full resize-none overflow-hidden"
-                        rows={3}
-                        onInput={(e) => {
-                          e.target.style.height = 'auto';
-                          e.target.style.height = e.target.scrollHeight + 'px';
-                        }}
+                        className="border p-2 rounded w-full resize-none h-32 overflow-y-auto"
                         placeholder="Enter detailed description of the event..."
                       />
                     </div>
@@ -716,6 +713,7 @@ const YourEvents = () => {
         autoHideDuration={6000}
         onClose={handleCloseSnackbar}
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+        sx={{ zIndex: 9999 }}
       >
         <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: "100%" }}>
           {snackbar.message}
