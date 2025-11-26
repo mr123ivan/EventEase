@@ -1,93 +1,143 @@
-name: Build and Deploy to ECS Fargate
+# name: Build and Deploy to ECS Fargate
 
-on:
-  push:
-    branches:
-      - master
+# on:
+#   push:
+#     branches:
+#       - master
 
-permissions:
-  id-token: write
-  contents: read
+# permissions:
+#   id-token: write
+#   contents: read
 
-env:
-  AWS_REGION: ap-southeast-1
-  AWS_ACCOUNT_ID: 998244282119
-  ECS_CLUSTER: Eventease-ecs-cluster
-  FE_SERVICE_NAME: eventease-frontend-ecs-service
-  BE_SERVICE_NAME: eventease-backend-ecs-service
+# env:
+#   AWS_REGION: ap-southeast-1
+#   AWS_ACCOUNT_ID: 998244282119
+#   ECS_CLUSTER: Eventease-ecs-cluster
+#   FE_SERVICE_NAME: eventease-frontend-ecs-service
+#   BE_SERVICE_NAME: eventease-backend-ecs-service
 
-jobs:
+# jobs:
+#   # ==========================================================
+#   # 1. BUILD & PUSH JOB (Uses Matrix Strategy for efficiency)
+#   # ==========================================================
+#   build-and-push:
+#     runs-on: ubuntu-latest
+#     # Define images to build, their location, repository names, and build arguments
+#     strategy:
+#       matrix:
+#         include:
+#           - name: backend
+#             context: backend/Backend
+#             repository: eventease-be
+#             container_name: eventease-be
+#             task_def_path: ecs-backend-task-definition.json
+#             build_args: ""
+#           - name: frontend
+#             context: frontend/my-app-planease
+#             repository: eventease-fe
+#             container_name: eventease-fe
+#             task_def_path: ecs-frontend-task-definition.json
+#             # Pass the build argument for VITE_API_BASE_URL
+#             build_args: "--build-arg VITE_API_BASE_URL=https://api.eventsease.app"
+
+#     # Define job outputs so the deploy job can access the image tag and task definition paths
+#     outputs:
+#       image_tag: ${{ github.sha }}
+#       be_task_def: ${{ steps.task-def-output.outputs.be_task_def }}
+#       fe_task_def: ${{ steps.task-def-output.outputs.fe_task_def }}
+
+#     steps:
+#       - name: Checkout repository
+#         uses: actions/checkout@v3
+
+#       - name: Configure AWS credentials via OIDC
+#         uses: aws-actions/configure-aws-credentials@v2
+#         with:
+#           role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/gh-actions-role
+#           aws-region: ${{ env.AWS_REGION }}
+
+#       - name: Login to Amazon ECR
+#         id: login-ecr
+#         uses: aws-actions/amazon-ecr-login@v1
+
+#       - name: Build and push ${{ matrix.name }} Docker image
+#         id: push-image
+#         working-directory: ${{ matrix.context }}
+#         env:
+#           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+#           ECR_REPOSITORY: ${{ matrix.repository }}
+#           IMAGE_TAG: ${{ github.sha }}
+#         run: |
+#           # The ${{ matrix.build_args }} variable is correctly placed here
+#           docker build ${{ matrix.build_args }} \
+#             -t $ECR_REGISTRY/$ECR_REPOSITORY:latest \
+#             -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+#           docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+#           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+#           # Store the image URI for the deployment step
+#           echo "IMAGE_URI=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_ENV
+#           echo "CONTEXT=${{ matrix.name }}" >> $GITHUB_ENV
+
+#       # Store matrix configuration for the deployment job
+#       - name: Prepare task definition outputs
+#         id: task-def-output
+#         if: always()
+#         run: |
+#           if [ "${{ matrix.name }}" == "backend" ]; then
+#             echo "be_task_def=${{ matrix.task_def_path }}" >> $GITHUB_OUTPUT
+#           else
+#             echo "fe_task_def=${{ matrix.task_def_path }}" >> $GITHUB_OUTPUT
+#           fi
+
+
   # ==========================================================
-  # 1. BUILD & PUSH JOB (Uses Matrix Strategy for efficiency)
+  # ALTERNATIVE: BUILD & PUSH TO DOCKER HUB (Currently disabled)
   # ==========================================================
-  build-and-push:
-    runs-on: ubuntu-latest
-    # Define images to build, their location, repository names, and build arguments
-    strategy:
-      matrix:
-        include:
-          - name: backend
-            context: backend/Backend
-            repository: eventease-be
-            container_name: eventease-be
-            task_def_path: ecs-backend-task-definition.json
-            build_args: ""
-          - name: frontend
-            context: frontend/my-app-planease
-            repository: eventease-fe
-            container_name: eventease-fe
-            task_def_path: ecs-frontend-task-definition.json
-            # Pass the build argument for VITE_API_BASE_URL
-            build_args: "--build-arg VITE_API_BASE_URL=https://api.eventsease.app"
+  # Uncomment this job if you want to push images to Docker Hub instead of/in addition to AWS ECR
+  # Prerequisites:
+  # 1. Go to GitHub repository Settings > Secrets and variables > Actions
+  # 2. Add DOCKERHUB_USERNAME secret (your Docker Hub username: espina28)
+  # 3. Add DOCKERHUB_TOKEN secret (your Docker Hub access token)
+  # 4. Uncomment all lines below
+  
+#  build-and-push-dockerhub:
+#    runs-on: ubuntu-latest
+#    strategy:
+#      matrix:
+#        include:
+#          - name: backend
+#            context: backend/Backend
+#            image: espina28/eventease-be
+#            dockerfile: backend/Backend/Dockerfile
+#          - name: frontend
+#            context: frontend/my-app-planease
+#            image: espina28/eventease-fe
+#            dockerfile: frontend/my-app-planease/Dockerfile
+#
+#    steps:
+#      - name: Checkout code
+#        uses: actions/checkout@v4
+#
+#      - name: Log in to Docker Hub
+#        uses: docker/login-action@v3
+#        with:
+#          username: ${{ secrets.DOCKERHUB_USERNAME }}
+#          password: ${{ secrets.DOCKERHUB_TOKEN }}
+#
+#      - name: Build ${{ matrix.name }} Docker image
+#        working-directory: ${{ matrix.context }}
+#        run: |
+#          docker build -t ${{ matrix.image }}:latest .
+#
+#      - name: Push ${{ matrix.name }} image to Docker Hub
+#        run: |
+#          docker push ${{ matrix.image }}:latest
+#
+#      - name: Build completed
+#        run: |
+#          echo "✅ ${{ matrix.name }} image built and pushed successfully!"
+#          echo "Image: ${{ matrix.image }}:latest"
 
-    # Define job outputs so the deploy job can access the image tag and task definition paths
-    outputs:
-      image_tag: ${{ github.sha }}
-      be_task_def: ${{ steps.task-def-output.outputs.be_task_def }}
-      fe_task_def: ${{ steps.task-def-output.outputs.fe_task_def }}
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Configure AWS credentials via OIDC
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/gh-actions-role
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v1
-
-      - name: Build and push ${{ matrix.name }} Docker image
-        id: push-image
-        working-directory: ${{ matrix.context }}
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: ${{ matrix.repository }}
-          IMAGE_TAG: ${{ github.sha }}
-        run: |
-          # The ${{ matrix.build_args }} variable is correctly placed here
-          docker build ${{ matrix.build_args }} \
-            -t $ECR_REGISTRY/$ECR_REPOSITORY:latest \
-            -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          # Store the image URI for the deployment step
-          echo "IMAGE_URI=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_ENV
-          echo "CONTEXT=${{ matrix.name }}" >> $GITHUB_ENV
-
-      # Store matrix configuration for the deployment job
-      - name: Prepare task definition outputs
-        id: task-def-output
-        if: always()
-        run: |
-          if [ "${{ matrix.name }}" == "backend" ]; then
-            echo "be_task_def=${{ matrix.task_def_path }}" >> $GITHUB_OUTPUT
-          else
-            echo "fe_task_def=${{ matrix.task_def_path }}" >> $GITHUB_OUTPUT
-          fi
 
 
   # ==========================================================
