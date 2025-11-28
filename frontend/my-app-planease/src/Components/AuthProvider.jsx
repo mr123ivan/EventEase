@@ -104,10 +104,14 @@ export const AuthProvider = ({ children }) => {
         } else if (role === "SubContractor") {
           navigate("/subcontractor/dashboard")
         }
-        return
+        return { success: true }
       }
       throw new Error(response.data.message)
     } catch (error) {
+      console.error("Login API error:", error)
+      return {
+        error: error.response?.data?.message || error.message || "Login failed. Please check your credentials."
+      }
     }
   }
 
