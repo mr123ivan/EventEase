@@ -213,7 +213,7 @@ const PaymentProofPagePackage = () => {
     return true
   }
 
-  const handleDeleteFormDraft =  async () => {
+  const handleDeleteFormDraft = async () => {
     const token = localStorage.getItem("token")
     try {
       const response = await axios.delete(`${API_BASE_URL}/form-draft/delete/${currentEmail}/${currentPackageName}`, {
@@ -488,7 +488,11 @@ const PaymentProofPagePackage = () => {
                 <input
                   type="text"
                   value={referenceNumber}
-                  onChange={(e) => setReferenceNumber(e.target.value)}
+                  onChange={(e) => {
+                    // Only allow numbers
+                    const value = e.target.value.replace(/[^0-9]/g, "")
+                    setReferenceNumber(value)
+                  }}
                   placeholder="Enter payment reference number (e.g., 1234567890)"
                   className="reference-input"
                   required
@@ -576,7 +580,7 @@ const PaymentProofPagePackage = () => {
             </div>
           </div>
         </div>
-        
+
       </div>
       <Footer />
       <MessageModal

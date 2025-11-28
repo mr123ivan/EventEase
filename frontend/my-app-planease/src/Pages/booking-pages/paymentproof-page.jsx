@@ -72,7 +72,7 @@ const PaymentProofPage = () => {
   useEffect(() => {
     setBookingData(getCompleteBookingData())
   }, [])
-  
+
   // Fetch event details to get event_sections
   useEffect(() => {
     const fetchEventSections = async () => {
@@ -100,12 +100,12 @@ const PaymentProofPage = () => {
         const arr = Array.isArray(resp.data) ? resp.data : []
         const map = {}
         arr.forEach(sc => {
-          ;(sc.services || []).forEach(svc => {
+          ; (sc.services || []).forEach(svc => {
             const sid = Number(svc.id ?? svc.serviceId ?? svc.service_id)
             if (Number.isFinite(sid)) {
-              map[sid] = { 
-                name: svc.name ?? svc.service_name ?? `Service ${sid}`, 
-                price: Number(svc.price ?? svc.service_price ?? 0) 
+              map[sid] = {
+                name: svc.name ?? svc.service_name ?? `Service ${sid}`,
+                price: Number(svc.price ?? svc.service_price ?? 0)
               }
             }
           })
@@ -129,9 +129,9 @@ const PaymentProofPage = () => {
         arr.forEach(pkg => {
           const pid = Number(pkg.id ?? pkg.packageId ?? pkg.package_id)
           if (Number.isFinite(pid)) {
-            map[pid] = { 
-              name: pkg.name ?? pkg.package_name ?? `Package ${pid}`, 
-              price: Number(pkg.price ?? pkg.package_price ?? 0) 
+            map[pid] = {
+              name: pkg.name ?? pkg.package_name ?? `Package ${pid}`,
+              price: Number(pkg.price ?? pkg.package_price ?? 0)
             }
           }
         })
@@ -143,10 +143,10 @@ const PaymentProofPage = () => {
     }
     fetchPackages()
   }, [])
-  
+
   // Check if using event sections from database
   const usingEventSections = Array.isArray(sections) && sections.length > 0
-  
+
   // Build dynamic sections from event sections if available
   const dynamicSections = (() => {
     if (!usingEventSections) return []
@@ -240,8 +240,8 @@ const PaymentProofPage = () => {
     const m = {}
     if (usingEventSections && dynamicSections.length > 0) {
       dynamicSections.forEach((sec) => {
-        sec.options.forEach((opt) => { 
-          m[opt.id] = { label: `${sec.label}: ${opt.label}`, price: opt.price } 
+        sec.options.forEach((opt) => {
+          m[opt.id] = { label: `${sec.label}: ${opt.label}`, price: opt.price }
         })
       })
     } else {
@@ -257,34 +257,34 @@ const PaymentProofPage = () => {
   // Build available packages from event sections
   const getAvailablePackages = () => {
     if (!usingEventSections) return PACKAGES
-    
+
     const byId = new Map()
-    ;(sections || []).forEach((sec) => {
-      // New/expanded shape: packages: [{ id, name?, price? } | { packageId, packageName?, packagePrice? } | number]
-      ;(sec.packages || []).forEach((p) => {
-        const raw = typeof p === 'number' || typeof p === 'string' ? p : (p?.id ?? p?.packageId ?? p?.package_id)
-        const idNum = Number(raw)
-        if (!Number.isFinite(idNum)) return
-        const inlineName = (typeof p === 'object' && p) ? (p.name ?? p.packageName ?? p.package_name) : undefined
-        const inlinePrice = (typeof p === 'object' && p) ? (p.price ?? p.packagePrice ?? p.package_price) : undefined
-        const meta = packageMap[idNum] || {}
-        const name = inlineName ?? meta.name ?? `Package ${idNum}`
-        const price = Number(inlinePrice ?? meta.price ?? 0)
-        byId.set(idNum, { id: idNum, name, price, icon: "📦" })
-      })
-      // Legacy shape: packageIds: [id, id]
-      ;(sec.packageIds || []).forEach((rawId) => {
-        const idNum = Number(rawId)
-        if (!Number.isFinite(idNum)) return
-        const meta = packageMap[idNum] || {}
-        if (!byId.has(idNum)) byId.set(idNum, { 
-          id: idNum, 
-          name: meta.name || `Package ${idNum}`, 
-          price: Number(meta.price || 0),
-          icon: "📦"
+      ; (sections || []).forEach((sec) => {
+        // New/expanded shape: packages: [{ id, name?, price? } | { packageId, packageName?, packagePrice? } | number]
+        ; (sec.packages || []).forEach((p) => {
+          const raw = typeof p === 'number' || typeof p === 'string' ? p : (p?.id ?? p?.packageId ?? p?.package_id)
+          const idNum = Number(raw)
+          if (!Number.isFinite(idNum)) return
+          const inlineName = (typeof p === 'object' && p) ? (p.name ?? p.packageName ?? p.package_name) : undefined
+          const inlinePrice = (typeof p === 'object' && p) ? (p.price ?? p.packagePrice ?? p.package_price) : undefined
+          const meta = packageMap[idNum] || {}
+          const name = inlineName ?? meta.name ?? `Package ${idNum}`
+          const price = Number(inlinePrice ?? meta.price ?? 0)
+          byId.set(idNum, { id: idNum, name, price, icon: "📦" })
         })
+          // Legacy shape: packageIds: [id, id]
+          ; (sec.packageIds || []).forEach((rawId) => {
+            const idNum = Number(rawId)
+            if (!Number.isFinite(idNum)) return
+            const meta = packageMap[idNum] || {}
+            if (!byId.has(idNum)) byId.set(idNum, {
+              id: idNum,
+              name: meta.name || `Package ${idNum}`,
+              price: Number(meta.price || 0),
+              icon: "📦"
+            })
+          })
       })
-    })
     return Array.from(byId.values())
   }
 
@@ -294,9 +294,9 @@ const PaymentProofPage = () => {
     const { servicesData } = bookingData
     const items = []
     if (!servicesData) return items
-    
+
     const { selectedServices = {}, selectedPackage } = servicesData
-    
+
     // Handle package selection
     if (selectedPackage) {
       // First try to find in available packages
@@ -304,31 +304,31 @@ const PaymentProofPage = () => {
       if (Number.isFinite(pkgIdNum)) {
         const pkg = availablePackages.find(p => Number(p.id) === pkgIdNum)
         if (pkg) {
-          items.push({ 
-            id: pkg.id, 
-            label: pkg.name, 
-            price: pkg.price, 
-            isPackage: true, 
-            icon: pkg.icon || "📦" 
+          items.push({
+            id: pkg.id,
+            label: pkg.name,
+            price: pkg.price,
+            isPackage: true,
+            icon: pkg.icon || "📦"
           })
           return items
         }
       }
-      
+
       // Fallback to static packages
       const pkg = PACKAGES.find(p => p.id === selectedPackage)
       if (pkg) {
-        items.push({ 
-          id: pkg.id, 
-          label: pkg.name, 
-          price: pkg.price, 
-          isPackage: true, 
-          icon: pkg.icon || "📦" 
+        items.push({
+          id: pkg.id,
+          label: pkg.name,
+          price: pkg.price,
+          isPackage: true,
+          icon: pkg.icon || "📦"
         })
         return items
       }
     }
-    
+
     // Handle custom service selections
     if (usingEventSections && dynamicSections.length > 0) {
       // Process dynamic sections
@@ -337,10 +337,10 @@ const PaymentProofPage = () => {
           // For multi-select sections, check each option
           sec.options.forEach((opt) => {
             if (selectedServices[opt.id]) {
-              items.push({ 
-                id: opt.id, 
-                label: `${sec.label}: ${opt.label}`, 
-                price: opt.price 
+              items.push({
+                id: opt.id,
+                label: `${sec.label}: ${opt.label}`,
+                price: opt.price
               })
             }
           })
@@ -351,10 +351,10 @@ const PaymentProofPage = () => {
             // Find the selected option
             const option = sec.options.find(o => o.id === sel)
             if (option) {
-              items.push({ 
-                id: sel, 
-                label: `${sec.label}: ${option.label}`, 
-                price: option.price 
+              items.push({
+                id: sel,
+                label: `${sec.label}: ${option.label}`,
+                price: option.price
               })
             }
           }
@@ -368,23 +368,23 @@ const PaymentProofPage = () => {
           const group = RADIO_GROUPS[groupKey]
           const option = group.options.find(o => o.id === optId)
           if (option) {
-            items.push({ 
-              id: optId, 
-              label: `${group.label}: ${option.label}`, 
-              price: option.price 
+            items.push({
+              id: optId,
+              label: `${group.label}: ${option.label}`,
+              price: option.price
             })
           }
         }
       })
-      
-      // Process checkbox services
-      ;[...OTHER_SERVICES, ...ADD_ONS].forEach((s) => {
-        if (selectedServices[s.id]) {
-          items.push({ id: s.id, label: s.label, price: s.price })
-        }
-      })
+
+        // Process checkbox services
+        ;[...OTHER_SERVICES, ...ADD_ONS].forEach((s) => {
+          if (selectedServices[s.id]) {
+            items.push({ id: s.id, label: s.label, price: s.price })
+          }
+        })
     }
-    
+
     return items
   }
 
@@ -466,7 +466,7 @@ const PaymentProofPage = () => {
   // Extract numeric service IDs from selectedItems for backend submission
   const extractServiceIds = (items) => {
     if (!items || items.length === 0) return null;
-    
+
     // Extract any numeric IDs from the selected items
     const numericIds = items
       .map(item => {
@@ -475,7 +475,7 @@ const PaymentProofPage = () => {
         return !isNaN(numId) ? numId : null;
       })
       .filter(id => id !== null);
-    
+
     // console.log("Extracted service IDs:", numericIds); // COMMENTED OUT - Exposes internal service ID structure
     return numericIds.length > 0 ? numericIds : null;
   }
@@ -589,7 +589,7 @@ const PaymentProofPage = () => {
         transactionVenue: bookingData.eventDetails.location,
         transactionDate: convertToSqlDate(bookingData.eventDetails.eventDate),
         transactionNote: bookingData.eventDetails.note || "",
-        
+
         // Additional Event Details
         celebrantName: bookingData.eventDetails.celebrantName || "",
         additionalCelebrants: bookingData.eventDetails.celebrantNameOptional || "",
@@ -627,13 +627,13 @@ const PaymentProofPage = () => {
         setIsSubmitting(false)
         return
       }
-      
+
       if (transactionData.serviceType === "CUSTOM" && (!selectedItems || selectedItems.length === 0)) {
         showModal("Error: No services selected. Please go back and select at least one service.")
         setIsSubmitting(false)
         return
       }
-      
+
       // If using custom services but couldn't extract any valid service IDs, use a fallback approach
       if (transactionData.serviceType === "CUSTOM" && transactionData.serviceIds === null) {
         // Create an array of service names as a fallback
@@ -661,7 +661,7 @@ const PaymentProofPage = () => {
           "Authorization": `Bearer ${token}`
         }
       });
-      
+
       // Submit to backend with modified headers for multipart data
       const response = await formApi.post("/api/transactions/createBookingTransaction", formData)
 
@@ -695,20 +695,20 @@ const PaymentProofPage = () => {
       }
     } catch (error) {
       console.error("Error submitting booking:", error)
-      
+
       // Enhanced error logging
       console.group('Booking Submission Error')
       console.error("Error object:", error)
-      
+
       // Try to get detailed error info
       if (error.response) {
         console.error("Response status:", error.response.status)
         console.error("Response headers:", error.response.headers)
         console.error("Response data:", error.response.data)
-        
+
         // Handle specific status codes
         let errorMessage = "";
-        switch(error.response.status) {
+        switch (error.response.status) {
           case 400:
             errorMessage = "The server couldn't process your submission. Please check the data and try again.";
             break;
@@ -723,10 +723,10 @@ const PaymentProofPage = () => {
             break;
           default:
             // Extract message from response data if available
-            errorMessage = error.response.data?.message || 
-                         error.response.data?.error || 
-                         JSON.stringify(error.response.data) || 
-                         "Failed to submit booking. Please try again.";
+            errorMessage = error.response.data?.message ||
+              error.response.data?.error ||
+              JSON.stringify(error.response.data) ||
+              "Failed to submit booking. Please try again.";
         }
         showModal(`Error: ${errorMessage}`);
       } else if (error.request) {
@@ -738,7 +738,7 @@ const PaymentProofPage = () => {
         console.error("Error setting up request:", error.message)
         showModal(`Error: ${error.message || "Unknown error occurred"}`);
       }
-      
+
       console.groupEnd()
     } finally {
       setIsSubmitting(false)
@@ -851,7 +851,11 @@ const PaymentProofPage = () => {
                 <input
                   type="text"
                   value={referenceNumber}
-                  onChange={(e) => setReferenceNumber(e.target.value)}
+                  onChange={(e) => {
+                    // Only allow numbers
+                    const value = e.target.value.replace(/[^0-9]/g, "")
+                    setReferenceNumber(value)
+                  }}
                   placeholder="Enter payment reference number (e.g., 1234567890)"
                   className="reference-input"
                   required
