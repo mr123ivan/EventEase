@@ -57,6 +57,9 @@ export default function SignUpPage() {
 
   const [phoneNumber, setPhoneNumber] = useState("")
   const [phoneError, setPhoneError] = useState("")
+  const [emailError, setEmailError] = useState("")
+  const [isCheckingEmail, setIsCheckingEmail] = useState(false)
+  const emailCheckTimeoutRef = useRef(null)
   const [selectedCountry, setSelectedCountry] = useState({ code: "PH", dialCode: "+63", flag: "🇵🇭" })
   const [showCountryList, setShowCountryList] = useState(false)
   const countryListRef = useRef(null)
@@ -419,6 +422,52 @@ export default function SignUpPage() {
     setPasswordsMatch(value === password)
   }
 
+  // Email validation - check if email exists
+  const checkEmailExists = async (emailToCheck) => {
+    if (!emailToCheck || !emailToCheck.includes('@')) {
+      setEmailError("")
+      return
+    }
+
+    setIsCheckingEmail(true)
+    try {
+      const response = await axios.post(`${API_BASE_URL}/user/isEmailExist`, emailToCheck, {
+        headers: {
+          'Content-Type': 'text/plain'
+        }
+      })
+
+      // Backend returns true if email is available, false if taken
+      if (response.data === false) {
+        setEmailError("This email is already registered. Please use a different email.")
+      } else {
+        setEmailError("")
+      }
+    } catch (error) {
+      console.error("Error checking email:", error)
+      setEmailError("")
+    } finally {
+      setIsCheckingEmail(false)
+    }
+  }
+
+  // Handle email change with debouncing
+  const handleEmailChange = (e) => {
+    const newEmail = e.target.value
+    setEmail(newEmail)
+    setEmailError("")
+
+    // Clear previous timeout
+    if (emailCheckTimeoutRef.current) {
+      clearTimeout(emailCheckTimeoutRef.current)
+    }
+
+    // Set new timeout to check email after 500ms of no typing
+    emailCheckTimeoutRef.current = setTimeout(() => {
+      checkEmailExists(newEmail)
+    }, 500)
+  }
+
   // Phone number validation
   const validatePhoneNumber = (number, countryCode) => {
     // For Philippine numbers (+63), expect 10 digits (mobile format)
@@ -456,6 +505,13 @@ export default function SignUpPage() {
 
     if (password !== confirmPassword) {
       setErrorMessage("Passwords do not match.")
+      setIsSubmitting(false)
+      return
+    }
+
+    // Check if email is taken
+    if (emailError) {
+      setErrorMessage("Please use a different email address.")
       setIsSubmitting(false)
       return
     }
@@ -782,11 +838,17 @@ export default function SignUpPage() {
                   id="email"
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={handleEmailChange}
                   hint="johndoe@gmail.com"
-                  className="w-full"
+                  className={`w-full ${emailError ? 'border-red-500' : ''}`}
                   required
                 />
+                {isCheckingEmail && (
+                  <p className="text-xs text-gray-500 mt-1">Checking email availability...</p>
+                )}
+                {emailError && (
+                  <p className="text-xs text-red-500 mt-1">{emailError}</p>
+                )}
               </div>
 
               {/* Phone Number input with country code */}
@@ -1102,9 +1164,12 @@ export default function SignUpPage() {
               <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                 <CustomButton
                   type="submit"
-                  className="w-full h-11 bg-gray-800 hover:bg-gray-900 text-white"
+                  className={`w-full h-11 text-white transition-all duration-200 ${isSubmitting || passwordStrength !== 3 || !passwordsMatch || isCheckingEmail || !!emailError || !!phoneError
+                      ? 'bg-gray-400 cursor-not-allowed opacity-60'
+                      : 'bg-gray-800 hover:bg-gray-900'
+                    }`}
                   fontSize="text-sm"
-                  disabled={isSubmitting || passwordStrength !== 3 || !passwordsMatch}
+                  disabled={isSubmitting || passwordStrength !== 3 || !passwordsMatch || isCheckingEmail || !!emailError || !!phoneError}
                 >
                   {isSubmitting ? "Creating Account..." : "SIGN UP"}
                 </CustomButton>
