@@ -28,10 +28,10 @@ public class SubcontractorController {
 
     @Autowired
     private SubcontractorService subcontractorService;
-//    @Autowired
-//    private TransactionService transactionService;
-//    @Autowired
-//    private EventServiceService eventServiceService;
+    // @Autowired
+    // private TransactionService transactionService;
+    // @Autowired
+    // private EventServiceService eventServiceService;
 
     @GetMapping("/getall")
     public ResponseEntity<List<SubcontractorEntity>> getAllSubcontractors() {
@@ -41,7 +41,7 @@ public class SubcontractorController {
     @GetMapping("/getdetails/{email}")
     public ResponseEntity<?> getSubcontractorDetails(@PathVariable String email) {
         SubcontractorEntity subcontractor = subcontractorService.getSubcontractorByEmail(email);
-        if(subcontractor == null) {
+        if (subcontractor == null) {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(subcontractor);
@@ -50,30 +50,29 @@ public class SubcontractorController {
     @GetMapping("/{id}")
     public ResponseEntity<SubcontractorEntity> getSubcontractorById(@PathVariable int id) {
         SubcontractorEntity subcontractor = subcontractorService.getSubcontractorById(id);
+        if (subcontractor == null) {
+            return ResponseEntity.notFound().build();
+        }
         return ResponseEntity.ok(subcontractor);
     }
 
     @GetMapping("/available/{date}")
     public ResponseEntity<List<GetSubcontractor>> getAvailableSubcontractorByDate(@PathVariable Date date) {
         List<GetSubcontractor> subcontractors = subcontractorService.getAvailableSubcontractors(date);
-        if(subcontractors.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
+        // Collection endpoint - return empty list, not 404
         return ResponseEntity.ok(subcontractors);
     }
 
-
     @PutMapping("/edit-description")
     public ResponseEntity<?> editSubcontractorDescription(
-                                @RequestBody SubcontractorDescriptionDTO subcontractorDescriptionDTO) {
-            String message = subcontractorService.editDescription(subcontractorDescriptionDTO.getEmail(),
-                                                                  subcontractorDescriptionDTO.getDescription());
-            if(message.equals("Error")) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Error in updating description" ));
-            }
+            @RequestBody SubcontractorDescriptionDTO subcontractorDescriptionDTO) {
+        String message = subcontractorService.editDescription(subcontractorDescriptionDTO.getEmail(),
+                subcontractorDescriptionDTO.getDescription());
+        if (message.equals("Error")) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Error in updating description"));
+        }
         return ResponseEntity.ok(Map.of("message", message));
     }
-
 
     @PostMapping("/create")
     public ResponseEntity<SubcontractorEntity> createSubcontractor(@RequestBody CreateSubcontractorRequest request) {
@@ -85,7 +84,8 @@ public class SubcontractorController {
         subcontractor.setSubcontractor_serviceCategory(request.getServiceCategory());
         subcontractor.setSubcontractor_service_price(request.getServicePrice());
 
-        //create object for package service -> what package of tulip, cherry blossom, he's available
+        // create object for package service -> what package of tulip, cherry blossom,
+        // he's available
 
         // subcontractor.setEventName(null);
         // subcontractor.setShowcase(null);
@@ -97,71 +97,66 @@ public class SubcontractorController {
     @PostMapping("/create-basic")
     public ResponseEntity<?> createBasic(@RequestBody CreateBasicSubcontractorRequest request) {
         if (request.getFirstname() == null || request.getFirstname().trim().isEmpty() ||
-            request.getLastname() == null || request.getLastname().trim().isEmpty() ||
-            request.getEmail() == null || request.getEmail().trim().isEmpty() ||
-            request.getPhoneNumber() == null || request.getPhoneNumber().trim().isEmpty()) {
+                request.getLastname() == null || request.getLastname().trim().isEmpty() ||
+                request.getEmail() == null || request.getEmail().trim().isEmpty() ||
+                request.getPhoneNumber() == null || request.getPhoneNumber().trim().isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of(
-                "success", false,
-                "message", "User information (firstname, lastname, email, phone number) is required to create a subcontractor"
-            ));
+                    "success", false,
+                    "message",
+                    "User information (firstname, lastname, email, phone number) is required to create a subcontractor"));
         }
 
         if (request.getBusinessName() == null || request.getBusinessName().trim().isEmpty() ||
-            request.getContactPerson() == null || request.getContactPerson().trim().isEmpty()) {
+                request.getContactPerson() == null || request.getContactPerson().trim().isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of(
-                "success", false,
-                "message", "Business name and contact person are required"
-            ));
+                    "success", false,
+                    "message", "Business name and contact person are required"));
         }
 
         try {
             SubcontractorEntity saved = subcontractorService.createSubcontractorWithUser(request);
             return ResponseEntity.ok(Map.of(
-                "success", true,
-                "message", "Subcontractor created successfully",
-                "subcontractor", saved
-            ));
+                    "success", true,
+                    "message", "Subcontractor created successfully",
+                    "subcontractor", saved));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of(
-                "success", false,
-                "message", "Failed to create subcontractor: " + e.getMessage()
-            ));
+                    "success", false,
+                    "message", "Failed to create subcontractor: " + e.getMessage()));
         }
     }
 
     // Update subcontractor with user and services
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateSubcontractor(@PathVariable int id, @RequestBody CreateBasicSubcontractorRequest request) {
+    public ResponseEntity<?> updateSubcontractor(@PathVariable int id,
+            @RequestBody CreateBasicSubcontractorRequest request) {
         if (request.getFirstname() == null || request.getFirstname().trim().isEmpty() ||
-            request.getLastname() == null || request.getLastname().trim().isEmpty() ||
-            request.getEmail() == null || request.getEmail().trim().isEmpty() ||
-            request.getPhoneNumber() == null || request.getPhoneNumber().trim().isEmpty()) {
+                request.getLastname() == null || request.getLastname().trim().isEmpty() ||
+                request.getEmail() == null || request.getEmail().trim().isEmpty() ||
+                request.getPhoneNumber() == null || request.getPhoneNumber().trim().isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of(
-                "success", false,
-                "message", "User information (firstname, lastname, email, phone number) is required to update subcontractor"
-            ));
+                    "success", false,
+                    "message",
+                    "User information (firstname, lastname, email, phone number) is required to update subcontractor"));
         }
 
         if (request.getBusinessName() == null || request.getBusinessName().trim().isEmpty() ||
-            request.getContactPerson() == null || request.getContactPerson().trim().isEmpty()) {
+                request.getContactPerson() == null || request.getContactPerson().trim().isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of(
-                "success", false,
-                "message", "Business name and contact person are required"
-            ));
+                    "success", false,
+                    "message", "Business name and contact person are required"));
         }
 
         try {
             SubcontractorEntity updated = subcontractorService.updateSubcontractorWithUser(id, request);
             return ResponseEntity.ok(Map.of(
-                "success", true,
-                "message", "Subcontractor updated successfully",
-                "subcontractor", updated
-            ));
+                    "success", true,
+                    "message", "Subcontractor updated successfully",
+                    "subcontractor", updated));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of(
-                "success", false,
-                "message", "Failed to update subcontractor: " + e.getMessage()
-            ));
+                    "success", false,
+                    "message", "Failed to update subcontractor: " + e.getMessage()));
         }
     }
 
@@ -172,15 +167,16 @@ public class SubcontractorController {
             return ResponseEntity.noContent().build();
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(Map.of(
-                "success", false,
-                "message", e.getMessage()
-            ));
+                    "success", false,
+                    "message", e.getMessage()));
         }
     }
-    
+
     /**
      * Check if a subcontractor with the given email already exists
-     * Used by frontend to validate email uniqueness before creating new subcontractor
+     * Used by frontend to validate email uniqueness before creating new
+     * subcontractor
+     * 
      * @param email The email to check
      * @return ResponseEntity with exists boolean
      */
@@ -198,6 +194,7 @@ public class SubcontractorController {
     /**
      * Get counts of subcontractors by service category
      * Used in the admin dashboard to display category statistics
+     * 
      * @return List of maps with category and count
      */
     @GetMapping("/category-counts")
