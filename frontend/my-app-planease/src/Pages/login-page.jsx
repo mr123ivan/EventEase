@@ -846,7 +846,7 @@ export default function LoginPage() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  hint="planease@gmail.com"
+                  hint="johndoe@gmail.com"
                   className="w-full"
                   required
                 />
