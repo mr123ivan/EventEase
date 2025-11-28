@@ -307,4 +307,13 @@ public class UserController {
         return ResponseEntity.ok(customers);
     }
 
+    @PostMapping("/isEmailExist")
+    public ResponseEntity<Boolean> isEmailExist(@RequestBody String email) {
+
+        UserEntity user = userService.getUserByEmail(email);
+        if (user == null) {
+            return ResponseEntity.ok(true);
+        }
+        return ResponseEntity.ok(false);
+    }
 }
