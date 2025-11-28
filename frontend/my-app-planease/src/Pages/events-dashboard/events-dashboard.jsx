@@ -65,7 +65,7 @@ const EventPage = () => {
       </section>
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-5">
         {events.map((event) => (
-          <div key={event.id} className="shadow-lg rounded-lg overflow-hidden flex flex-col h-full">
+          <div key={event.event_Id} className="shadow-lg rounded-lg overflow-hidden flex flex-col h-full">
             {/* Image section */}
             <div className="h-52 w-full bg-gray-200 flex items-center justify-center">
               {event.event_image ? (
