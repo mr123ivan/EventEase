@@ -1,6 +1,5 @@
 package com.Project.Backend.Controller;
 
-
 import java.io.IOException;
 import java.util.List;
 
@@ -35,13 +34,17 @@ public class EventController {
 
     @GetMapping("/{id}")
     public ResponseEntity<EventEntity> readById(@PathVariable int id) {
-        return ResponseEntity.ok(eventService.readById(id));
+        EventEntity event = eventService.readById(id);
+        if (event == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(event);
     }
 
     @GetMapping("/event-details/{event_name}")
     public ResponseEntity<EventEntity> readByEventName(@PathVariable String event_name) {
         EventEntity event = eventService.getEventByEventName(event_name);
-        if(event == null) {
+        if (event == null) {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(event);
@@ -51,7 +54,6 @@ public class EventController {
     public ResponseEntity<List<EventEntity>> readAll() {
         return ResponseEntity.ok(eventService.readAll());
     }
-
 
     @PutMapping
     public ResponseEntity<EventEntity> update(@RequestBody EventUpsertDTO dto) {
@@ -75,17 +77,15 @@ public class EventController {
         return ResponseEntity.noContent().build();
     }
 
-
     // @GetMapping("/available")
     // public ResponseEntity<List<EventEntity>> readAvailable() {
-    //     return ResponseEntity.ok(eventService.readAvailable());
+    // return ResponseEntity.ok(eventService.readAvailable());
     // }
 
     @PostMapping("/upload/image/{eventId}")
     public ResponseEntity<?> uploadEventImage(
-        @PathVariable int eventId,
-        @RequestParam(value = "file", required = false) MultipartFile file
-    ) {
+            @PathVariable int eventId,
+            @RequestParam(value = "file", required = false) MultipartFile file) {
         try {
             EventEntity updatedEvent = eventService.updateEventImage(eventId, file);
             return ResponseEntity.ok(updatedEvent);

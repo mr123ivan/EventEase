@@ -85,7 +85,9 @@ public class SecurityConfig {
                         .requestMatchers("/user/check-user").permitAll()
                         .requestMatchers("/user/reset-password").permitAll()
                         .requestMatchers("/user/verify-token").permitAll()
+                        .requestMatchers("/user/getCustomers").hasRole("ADMIN")
                         .requestMatchers("/user/getcurrentuser").authenticated()
+                        .requestMatchers("/user/isEmailExist").permitAll()
                         .requestMatchers("/regularuser/create").permitAll()
                         .requestMatchers("/subcontractor/create", "/subcontractor/login").permitAll()
                         // Subcontractor admin-only endpoints
@@ -103,11 +105,15 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/transactions/getAllTransactions").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/transactions/validateTransaction").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/transactions/getAllPendingTransactions").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/api/transactions/event-progress/{id}").hasAnyRole("ADMIN","USER")
-                        .requestMatchers(HttpMethod.GET, "/api/transactions/subcontractor-progress/{id}").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/transactions/event-progress/{id}")
+                        .hasAnyRole("ADMIN", "USER")
+                        .requestMatchers(HttpMethod.GET, "/api/transactions/subcontractor-progress/{id}")
+                        .hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/transactions/updateProgress/{id}").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/api/transactions/subcontractor-progress/id/{id}").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/transactions/subcontractor-progress/id/{id}").hasAnyRole("ADMIN","SUBCONTRACTOR")
+                        .requestMatchers(HttpMethod.GET, "/api/transactions/subcontractor-progress/id/{id}")
+                        .hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/transactions/subcontractor-progress/id/{id}")
+                        .hasAnyRole("ADMIN", "SUBCONTRACTOR")
                         // Remaining transactions endpoints
                         .requestMatchers("/api/transactions/**").hasAnyRole("USER", "ADMIN", "SUBCONTRACTOR")
                         // Events admin-only endpoints
@@ -120,7 +126,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/events/**").hasAnyRole("USER", "ADMIN")
                         // Notifications admin-only endpoints
                         .requestMatchers(HttpMethod.POST, "/api/notifications/booking-approved").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/notifications/notify-subcontractors-by-id").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/notifications/notify-subcontractors-by-id")
+                        .hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/notifications/booking-rejected").hasRole("ADMIN")
                         // Remaining notifications endpoints
                         .requestMatchers("/api/notifications/**").permitAll()
@@ -143,10 +150,11 @@ public class SecurityConfig {
                         .requestMatchers("/serviceoffering/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers("/payment/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers("/form-draft/**").hasAnyRole("USER", "ADMIN")
-                        .requestMatchers("/email/**").permitAll() //temporary
+                        .requestMatchers("/email/**").permitAll() // temporary
                         .requestMatchers("/location/**").permitAll()
                         .anyRequest().authenticated())
-                .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())))
+                .oauth2ResourceServer(
+                        oauth2 -> oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .httpBasic(Customizer.withDefaults())
                 .build();
@@ -167,8 +175,7 @@ public class SecurityConfig {
                 "http://localhost:5173",
                 "http://54.179.192.129",
                 "https://eventsease.app",
-                "https://www.eventsease.app"
-        ));
+                "https://www.eventsease.app"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE"));
         configuration.setAllowCredentials(true);
         configuration.setAllowedHeaders(List.of("*"));

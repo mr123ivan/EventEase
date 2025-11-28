@@ -35,7 +35,7 @@ api.interceptors.response.use(
   response => response,
   error => {
     if (error.response && error.response.status === 401) {
-      console.log("Authentication error - You might need to log in again");
+      // console.log("Authentication error - You might need to log in again"); // COMMENTED OUT - Exposes authentication flow details
       // You could redirect to login here if needed
     }
     return Promise.reject(error);
@@ -72,7 +72,7 @@ const PaymentProofPage = () => {
   useEffect(() => {
     setBookingData(getCompleteBookingData())
   }, [])
-  
+
   // Fetch event details to get event_sections
   useEffect(() => {
     const fetchEventSections = async () => {
@@ -100,12 +100,12 @@ const PaymentProofPage = () => {
         const arr = Array.isArray(resp.data) ? resp.data : []
         const map = {}
         arr.forEach(sc => {
-          ;(sc.services || []).forEach(svc => {
+          ; (sc.services || []).forEach(svc => {
             const sid = Number(svc.id ?? svc.serviceId ?? svc.service_id)
             if (Number.isFinite(sid)) {
-              map[sid] = { 
-                name: svc.name ?? svc.service_name ?? `Service ${sid}`, 
-                price: Number(svc.price ?? svc.service_price ?? 0) 
+              map[sid] = {
+                name: svc.name ?? svc.service_name ?? `Service ${sid}`,
+                price: Number(svc.price ?? svc.service_price ?? 0)
               }
             }
           })
@@ -129,9 +129,9 @@ const PaymentProofPage = () => {
         arr.forEach(pkg => {
           const pid = Number(pkg.id ?? pkg.packageId ?? pkg.package_id)
           if (Number.isFinite(pid)) {
-            map[pid] = { 
-              name: pkg.name ?? pkg.package_name ?? `Package ${pid}`, 
-              price: Number(pkg.price ?? pkg.package_price ?? 0) 
+            map[pid] = {
+              name: pkg.name ?? pkg.package_name ?? `Package ${pid}`,
+              price: Number(pkg.price ?? pkg.package_price ?? 0)
             }
           }
         })
@@ -143,10 +143,10 @@ const PaymentProofPage = () => {
     }
     fetchPackages()
   }, [])
-  
+
   // Check if using event sections from database
   const usingEventSections = Array.isArray(sections) && sections.length > 0
-  
+
   // Build dynamic sections from event sections if available
   const dynamicSections = (() => {
     if (!usingEventSections) return []
@@ -240,8 +240,8 @@ const PaymentProofPage = () => {
     const m = {}
     if (usingEventSections && dynamicSections.length > 0) {
       dynamicSections.forEach((sec) => {
-        sec.options.forEach((opt) => { 
-          m[opt.id] = { label: `${sec.label}: ${opt.label}`, price: opt.price } 
+        sec.options.forEach((opt) => {
+          m[opt.id] = { label: `${sec.label}: ${opt.label}`, price: opt.price }
         })
       })
     } else {
@@ -257,34 +257,34 @@ const PaymentProofPage = () => {
   // Build available packages from event sections
   const getAvailablePackages = () => {
     if (!usingEventSections) return PACKAGES
-    
+
     const byId = new Map()
-    ;(sections || []).forEach((sec) => {
-      // New/expanded shape: packages: [{ id, name?, price? } | { packageId, packageName?, packagePrice? } | number]
-      ;(sec.packages || []).forEach((p) => {
-        const raw = typeof p === 'number' || typeof p === 'string' ? p : (p?.id ?? p?.packageId ?? p?.package_id)
-        const idNum = Number(raw)
-        if (!Number.isFinite(idNum)) return
-        const inlineName = (typeof p === 'object' && p) ? (p.name ?? p.packageName ?? p.package_name) : undefined
-        const inlinePrice = (typeof p === 'object' && p) ? (p.price ?? p.packagePrice ?? p.package_price) : undefined
-        const meta = packageMap[idNum] || {}
-        const name = inlineName ?? meta.name ?? `Package ${idNum}`
-        const price = Number(inlinePrice ?? meta.price ?? 0)
-        byId.set(idNum, { id: idNum, name, price, icon: "📦" })
-      })
-      // Legacy shape: packageIds: [id, id]
-      ;(sec.packageIds || []).forEach((rawId) => {
-        const idNum = Number(rawId)
-        if (!Number.isFinite(idNum)) return
-        const meta = packageMap[idNum] || {}
-        if (!byId.has(idNum)) byId.set(idNum, { 
-          id: idNum, 
-          name: meta.name || `Package ${idNum}`, 
-          price: Number(meta.price || 0),
-          icon: "📦"
+      ; (sections || []).forEach((sec) => {
+        // New/expanded shape: packages: [{ id, name?, price? } | { packageId, packageName?, packagePrice? } | number]
+        ; (sec.packages || []).forEach((p) => {
+          const raw = typeof p === 'number' || typeof p === 'string' ? p : (p?.id ?? p?.packageId ?? p?.package_id)
+          const idNum = Number(raw)
+          if (!Number.isFinite(idNum)) return
+          const inlineName = (typeof p === 'object' && p) ? (p.name ?? p.packageName ?? p.package_name) : undefined
+          const inlinePrice = (typeof p === 'object' && p) ? (p.price ?? p.packagePrice ?? p.package_price) : undefined
+          const meta = packageMap[idNum] || {}
+          const name = inlineName ?? meta.name ?? `Package ${idNum}`
+          const price = Number(inlinePrice ?? meta.price ?? 0)
+          byId.set(idNum, { id: idNum, name, price, icon: "📦" })
         })
+          // Legacy shape: packageIds: [id, id]
+          ; (sec.packageIds || []).forEach((rawId) => {
+            const idNum = Number(rawId)
+            if (!Number.isFinite(idNum)) return
+            const meta = packageMap[idNum] || {}
+            if (!byId.has(idNum)) byId.set(idNum, {
+              id: idNum,
+              name: meta.name || `Package ${idNum}`,
+              price: Number(meta.price || 0),
+              icon: "📦"
+            })
+          })
       })
-    })
     return Array.from(byId.values())
   }
 
@@ -294,9 +294,9 @@ const PaymentProofPage = () => {
     const { servicesData } = bookingData
     const items = []
     if (!servicesData) return items
-    
+
     const { selectedServices = {}, selectedPackage } = servicesData
-    
+
     // Handle package selection
     if (selectedPackage) {
       // First try to find in available packages
@@ -304,31 +304,31 @@ const PaymentProofPage = () => {
       if (Number.isFinite(pkgIdNum)) {
         const pkg = availablePackages.find(p => Number(p.id) === pkgIdNum)
         if (pkg) {
-          items.push({ 
-            id: pkg.id, 
-            label: pkg.name, 
-            price: pkg.price, 
-            isPackage: true, 
-            icon: pkg.icon || "📦" 
+          items.push({
+            id: pkg.id,
+            label: pkg.name,
+            price: pkg.price,
+            isPackage: true,
+            icon: pkg.icon || "📦"
           })
           return items
         }
       }
-      
+
       // Fallback to static packages
       const pkg = PACKAGES.find(p => p.id === selectedPackage)
       if (pkg) {
-        items.push({ 
-          id: pkg.id, 
-          label: pkg.name, 
-          price: pkg.price, 
-          isPackage: true, 
-          icon: pkg.icon || "📦" 
+        items.push({
+          id: pkg.id,
+          label: pkg.name,
+          price: pkg.price,
+          isPackage: true,
+          icon: pkg.icon || "📦"
         })
         return items
       }
     }
-    
+
     // Handle custom service selections
     if (usingEventSections && dynamicSections.length > 0) {
       // Process dynamic sections
@@ -337,10 +337,10 @@ const PaymentProofPage = () => {
           // For multi-select sections, check each option
           sec.options.forEach((opt) => {
             if (selectedServices[opt.id]) {
-              items.push({ 
-                id: opt.id, 
-                label: `${sec.label}: ${opt.label}`, 
-                price: opt.price 
+              items.push({
+                id: opt.id,
+                label: `${sec.label}: ${opt.label}`,
+                price: opt.price
               })
             }
           })
@@ -351,10 +351,10 @@ const PaymentProofPage = () => {
             // Find the selected option
             const option = sec.options.find(o => o.id === sel)
             if (option) {
-              items.push({ 
-                id: sel, 
-                label: `${sec.label}: ${option.label}`, 
-                price: option.price 
+              items.push({
+                id: sel,
+                label: `${sec.label}: ${option.label}`,
+                price: option.price
               })
             }
           }
@@ -368,23 +368,23 @@ const PaymentProofPage = () => {
           const group = RADIO_GROUPS[groupKey]
           const option = group.options.find(o => o.id === optId)
           if (option) {
-            items.push({ 
-              id: optId, 
-              label: `${group.label}: ${option.label}`, 
-              price: option.price 
+            items.push({
+              id: optId,
+              label: `${group.label}: ${option.label}`,
+              price: option.price
             })
           }
         }
       })
-      
-      // Process checkbox services
-      ;[...OTHER_SERVICES, ...ADD_ONS].forEach((s) => {
-        if (selectedServices[s.id]) {
-          items.push({ id: s.id, label: s.label, price: s.price })
-        }
-      })
+
+        // Process checkbox services
+        ;[...OTHER_SERVICES, ...ADD_ONS].forEach((s) => {
+          if (selectedServices[s.id]) {
+            items.push({ id: s.id, label: s.label, price: s.price })
+          }
+        })
     }
-    
+
     return items
   }
 
@@ -466,7 +466,7 @@ const PaymentProofPage = () => {
   // Extract numeric service IDs from selectedItems for backend submission
   const extractServiceIds = (items) => {
     if (!items || items.length === 0) return null;
-    
+
     // Extract any numeric IDs from the selected items
     const numericIds = items
       .map(item => {
@@ -475,8 +475,8 @@ const PaymentProofPage = () => {
         return !isNaN(numId) ? numId : null;
       })
       .filter(id => id !== null);
-    
-    console.log("Extracted service IDs:", numericIds);
+
+    // console.log("Extracted service IDs:", numericIds); // COMMENTED OUT - Exposes internal service ID structure
     return numericIds.length > 0 ? numericIds : null;
   }
 
@@ -569,11 +569,11 @@ const PaymentProofPage = () => {
         console.error("Error fetching user from API:", userError);
         // Fall back to the email from booking data
         userEmail = bookingData.personalInfo.email;
-        console.log("Using email from booking data:", userEmail);
+        // console.log("Using email from booking data:", userEmail); // COMMENTED OUT - Exposes personal email address
       }
 
-      console.log("User email for submission:", userEmail);
-      console.log("Booking data:", bookingData);
+      // console.log("User email for submission:", userEmail); // COMMENTED OUT - Exposes personal email address
+      // console.log("Booking data:", bookingData); // COMMENTED OUT - Exposes sensitive booking/personal data
 
       // Prepare booking transaction data matching the exact DTO structure
       const transactionData = {
@@ -589,7 +589,7 @@ const PaymentProofPage = () => {
         transactionVenue: bookingData.eventDetails.location,
         transactionDate: convertToSqlDate(bookingData.eventDetails.eventDate),
         transactionNote: bookingData.eventDetails.note || "",
-        
+
         // Additional Event Details
         celebrantName: bookingData.eventDetails.celebrantName || "",
         additionalCelebrants: bookingData.eventDetails.celebrantNameOptional || "",
@@ -613,13 +613,13 @@ const PaymentProofPage = () => {
         userEmail: userEmail,
       }
 
-      // console.log("=== TRANSACTION DATA DEBUG ===")
-      // console.log("Service Type:", transactionData.serviceType)
-      // console.log("Package ID:", transactionData.packageId)
-      // console.log("Service IDs (subcontractor IDs):", transactionData.serviceIds)
-      // console.log("Payment Amount:", formatAsPeso(paymentAmount))
-      // console.log("Transaction Date:", transactionData.transactionDate)
-      // console.log("Complete transaction data:", transactionData)
+      // console.log("=== TRANSACTION DATA DEBUG ===") // COMMENTED OUT - Debug logging exposes sensitive data
+      // console.log("Service Type:", transactionData.serviceType) // COMMENTED OUT - Exposes internal service structure
+      // console.log("Package ID:", transactionData.packageId) // COMMENTED OUT - Exposes internal package IDs
+      // console.log("Service IDs (subcontractor IDs):", transactionData.serviceIds) // COMMENTED OUT - Exposes internal contractor IDs
+      // console.log("Payment Amount:", formatAsPeso(paymentAmount)) // COMMENTED OUT - Exposes payment amount
+      // console.log("Transaction Date:", transactionData.transactionDate) // COMMENTED OUT - Exposes transaction timing
+      // console.log("Complete transaction data:", transactionData) // COMMENTED OUT - Exposes complete sensitive transaction data
 
       // Validate selection presence based on new model
       if (transactionData.serviceType === "PACKAGE" && transactionData.packageId === null) {
@@ -627,19 +627,19 @@ const PaymentProofPage = () => {
         setIsSubmitting(false)
         return
       }
-      
+
       if (transactionData.serviceType === "CUSTOM" && (!selectedItems || selectedItems.length === 0)) {
         showModal("Error: No services selected. Please go back and select at least one service.")
         setIsSubmitting(false)
         return
       }
-      
+
       // If using custom services but couldn't extract any valid service IDs, use a fallback approach
       if (transactionData.serviceType === "CUSTOM" && transactionData.serviceIds === null) {
         // Create an array of service names as a fallback
         const serviceNames = selectedItems.map(item => item.label).join(", ");
         transactionData.transactionNote += ` | Selected services: ${serviceNames}`;
-        console.log("Using service names as fallback in notes:", serviceNames);
+        // console.log("Using service names as fallback in notes:", serviceNames); // COMMENTED OUT - Exposes selected services data
       }
 
       // Create FormData for multipart request
@@ -647,12 +647,12 @@ const PaymentProofPage = () => {
       formData.append("paymentProof", uploadedFile)
       formData.append("bookingData", JSON.stringify(transactionData))
 
-      console.log("FormData contents:")
-      console.log("- paymentProof file:", uploadedFile.name, uploadedFile.type, uploadedFile.size)
-      console.log("- bookingData JSON:", JSON.stringify(transactionData))
+      // console.log("FormData contents:") // COMMENTED OUT - Exposes form structure
+      // console.log("- paymentProof file:", uploadedFile.name, uploadedFile.type, uploadedFile.size) // COMMENTED OUT - Exposes file details
+      // console.log("- bookingData JSON:", JSON.stringify(transactionData)) // COMMENTED OUT - Exposes complete transaction data structure
 
-      console.log("Submitting form data to backend...");
-      
+      // console.log("Submitting form data to backend..."); // COMMENTED OUT - Development debug message
+
       // Create a new custom axios instance for multipart form data
       const formApi = axios.create({
         baseURL: API_BASE_URL,
@@ -661,11 +661,11 @@ const PaymentProofPage = () => {
           "Authorization": `Bearer ${token}`
         }
       });
-      
+
       // Submit to backend with modified headers for multipart data
       const response = await formApi.post("/api/transactions/createBookingTransaction", formData)
 
-      console.log("Response:", response.data)
+      // console.log("Response:", response.data) // COMMENTED OUT - API response may contain sensitive booking data
 
       if (response.data.success) {
         setSubmitSuccess(true)
@@ -683,7 +683,7 @@ const PaymentProofPage = () => {
             }
           )
         } catch (notifyError) {
-          console.log("Could not notify admins, but booking was successful:", notifyError.message)
+          // console.log("Could not notify admins, but booking was successful:", notifyError.message) // COMMENTED OUT - Exposes error details and system internals
           // Continue since this is optional
         }
         handleDeleteFormDraft()
@@ -695,20 +695,20 @@ const PaymentProofPage = () => {
       }
     } catch (error) {
       console.error("Error submitting booking:", error)
-      
+
       // Enhanced error logging
       console.group('Booking Submission Error')
       console.error("Error object:", error)
-      
+
       // Try to get detailed error info
       if (error.response) {
         console.error("Response status:", error.response.status)
         console.error("Response headers:", error.response.headers)
         console.error("Response data:", error.response.data)
-        
+
         // Handle specific status codes
         let errorMessage = "";
-        switch(error.response.status) {
+        switch (error.response.status) {
           case 400:
             errorMessage = "The server couldn't process your submission. Please check the data and try again.";
             break;
@@ -723,10 +723,10 @@ const PaymentProofPage = () => {
             break;
           default:
             // Extract message from response data if available
-            errorMessage = error.response.data?.message || 
-                         error.response.data?.error || 
-                         JSON.stringify(error.response.data) || 
-                         "Failed to submit booking. Please try again.";
+            errorMessage = error.response.data?.message ||
+              error.response.data?.error ||
+              JSON.stringify(error.response.data) ||
+              "Failed to submit booking. Please try again.";
         }
         showModal(`Error: ${errorMessage}`);
       } else if (error.request) {
@@ -738,7 +738,7 @@ const PaymentProofPage = () => {
         console.error("Error setting up request:", error.message)
         showModal(`Error: ${error.message || "Unknown error occurred"}`);
       }
-      
+
       console.groupEnd()
     } finally {
       setIsSubmitting(false)
@@ -851,7 +851,11 @@ const PaymentProofPage = () => {
                 <input
                   type="text"
                   value={referenceNumber}
-                  onChange={(e) => setReferenceNumber(e.target.value)}
+                  onChange={(e) => {
+                    // Only allow numbers
+                    const value = e.target.value.replace(/[^0-9]/g, "")
+                    setReferenceNumber(value)
+                  }}
                   placeholder="Enter payment reference number (e.g., 1234567890)"
                   className="reference-input"
                   required

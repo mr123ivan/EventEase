@@ -152,7 +152,7 @@ const EventTrackingAdmin = () => {
                   (progress) => progress.userId === parseInt(sub.subcontractorUserId) &&
                                progress.eventServiceId === sub.eventServiceId
                 )
-                //console.log(`DEBUG: For subcontractor ${sub.subcontractorUserId} (${sub.subcontractorName}), service ${sub.serviceName}, eventServiceId ${sub.eventServiceId}, progressData found:`, progressData)
+                // console.log(`DEBUG: For subcontractor ${sub.subcontractorUserId} (${sub.subcontractorName}), service ${sub.serviceName}, eventServiceId ${sub.eventServiceId}, progressData found:`, progressData) // COMMENTED OUT - Development debug with potentially sensitive data
 
                 return {
                   id: sub.subcontractorUserId.toString(),
@@ -412,14 +412,14 @@ const EventTrackingAdmin = () => {
     // Fetch detailed progress data using the individual endpoint
     try {
       const token = localStorage.getItem("token")
-      //console.log("DEBUG: Calling API with progressId:", subcontractor.progressId)
+      // console.log("DEBUG: Calling API with progressId:", subcontractor.progressId) // COMMENTED OUT - Development debug message
       const progressResponse = await axios.get(
         `${API_BASE_URL}/api/transactions/subcontractor-progress/id/${subcontractor.progressId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       )
-      //console.log("DEBUG: Detailed subcontractor progress data fetched:", progressResponse.data)
+      // console.log("DEBUG: Detailed subcontractor progress data fetched:", progressResponse.data) // COMMENTED OUT - API response may contain sensitive data
 
       // Update subcontractor with fresh data from individual endpoint
       const detailedProgress = progressResponse.data
@@ -445,18 +445,18 @@ const EventTrackingAdmin = () => {
           // Filter out empty/null URLs and ensure they are valid
           const validImageUrls = imageUrls.filter(url => url && url.trim() !== '')
 
-          //console.log("DEBUG: Setting images for carousel:", validImageUrls)
+          // console.log("DEBUG: Setting images for carousel:", validImageUrls) // COMMENTED OUT - Development debug message
           setImages(validImageUrls)
           setCurrentImageIndex(0) // Reset to first image
         } catch (error) {
           // Fallback for single image URL (backward compatibility)
           const imageUrls = [detailedProgress.progressImageUrl].filter(url => url && url.trim() !== '')
-          //console.log("DEBUG: Setting single image for carousel:", imageUrls)
+          // console.log("DEBUG: Setting single image for carousel:", imageUrls) // COMMENTED OUT - Development debug message
           setImages(imageUrls)
           setCurrentImageIndex(0)
         }
       } else {
-        //console.log("DEBUG: No progress image URL found")
+        // console.log("DEBUG: No progress image URL found") // COMMENTED OUT - Development debug message
         setImages([])
         setCurrentImageIndex(0)
       }
@@ -469,7 +469,7 @@ const EventTrackingAdmin = () => {
   }
 
   const handleMarkComplete = async (event, subcontractor) => {
-    //console.log("DEBUG: handleMarkComplete called with:", { event: event.id, subcontractor: subcontractor.name, progressId: subcontractor.progressId, subcontractorEntityId: subcontractor.subcontractorEntityId, subcontractorEmail: subcontractor.subcontractorEmail })
+    // console.log("DEBUG: handleMarkComplete called with:", { event: event.id, subcontractor: subcontractor.name, progressId: subcontractor.progressId, subcontractorEntityId: subcontractor.subcontractorEntityId, subcontractorEmail: subcontractor.subcontractorEmail }) // COMMENTED OUT - Exposes sensitive subcontractor and event data
 
     setLoadingMarkComplete(true)
 
@@ -486,7 +486,7 @@ const EventTrackingAdmin = () => {
         apiUrl = `${API_BASE_URL}/api/transactions/subcontractor-progress/${event.id}/email/${subcontractor.subcontractorEmail}`
       }
 
-      //console.log("DEBUG: API URL:", apiUrl)
+      // console.log("DEBUG: API URL:", apiUrl) // COMMENTED OUT - Exposes internal API URL structure
 
       const response = await axios.put(
         apiUrl,
@@ -502,10 +502,10 @@ const EventTrackingAdmin = () => {
         }
       )
 
-      //console.log("DEBUG: API Response:", response)
+      // console.log("DEBUG: API Response:", response) // COMMENTED OUT - Exposes API response data
 
       if (response.status === 200) {
-        //console.log("DEBUG: Updating state locally after subcontractor update")
+        // console.log("DEBUG: Updating state locally after subcontractor update") // COMMENTED OUT - Debug message for state updates
         // Update the state locally to reflect the change immediately
         setEvents((prevEvents) =>
           prevEvents.map((e) =>
@@ -534,11 +534,11 @@ const EventTrackingAdmin = () => {
               : e
           )
         )
-        //console.log("DEBUG: State updated locally")
+        // console.log("DEBUG: State updated locally") // COMMENTED OUT - Debug message for state update
 
         // Refetch the events data to get the updated status from backend
         await fetchEventsProgress()
-        //console.log("DEBUG: Events data refetched successfully")
+        // console.log("DEBUG: Events data refetched successfully") // COMMENTED OUT - Debug message for data refetch
 
         // Close the modal after successful completion
         setShowIndividualUpdateModal(false)
@@ -559,7 +559,7 @@ const EventTrackingAdmin = () => {
   }
 
   const handleMarkIncomplete = async (event, subcontractor) => {
-    //console.log("DEBUG: handleMarkIncomplete called with:", { event: event.id, subcontractor: subcontractor.name, progressId: subcontractor.progressId, subcontractorEntityId: subcontractor.subcontractorEntityId, subcontractorEmail: subcontractor.subcontractorEmail })
+    // console.log("DEBUG: handleMarkIncomplete called with:", { event: event.id, subcontractor: subcontractor.name, progressId: subcontractor.progressId, subcontractorEntityId: subcontractor.subcontractorEntityId, subcontractorEmail: subcontractor.subcontractorEmail }) // COMMENTED OUT - Exposes sensitive subcontractor and event data
 
     setLoadingMarkComplete(true)
 
@@ -576,7 +576,7 @@ const EventTrackingAdmin = () => {
         apiUrl = `${API_BASE_URL}/api/transactions/subcontractor-progress/${event.id}/email/${subcontractor.subcontractorEmail}`
       }
 
-      //console.log("DEBUG: API URL:", apiUrl)
+      // console.log("DEBUG: API URL:", apiUrl) // COMMENTED OUT - Exposes internal API URL structure
 
       const newProgress = Math.min(selectedSubcontractor.progressPercentage + 20, 100)
 
@@ -594,10 +594,10 @@ const EventTrackingAdmin = () => {
         }
       )
 
-      //console.log("DEBUG: API Response:", response)
+      // console.log("DEBUG: API Response:", response)
 
       if (response.status === 200) {
-        //console.log("DEBUG: Updating state locally after subcontractor marked incomplete")
+        // console.log("DEBUG: Updating state locally after subcontractor marked incomplete")
         // Update the state locally to reflect the change immediately
         setEvents((prevEvents) =>
           prevEvents.map((e) =>
@@ -626,11 +626,11 @@ const EventTrackingAdmin = () => {
               : e
           )
         )
-        //console.log("DEBUG: State updated locally after marking incomplete")
+        // console.log("DEBUG: State updated locally after marking incomplete")
 
         // Refetch the events data to get the updated status from backend
         await fetchEventsProgress()
-       // console.log("DEBUG: Events data refetched successfully after marking incomplete")
+        // console.log("DEBUG: Events data refetched successfully after marking incomplete")
 
         // Close the modal after successful completion
         setShowIndividualUpdateModal(false)

@@ -370,7 +370,7 @@ export default function LoginPage() {
             if (response.authResponse) {
               // Explicitly set redirect URI for development
               const redirectUri = window.location.origin
-              console.log("Using redirect URI:", redirectUri)
+              // console.log("Using redirect URI:", redirectUri)
 
               window.FB.api("/me", { fields: "id,name,email,picture" }, async (profile) => {
                 try {
@@ -799,8 +799,8 @@ export default function LoginPage() {
           {mode === 'login' && (
             <form onSubmit={handleLogin} className="space-y-6">
               {/* Login Buttons Container */}
-              <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
-                {/* Google Login Button (Styled) */}
+              {/* Google and Facebook login disabled */}
+              {/*<div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
                 <motion.button
                   type="button"
                   onClick={() => handleSocialLogin("Google")}
@@ -813,8 +813,7 @@ export default function LoginPage() {
                   <span className="sm:hidden">Google</span>
                 </motion.button>
 
-                {/* Facebook Login Button (Styled) */}
-                {/*<motion.button
+                <motion.button
                   type="button"
                   onClick={() => handleSocialLogin("Facebook")}
                   className="flex items-center justify-center w-full h-12 border rounded-lg shadow-sm hover:shadow-md transition text-gray-700 hover:bg-gray-50"
@@ -824,7 +823,7 @@ export default function LoginPage() {
                   <FaFacebook size={24} className="mr-2 text-blue-600" />
                   <span className="hidden sm:inline">Login with Facebook</span>
                   <span className="sm:hidden">Facebook</span>
-                </motion.button>*/}
+                </motion.button>
               </div>
 
               <div className="relative">
@@ -834,7 +833,8 @@ export default function LoginPage() {
                 <div className="relative flex justify-center text-sm">
                   <span className="px-2 bg-white text-gray-500">Or continue with</span>
                 </div>
-              </div>
+              </div>*/}
+
 
               {/* Email input */}
               <div className="space-y-1">
@@ -846,7 +846,7 @@ export default function LoginPage() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  hint="planease@gmail.com"
+                  hint="johndoe@gmail.com"
                   className="w-full"
                   required
                 />

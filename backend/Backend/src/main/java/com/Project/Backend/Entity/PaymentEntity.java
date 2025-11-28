@@ -22,8 +22,8 @@ public class PaymentEntity {
     private Date paymentDatePaid;
     private String paymentNote;
     private String paymentReceipt; // Added this field to match ERD
-    private int paymentReferenceNumber; // Added this field to match ERD
-    
+    private String paymentReferenceNumber; // Added this field to match ERD
+
     @PrePersist
     protected void onCreate() {
         this.paymentDatePaid = Date.valueOf(LocalDateTime.now().toLocalDate());
@@ -82,11 +82,11 @@ public class PaymentEntity {
         this.paymentReceipt = paymentReceipt;
     }
 
-    public int getPaymentReferenceNumber() {
+    public String getPaymentReferenceNumber() {
         return paymentReferenceNumber;
     }
 
-    public void setPaymentReferenceNumber(int paymentReferenceNumber) {
+    public void setPaymentReferenceNumber(String paymentReferenceNumber) {
         this.paymentReferenceNumber = paymentReferenceNumber;
     }
 }

@@ -4,14 +4,24 @@ import tailwindcss from '@tailwindcss/vite'
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [
-    react(),
-    tailwindcss(),
-  ],
-  server: {
-    host: true, // or "0.0.0.0" to accept external connections
-  },
-  preview: {
-    allowedHosts: ['eventsease.app', 'www.eventsease.app'],
-  },
+    plugins: [
+        react(),
+        tailwindcss(),
+    ],
+    server: {
+        host: '0.0.0.0',
+        allowedHosts: [
+            'eventsease.app',
+            'www.eventsease.app',
+            '.ngrok-free.app',
+        ],
+    },
+    preview: {
+        host: '0.0.0.0',
+        allowedHosts: [
+            'eventsease.app',
+            'www.eventsease.app',
+            '.ngrok-free.app',
+        ],
+    },
 })

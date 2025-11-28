@@ -256,6 +256,13 @@ export function ProfileModal({ open, onOpenChange }) {
     }
   }, [showProfilePasswordModal])
 
+  // Reset edit mode when modal closes
+  useEffect(() => {
+    if (!open) {
+      setEditMode(false)
+    }
+  }, [open])
+
   if (!open) return null
 
   const handleChange = (field, value) => {
@@ -672,560 +679,464 @@ export function ProfileModal({ open, onOpenChange }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 px-4 pt-18">
-      <div
-        ref={modalRef}
-        className="bg-white rounded-md shadow-lg w-full max-w-4xl overflow-hidden animate-in fade-in zoom-in duration-300"
-        role="dialog"
-        aria-modal="true"
-      >
-        {/* Top header bar */}
-        <div className="bg-slate-900 h-12 relative flex items-center justify-between px-4">
-          <div></div>
-          <button onClick={() => onOpenChange(false)} className="text-white hover:text-gray-300" aria-label="Close">
-            <X size={18} />
-          </button>
-        </div>
-
-        {/* Profile Header */}
-        <div className="px-8 pt-6 pb-4">
-          <div className="flex items-start justify-between">
-            <div className="flex items-start gap-4">
-              {/* Profile Image with upload hover effect */}
-              <div className="relative group">
-                {user.profilePicture ? (
-                  <img
-                    src={user.profilePicture || "/placeholder.svg"}
-                    alt="Profile"
-                    className="h-20 w-20 rounded-full object-cover cursor-pointer"
-                  />
-                ) : (
-                  <div className="h-20 w-20 rounded-full bg-gray-400 flex items-center justify-center text-white text-3xl font-semibold select-none cursor-pointer">
-                    {user.firstname ? user.firstname.charAt(0).toUpperCase() : "?"}
-                  </div>
-                )}
-
-                {/* Upload overlay */}
-                <div
-                  className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                  onClick={() => document.getElementById("profile-upload").click()}
-                >
-                  <span className="text-white text-xs font-medium">Change Photo</span>
-                </div>
-
-                {/* Hidden file input */}
-                <input
-                  type="file"
-                  id="profile-upload"
-                  className="hidden"
-                  accept="image/*"
-                  onChange={handleProfilePictureUpload}
-                />
-              </div>
-
-              {/* Profile Info */}
-              <div>
-                <div className="text-xl font-semibold">
-                  {displayUser.firstname} {displayUser.lastname}
-                </div>
-                <div className="text-sm text-gray-500 mb-1">{displayUser.role || "No Role"}</div>
-                <div className="flex items-center text-sm text-gray-600">
-                  <MapPin size={14} className="mr-1" />
-                  <span className="line-clamp-2">{getFullAddress()}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex gap-2">
-              <button
-                onClick={() => {
-                  if (editMode) {
-                    // Save changes
-                    handleSaveChanges()
-                  } else {
-                    // Enter edit mode
-                    setEditMode(true)
-                  }
-                }}
-                className="flex items-center px-3 py-2 h-9 text-sm text-white bg-black rounded-md hover:bg-gray-800 transition-colors"
-              >
-                {editMode ? <Check size={16} className="mr-2" /> : <Pencil size={16} className="mr-2" />}
-                {editMode ? "Save" : "Edit"}
-              </button>
-              <button
-                onClick={() => setShowPasswordModal(true)}
-                className="flex items-center px-3 py-2 h-9 text-sm border border-gray-300 rounded-md hover:bg-gray-50"
-              >
-                <KeyRound size={16} className="mr-2" />
-                Change Password
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Form */}
-        <div className="px-8 pb-8">
-          {/* Basic Information */}
-          <div className="mb-6">
-            <h3 className="text-lg font-medium mb-4">Basic Information</h3>
-            <div className="grid grid-cols-2 gap-6">
-              {/* Left */}
-              <div className="space-y-5">
-                <InputField
-                  label="Firstname"
-                  value={user.firstname}
-                  onChange={(val) => handleChange("firstname", val)}
-                  editable={editMode}
-                />
-                <InputField
-                  label="Email"
-                  value={user.email}
-                  onChange={(val) => handleChange("email", val)}
-                  editable={editMode}
-                />
-              </div>
-
-              {/* Right */}
-              <div className="space-y-5">
-                <InputField
-                  label="Lastname"
-                  value={user.lastname}
-                  onChange={(val) => handleChange("lastname", val)}
-                  editable={editMode}
-                />
-
-                {/* Phone Number with country code */}
-                <div className="space-y-1">
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="text-sm text-gray-600">Phone number</label>
-                    {isPhoneEmpty && <span className="text-red-500 text-xs">(Fill In)</span>}
-                  </div>
-
-                  {editMode ? (
-                    <div className="flex">
-                      <div className="relative">
-                        <button
-                          type="button"
-                          className="flex items-center justify-between h-11 px-3 bg-white border border-gray-300 focus:border-blue-500 transition-colors rounded-l"
-                          onClick={() => setShowCountryList(!showCountryList)}
-                          aria-label="Select country code"
-                        >
-                          <span className="mr-2 text-lg">{selectedCountry.flag}</span>
-                          <span className="text-sm font-medium">{selectedCountry.dialCode}</span>
-                          <ChevronDown className="ml-1 h-4 w-4 text-gray-500" />
-                        </button>
-
-                        {/* Country dropdown */}
-                        {showCountryList && (
-                          <div
-                            ref={countryListRef}
-                            className="absolute z-10 mt-1 w-64 max-h-60 overflow-y-auto bg-white border rounded-md shadow-lg"
-                          >
-                            <div className="sticky top-0 bg-white border-b">
-                              <input
-                                type="text"
-                                placeholder="Search countries..."
-                                className="w-full p-2 text-sm border-none focus:outline-none"
-                                onChange={(e) => {
-                                  // Search functionality could be added here
-                                }}
-                              />
-                            </div>
-                            {countries.map((country) => (
-                              <button
-                                key={country.code}
-                                type="button"
-                                className="flex items-center w-full px-4 py-2 text-left hover:bg-gray-50 transition-colors"
-                                onClick={() => {
-                                  setSelectedCountry(country)
-                                  setShowCountryList(false)
-                                  // Update the full phone number in user state
-                                  handleChange("phone", country.dialCode + phoneNumber)
-                                }}
-                              >
-                                <span className="mr-2 text-lg">{country.flag}</span>
-                                <span className="text-sm">{country.name}</span>
-                                <span className="ml-auto text-sm text-gray-500">{country.dialCode}</span>
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-
-                      <input
-                        type="tel"
-                        value={phoneNumber}
-                        onChange={handlePhoneNumberChange}
-                        placeholder={phoneNumber || "9123456789"}
-                        className={`w-full h-11 px-3 py-2 border border-gray-300 rounded-r focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                          isPhoneEmpty ? "border-red-500" : ""
-                        }`}
-                      />
-                    </div>
-                  ) : (
-                    <input
-                      type="text"
-                      value={user.phone || "Empty"}
-                      readOnly
-                      className="w-full h-11 px-3 py-2 border rounded-md text-sm bg-gray-100 text-gray-500 cursor-not-allowed"
-                    />
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Address Information */}
-          <div>
-            <h3 className="text-lg font-medium mb-4">Address Information</h3>
-            <div className="grid grid-cols-2 gap-6">
-              {/* Left */}
-              <div className="space-y-5">
-                {/* Region */}
-                <div className="space-y-1">
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="text-sm text-gray-600">Region</label>
-                    {(!user.region || user.region.trim() === "") && (
-                      <span className="text-red-500 text-xs">(Fill In)</span>
-                    )}
-                  </div>
-                  {editMode ? (
-                    <select
-                      className={`w-full h-11 px-3 py-2 border rounded-md focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 transition-all ${
-                        !user.region || user.region.trim() === "" ? "border-red-500" : ""
-                      }`}
-                      onChange={handleRegionChange}
-                      value={selectedRegion}
-                    >
-                      <option value="">Select Region</option>
-                      {regions.map((region) => (
-                        <option key={region.code} value={region.code}>
-                          {region.name}
-                        </option>
-                      ))}
-                    </select>
-                  ) : (
-                    <input
-                      type="text"
-                      value={user.region || "Empty"}
-                      readOnly
-                      className="w-full h-11 px-3 py-2 border rounded-md text-sm bg-gray-100 text-gray-500 cursor-not-allowed"
-                    />
-                  )}
-                </div>
-
-                {/* City/Municipality */}
-                <div className="space-y-1">
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="text-sm text-gray-600">City/Municipality</label>
-                    {(!user.cityAndMul || user.cityAndMul.trim() === "") && (
-                      <span className="text-red-500 text-xs">(Fill In)</span>
-                    )}
-                  </div>
-                  {editMode ? (
-                    <select
-                      className={`w-full h-11 px-3 py-2 border rounded-md focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 transition-all ${
-                        !user.cityAndMul || user.cityAndMul.trim() === "" ? "border-red-500" : ""
-                      }`}
-                      onChange={handleCityMunicipalityChange}
-                      disabled={!selectedProvince}
-                      value={selectedCityMunicipality}
-                    >
-                      <option value="">Select City/Municipality</option>
-                      {citiesMunicipalities.map((city) => (
-                        <option key={city.code} value={city.code}>
-                          {city.name}
-                        </option>
-                      ))}
-                    </select>
-                  ) : (
-                    <input
-                      type="text"
-                      value={user.cityAndMul || "Empty"}
-                      readOnly
-                      className="w-full h-11 px-3 py-2 border rounded-md text-sm bg-gray-100 text-gray-500 cursor-not-allowed"
-                    />
-                  )}
-                </div>
-              </div>
-
-              {/* Right */}
-              <div className="space-y-5">
-                {/* Province */}
-                <div className="space-y-1">
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="text-sm text-gray-600">Province</label>
-                    {(!user.province || user.province.trim() === "") && (
-                      <span className="text-red-500 text-xs">(Fill In)</span>
-                    )}
-                  </div>
-                  {editMode ? (
-                    <select
-                      className={`w-full h-11 px-3 py-2 border rounded-md focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 transition-all ${
-                        !user.province || user.province.trim() === "" ? "border-red-500" : ""
-                      }`}
-                      onChange={handleProvinceChange}
-                      disabled={!selectedRegion}
-                      value={selectedProvince}
-                    >
-                      <option value="">Select Province</option>
-                      {provinces.map((province) => (
-                        <option key={province.code} value={province.code}>
-                          {province.name}
-                        </option>
-                      ))}
-                    </select>
-                  ) : (
-                    <input
-                      type="text"
-                      value={user.province || "Empty"}
-                      readOnly
-                      className="w-full h-11 px-3 py-2 border rounded-md text-sm bg-gray-100 text-gray-500 cursor-not-allowed"
-                    />
-                  )}
-                </div>
-
-                {/* Barangay */}
-                <div className="space-y-1">
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="text-sm text-gray-600">Barangay</label>
-                    {(!user.barangay || user.barangay.trim() === "") && (
-                      <span className="text-red-500 text-xs">(Fill In)</span>
-                    )}
-                  </div>
-                  {editMode ? (
-                    <select
-                      className={`w-full h-11 px-3 py-2 border rounded-md focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 transition-all ${
-                        !user.barangay || user.barangay.trim() === "" ? "border-red-500" : ""
-                      }`}
-                      onChange={handleBarangayChange}
-                      disabled={!selectedCityMunicipality}
-                      value={selectedBarangay}
-                    >
-                      <option value="">Select Barangay</option>
-                      {barangays.map((barangay) => (
-                        <option key={barangay.code} value={barangay.code}>
-                          {barangay.name}
-                        </option>
-                      ))}
-                    </select>
-                  ) : (
-                    <input
-                      type="text"
-                      value={user.barangay || "Empty"}
-                      readOnly
-                      className="w-full h-11 px-3 py-2 border rounded-md text-sm bg-gray-100 text-gray-500 cursor-not-allowed"
-                    />
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      {/* Snackbar for notifications */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={6000}
-        onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-        onClick={(e) => e.stopPropagation()}
-        onMouseDown={(e) => e.stopPropagation()}
-      >
-        <Alert
-          onClose={(e) => {
-            e.stopPropagation()
-            handleCloseSnackbar(e)
-          }}
-          severity={snackbar.severity}
-          sx={{ width: "100%" }}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
-      {/* Current Password Modal */}
-      {showPasswordModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-          onMouseDown={(e) => e.stopPropagation()}
-        >
+    <div className="fixed inset-0 z-50 bg-black/50">
+      {/* Scrollable container */}
+      <div className="fixed inset-0 overflow-y-auto">
+        <div className="flex min-h-full items-center justify-center p-2 sm:p-4">
           <div
-            className="bg-white rounded-md shadow-lg w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-300"
-            onClick={(e) => e.stopPropagation()}
+            ref={modalRef}
+            className="bg-white rounded-md shadow-lg w-full max-w-4xl overflow-hidden animate-in fade-in zoom-in duration-300 my-8"
+            role="dialog"
+            aria-modal="true"
           >
-            {/* Modal header */}
+            {/* Top header bar */}
             <div className="bg-slate-900 h-12 relative flex items-center justify-between px-4">
-              <div className="text-white font-medium">Verify Password</div>
-              <button
-                onClick={() => {
-                  setShowPasswordModal(false)
-                  setCurrentPassword("")
-                  setPasswordError("")
-                }}
-                className="text-white hover:text-gray-300"
-              >
+              <div></div>
+              <button onClick={() => onOpenChange(false)} className="text-white hover:text-gray-300" aria-label="Close">
                 <X size={18} />
               </button>
             </div>
 
-            {/* Modal content */}
-            <div className="p-6">
-              <p className="text-gray-600 mb-4">Please enter your current password to continue</p>
+            {/* Profile Header */}
+            <div className="px-4 sm:px-8 pt-4 sm:pt-6 pb-4">
+              <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
+                <div className="flex items-start gap-4">
+                  {/* Profile Image with upload hover effect */}
+                  <div className="relative group">
+                    {user.profilePicture ? (
+                      <img
+                        src={user.profilePicture || "/placeholder.svg"}
+                        alt="Profile"
+                        className="h-20 w-20 rounded-full object-cover cursor-pointer"
+                      />
+                    ) : (
+                      <div className="h-20 w-20 rounded-full bg-gray-400 flex items-center justify-center text-white text-3xl font-semibold select-none cursor-pointer">
+                        {user.firstname ? user.firstname.charAt(0).toUpperCase() : "?"}
+                      </div>
+                    )}
 
-              {passwordError && (
-                <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-md">{passwordError}</div>
-              )}
+                    {/* Upload overlay */}
+                    <div
+                      className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                      onClick={() => document.getElementById("profile-upload").click()}
+                    >
+                      <span className="text-white text-xs font-medium">Change Photo</span>
+                    </div>
 
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <label htmlFor="current-password" className="text-sm font-medium text-gray-700">
-                    Current Password
-                  </label>
-                  <div className="relative">
+                    {/* Hidden file input */}
                     <input
-                      id="current-password"
-                      type="password"
-                      value={currentPassword}
-                      onChange={(e) => setCurrentPassword(e.target.value)}
-                      className="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Enter your current password"
+                      type="file"
+                      id="profile-upload"
+                      className="hidden"
+                      accept="image/*"
+                      onChange={handleProfilePictureUpload}
                     />
+                  </div>
+
+                  {/* Profile Info */}
+                  <div>
+                    <div className="text-xl font-semibold">
+                      {displayUser.firstname} {displayUser.lastname}
+                    </div>
+                    <div className="text-sm text-gray-500 mb-1">{displayUser.role || "No Role"}</div>
+                    <div className="flex items-center text-sm text-gray-600">
+                      <MapPin size={14} className="mr-1" />
+                      <span className="line-clamp-2">{getFullAddress()}</span>
+                    </div>
                   </div>
                 </div>
 
-                <div className="flex justify-end space-x-3">
+                {/* Action Buttons */}
+                <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                  <button
+                    onClick={() => {
+                      if (editMode) {
+                        // Save changes
+                        handleSaveChanges()
+                      } else {
+                        // Enter edit mode
+                        setEditMode(true)
+                      }
+                    }}
+                    className="flex items-center justify-center px-3 py-2 h-9 text-sm text-white bg-black rounded-md hover:bg-gray-800 transition-colors w-full sm:w-auto"
+                  >
+                    {editMode ? <Check size={16} className="mr-2" /> : <Pencil size={16} className="mr-2" />}
+                    {editMode ? "Save" : "Edit"}
+                  </button>
+                  <button
+                    onClick={() => setShowPasswordModal(true)}
+                    className="flex items-center justify-center px-3 py-2 h-9 text-sm border border-gray-300 rounded-md hover:bg-gray-50 w-full sm:w-auto"
+                  >
+                    <KeyRound size={16} className="mr-2" />
+                    Change Password
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Form */}
+            <div className="px-4 sm:px-8 pb-6 sm:pb-8">
+              {/* Basic Information */}
+              <div className="mb-6">
+                <h3 className="text-base sm:text-lg font-medium mb-4">Basic Information</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                  {/* Left */}
+                  <div className="space-y-5">
+                    <InputField
+                      label="Firstname"
+                      value={user.firstname}
+                      onChange={(val) => handleChange("firstname", val)}
+                      editable={editMode}
+                    />
+                    <InputField
+                      label="Email"
+                      value={user.email}
+                      onChange={(val) => handleChange("email", val)}
+                      editable={editMode}
+                    />
+                  </div>
+
+                  {/* Right */}
+                  <div className="space-y-5">
+                    <InputField
+                      label="Lastname"
+                      value={user.lastname}
+                      onChange={(val) => handleChange("lastname", val)}
+                      editable={editMode}
+                    />
+
+                    {/* Phone Number with country code */}
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="text-sm text-gray-600">Phone number</label>
+                        {isPhoneEmpty && <span className="text-red-500 text-xs">(Fill In)</span>}
+                      </div>
+
+                      {editMode ? (
+                        <div className="flex">
+                          <div className="relative">
+                            <button
+                              type="button"
+                              className="flex items-center justify-between h-11 px-3 bg-white border border-gray-300 focus:border-blue-500 transition-colors rounded-l"
+                              onClick={() => setShowCountryList(!showCountryList)}
+                              aria-label="Select country code"
+                            >
+                              <span className="mr-2 text-lg">{selectedCountry.flag}</span>
+                              <span className="text-sm font-medium">{selectedCountry.dialCode}</span>
+                              <ChevronDown className="ml-1 h-4 w-4 text-gray-500" />
+                            </button>
+
+                            {/* Country dropdown */}
+                            {showCountryList && (
+                              <div
+                                ref={countryListRef}
+                                className="absolute z-10 mt-1 w-64 max-h-60 overflow-y-auto bg-white border rounded-md shadow-lg"
+                              >
+                                <div className="sticky top-0 bg-white border-b">
+                                  <input
+                                    type="text"
+                                    placeholder="Search countries..."
+                                    className="w-full p-2 text-sm border-none focus:outline-none"
+                                    onChange={(e) => {
+                                      // Search functionality could be added here
+                                    }}
+                                  />
+                                </div>
+                                {countries.map((country) => (
+                                  <button
+                                    key={country.code}
+                                    type="button"
+                                    className="flex items-center w-full px-4 py-2 text-left hover:bg-gray-50 transition-colors"
+                                    onClick={() => {
+                                      setSelectedCountry(country)
+                                      setShowCountryList(false)
+                                      // Update the full phone number in user state
+                                      handleChange("phone", country.dialCode + phoneNumber)
+                                    }}
+                                  >
+                                    <span className="mr-2 text-lg">{country.flag}</span>
+                                    <span className="text-sm">{country.name}</span>
+                                    <span className="ml-auto text-sm text-gray-500">{country.dialCode}</span>
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+
+                          <input
+                            type="tel"
+                            value={phoneNumber}
+                            onChange={handlePhoneNumberChange}
+                            placeholder={phoneNumber || "9123456789"}
+                            className={`w-full h-11 px-3 py-2 border border-gray-300 rounded-r focus:outline-none focus:ring-2 focus:ring-blue-500 ${isPhoneEmpty ? "border-red-500" : ""
+                              }`}
+                          />
+                        </div>
+                      ) : (
+                        <input
+                          type="text"
+                          value={user.phone || "Empty"}
+                          readOnly
+                          className="w-full h-11 px-3 py-2 border rounded-md text-sm bg-gray-100 text-gray-500 cursor-not-allowed"
+                        />
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Address Information */}
+              <div>
+                <h3 className="text-base sm:text-lg font-medium mb-4">Address Information</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                  {/* Left */}
+                  <div className="space-y-5">
+                    {/* Region */}
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="text-sm text-gray-600">Region</label>
+                        {(!user.region || user.region.trim() === "") && (
+                          <span className="text-red-500 text-xs">(Fill In)</span>
+                        )}
+                      </div>
+                      {editMode ? (
+                        <select
+                          className={`w-full h-11 px-3 py-2 border rounded-md focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 transition-all ${!user.region || user.region.trim() === "" ? "border-red-500" : ""
+                            }`}
+                          onChange={handleRegionChange}
+                          value={selectedRegion}
+                        >
+                          <option value="">Select Region</option>
+                          {regions.map((region) => (
+                            <option key={region.code} value={region.code}>
+                              {region.name}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <input
+                          type="text"
+                          value={user.region || "Empty"}
+                          readOnly
+                          className="w-full h-11 px-3 py-2 border rounded-md text-sm bg-gray-100 text-gray-500 cursor-not-allowed"
+                        />
+                      )}
+                    </div>
+
+                    {/* City/Municipality */}
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="text-sm text-gray-600">City/Municipality</label>
+                        {(!user.cityAndMul || user.cityAndMul.trim() === "") && (
+                          <span className="text-red-500 text-xs">(Fill In)</span>
+                        )}
+                      </div>
+                      {editMode ? (
+                        <select
+                          className={`w-full h-11 px-3 py-2 border rounded-md focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 transition-all ${!user.cityAndMul || user.cityAndMul.trim() === "" ? "border-red-500" : ""
+                            }`}
+                          onChange={handleCityMunicipalityChange}
+                          disabled={!selectedProvince}
+                          value={selectedCityMunicipality}
+                        >
+                          <option value="">Select City/Municipality</option>
+                          {citiesMunicipalities.map((city) => (
+                            <option key={city.code} value={city.code}>
+                              {city.name}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <input
+                          type="text"
+                          value={user.cityAndMul || "Empty"}
+                          readOnly
+                          className="w-full h-11 px-3 py-2 border rounded-md text-sm bg-gray-100 text-gray-500 cursor-not-allowed"
+                        />
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Right */}
+                  <div className="space-y-5">
+                    {/* Province */}
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="text-sm text-gray-600">Province</label>
+                        {(!user.province || user.province.trim() === "") && (
+                          <span className="text-red-500 text-xs">(Fill In)</span>
+                        )}
+                      </div>
+                      {editMode ? (
+                        <select
+                          className={`w-full h-11 px-3 py-2 border rounded-md focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 transition-all ${!user.province || user.province.trim() === "" ? "border-red-500" : ""
+                            }`}
+                          onChange={handleProvinceChange}
+                          disabled={!selectedRegion}
+                          value={selectedProvince}
+                        >
+                          <option value="">Select Province</option>
+                          {provinces.map((province) => (
+                            <option key={province.code} value={province.code}>
+                              {province.name}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <input
+                          type="text"
+                          value={user.province || "Empty"}
+                          readOnly
+                          className="w-full h-11 px-3 py-2 border rounded-md text-sm bg-gray-100 text-gray-500 cursor-not-allowed"
+                        />
+                      )}
+                    </div>
+
+                    {/* Barangay */}
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="text-sm text-gray-600">Barangay</label>
+                        {(!user.barangay || user.barangay.trim() === "") && (
+                          <span className="text-red-500 text-xs">(Fill In)</span>
+                        )}
+                      </div>
+                      {editMode ? (
+                        <select
+                          className={`w-full h-11 px-3 py-2 border rounded-md focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 transition-all ${!user.barangay || user.barangay.trim() === "" ? "border-red-500" : ""
+                            }`}
+                          onChange={handleBarangayChange}
+                          disabled={!selectedCityMunicipality}
+                          value={selectedBarangay}
+                        >
+                          <option value="">Select Barangay</option>
+                          {barangays.map((barangay) => (
+                            <option key={barangay.code} value={barangay.code}>
+                              {barangay.name}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <input
+                          type="text"
+                          value={user.barangay || "Empty"}
+                          readOnly
+                          className="w-full h-11 px-3 py-2 border rounded-md text-sm bg-gray-100 text-gray-500 cursor-not-allowed"
+                        />
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          {/* Snackbar for notifications */}
+          <Snackbar
+            open={snackbar.open}
+            autoHideDuration={6000}
+            onClose={handleCloseSnackbar}
+            anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+            onClick={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
+          >
+            <Alert
+              onClose={(e) => {
+                e.stopPropagation()
+                handleCloseSnackbar(e)
+              }}
+              severity={snackbar.severity}
+              sx={{ width: "100%" }}
+            >
+              {snackbar.message}
+            </Alert>
+          </Snackbar>
+          {/* Current Password Modal */}
+          {showPasswordModal && (
+            <div
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+              onMouseDown={(e) => e.stopPropagation()}
+            >
+              <div
+                className="bg-white rounded-md shadow-lg w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-300"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Modal header */}
+                <div className="bg-slate-900 h-12 relative flex items-center justify-between px-4">
+                  <div className="text-white font-medium">Verify Password</div>
                   <button
                     onClick={() => {
                       setShowPasswordModal(false)
                       setCurrentPassword("")
                       setPasswordError("")
                     }}
-                    className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+                    className="text-white hover:text-gray-300"
                   >
-                    Cancel
+                    <X size={18} />
                   </button>
-                  <button
-                    onClick={handleCheckPassword}
-                    disabled={isCheckingPassword}
-                    className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 disabled:opacity-70"
-                  >
-                    {isCheckingPassword ? "Verifying..." : "Next"}
-                  </button>
+                </div>
+
+                {/* Modal content */}
+                <div className="p-6">
+                  <p className="text-gray-600 mb-4">Please enter your current password to continue</p>
+
+                  {passwordError && (
+                    <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-md">{passwordError}</div>
+                  )}
+
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <label htmlFor="current-password" className="text-sm font-medium text-gray-700">
+                        Current Password
+                      </label>
+                      <div className="relative">
+                        <input
+                          id="current-password"
+                          type="password"
+                          value={currentPassword}
+                          onChange={(e) => setCurrentPassword(e.target.value)}
+                          className="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="Enter your current password"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end space-x-3">
+                      <button
+                        onClick={() => {
+                          setShowPasswordModal(false)
+                          setCurrentPassword("")
+                          setPasswordError("")
+                        }}
+                        className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleCheckPassword}
+                        disabled={isCheckingPassword}
+                        className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 disabled:opacity-70"
+                      >
+                        {isCheckingPassword ? "Verifying..." : "Next"}
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-      )}
+          )}
 
-      {/* New Password Modal */}
-      {showNewPasswordModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-          onMouseDown={(e) => e.stopPropagation()}
-        >
-          <div
-            className="bg-white rounded-md shadow-lg w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-300"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Modal header */}
-            <div className="bg-slate-900 h-12 relative flex items-center justify-between px-4">
-              <div className="text-white font-medium">Change Password</div>
-              <button
-                onClick={() => {
-                  setShowNewPasswordModal(false)
-                  setNewPassword("")
-                  setConfirmNewPassword("")
-                  setPasswordError("")
-                  setPasswordStrength(0)
-                  setPasswordErrors([])
-                }}
-                className="text-white hover:text-gray-300"
+          {/* New Password Modal */}
+          {showNewPasswordModal && (
+            <div
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+              onMouseDown={(e) => e.stopPropagation()}
+            >
+              <div
+                className="bg-white rounded-md shadow-lg w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-300"
+                onClick={(e) => e.stopPropagation()}
               >
-                <X size={18} />
-              </button>
-            </div>
-
-            {/* Modal content */}
-            <div className="p-6">
-              <p className="text-gray-600 mb-4">Create a new password for your account</p>
-
-              {passwordError && (
-                <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-md">{passwordError}</div>
-              )}
-
-              <div className="space-y-4">
-                {/* New Password */}
-                <div className="space-y-2">
-                  <label htmlFor="new-password" className="text-sm font-medium text-gray-700">
-                    New Password
-                  </label>
-                  <div className="relative">
-                    <input
-                      id="new-password"
-                      type="password"
-                      value={newPassword}
-                      onChange={handleNewPasswordChange}
-                      className="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Enter new password"
-                    />
-                  </div>
-                </div>
-
-                {/* Password Strength */}
-                {newPassword && (
-                  <div className="space-y-3">
-                    <div className="space-y-1">
-                      <div className="text-sm font-medium text-gray-700">Password Strength</div>
-                      <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
-                        <div
-                          className={`h-full rounded-full transition-all duration-500 ease-out ${
-                            passwordStrength === 3
-                              ? "bg-green-500"
-                              : passwordStrength === 2
-                                ? "bg-yellow-500"
-                                : "bg-red-500"
-                          }`}
-                          style={{ width: `${(passwordStrength / 3) * 100}%` }}
-                        ></div>
-                      </div>
-                    </div>
-
-                    {/* Password requirements */}
-                    {passwordErrors.length > 0 && (
-                      <div className="space-y-1 text-sm text-red-500">
-                        {passwordErrors.map((error, index) => (
-                          <div key={index}>{error}</div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Confirm New Password */}
-                {passwordStrength === 3 && (
-                  <div className="space-y-2">
-                    <label htmlFor="confirm-new-password" className="text-sm font-medium text-gray-700">
-                      Confirm New Password
-                    </label>
-                    <div className="relative">
-                      <input
-                        id="confirm-new-password"
-                        type="password"
-                        value={confirmNewPassword}
-                        onChange={handleConfirmPasswordChange}
-                        className="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Confirm new password"
-                      />
-                    </div>
-                    {!passwordsMatch && confirmNewPassword && (
-                      <div className="text-sm text-red-500">Passwords do not match</div>
-                    )}
-                  </div>
-                )}
-
-                <div className="flex justify-end space-x-3 pt-2">
+                {/* Modal header */}
+                <div className="bg-slate-900 h-12 relative flex items-center justify-between px-4">
+                  <div className="text-white font-medium">Change Password</div>
                   <button
                     onClick={() => {
                       setShowNewPasswordModal(false)
@@ -1235,99 +1146,194 @@ export function ProfileModal({ open, onOpenChange }) {
                       setPasswordStrength(0)
                       setPasswordErrors([])
                     }}
-                    className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+                    className="text-white hover:text-gray-300"
                   >
-                    Cancel
+                    <X size={18} />
                   </button>
-                  <button
-                    onClick={handleUpdatePassword}
-                    disabled={isChangingPassword || passwordStrength < 3 || !passwordsMatch || !confirmNewPassword}
-                    className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 disabled:opacity-70"
-                  >
-                    {isChangingPassword ? "Updating..." : "Update Password"}
-                  </button>
+                </div>
+
+                {/* Modal content */}
+                <div className="p-6">
+                  <p className="text-gray-600 mb-4">Create a new password for your account</p>
+
+                  {passwordError && (
+                    <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-md">{passwordError}</div>
+                  )}
+
+                  <div className="space-y-4">
+                    {/* New Password */}
+                    <div className="space-y-2">
+                      <label htmlFor="new-password" className="text-sm font-medium text-gray-700">
+                        New Password
+                      </label>
+                      <div className="relative">
+                        <input
+                          id="new-password"
+                          type="password"
+                          value={newPassword}
+                          onChange={handleNewPasswordChange}
+                          className="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="Enter new password"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Password Strength */}
+                    {newPassword && (
+                      <div className="space-y-3">
+                        <div className="space-y-1">
+                          <div className="text-sm font-medium text-gray-700">Password Strength</div>
+                          <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
+                            <div
+                              className={`h-full rounded-full transition-all duration-500 ease-out ${passwordStrength === 3
+                                ? "bg-green-500"
+                                : passwordStrength === 2
+                                  ? "bg-yellow-500"
+                                  : "bg-red-500"
+                                }`}
+                              style={{ width: `${(passwordStrength / 3) * 100}%` }}
+                            ></div>
+                          </div>
+                        </div>
+
+                        {/* Password requirements */}
+                        {passwordErrors.length > 0 && (
+                          <div className="space-y-1 text-sm text-red-500">
+                            {passwordErrors.map((error, index) => (
+                              <div key={index}>{error}</div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Confirm New Password */}
+                    {passwordStrength === 3 && (
+                      <div className="space-y-2">
+                        <label htmlFor="confirm-new-password" className="text-sm font-medium text-gray-700">
+                          Confirm New Password
+                        </label>
+                        <div className="relative">
+                          <input
+                            id="confirm-new-password"
+                            type="password"
+                            value={confirmNewPassword}
+                            onChange={handleConfirmPasswordChange}
+                            className="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="Confirm new password"
+                          />
+                        </div>
+                        {!passwordsMatch && confirmNewPassword && (
+                          <div className="text-sm text-red-500">Passwords do not match</div>
+                        )}
+                      </div>
+                    )}
+
+                    <div className="flex justify-end space-x-3 pt-2">
+                      <button
+                        onClick={() => {
+                          setShowNewPasswordModal(false)
+                          setNewPassword("")
+                          setConfirmNewPassword("")
+                          setPasswordError("")
+                          setPasswordStrength(0)
+                          setPasswordErrors([])
+                        }}
+                        className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleUpdatePassword}
+                        disabled={isChangingPassword || passwordStrength < 3 || !passwordsMatch || !confirmNewPassword}
+                        className="px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 disabled:opacity-70"
+                      >
+                        {isChangingPassword ? "Updating..." : "Update Password"}
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-      )}
+          )}
 
-      {/* Profile Password Verification Modal */}
-      {showProfilePasswordModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div
-            className="bg-white rounded-md shadow-lg w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-300 relative"
-            onMouseDown={(e) => e.stopPropagation()}
-          >
-            <div className="bg-slate-900 h-12 relative flex items-center justify-between px-4">
-              <div className="text-white font-medium">Verify Password</div>
-              <button
-                onClick={() => {
-                  setShowProfilePasswordModal(false)
-                  setProfilePassword("")
-                  setProfilePasswordError("")
-                  setPendingProfileUpdate(null)
-                }}
-                className="text-white hover:text-gray-300 transition-colors"
+          {/* Profile Password Verification Modal */}
+          {showProfilePasswordModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+              <div
+                className="bg-white rounded-md shadow-lg w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-300 relative"
+                onMouseDown={(e) => e.stopPropagation()}
               >
-                <X size={20} />
-              </button>
-            </div>
-            <div className="p-6">
-              <p className="text-gray-600 mb-4">Please enter your current password to confirm the profile changes.</p>
-              {profilePasswordError && (
-                <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-md">
-                  {profilePasswordError}
-                </div>
-              )}
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault()
-                  handleVerifyProfilePassword()
-                }}
-                className="space-y-4"
-              >
-                <div className="space-y-2">
-                  <label htmlFor="profilePassword" className="text-sm font-medium text-gray-700">
-                    Current Password
-                  </label>
-                  <input
-                    id="profilePassword"
-                    type="password"
-                    value={profilePassword}
-                    onChange={(e) => setProfilePassword(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Enter your current password"
-                    required
-                  />
-                </div>
-                <div className="flex gap-3 pt-4">
+                <div className="bg-slate-900 h-12 relative flex items-center justify-between px-4">
+                  <div className="text-white font-medium">Verify Password</div>
                   <button
-                    type="button"
                     onClick={() => {
                       setShowProfilePasswordModal(false)
                       setProfilePassword("")
                       setProfilePasswordError("")
                       setPendingProfileUpdate(null)
                     }}
-                    className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
+                    className="text-white hover:text-gray-300 transition-colors"
                   >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isVerifyingProfilePassword}
-                    className="flex-1 px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    {isVerifyingProfilePassword ? "Verifying..." : "Confirm"}
+                    <X size={20} />
                   </button>
                 </div>
-              </form>
+                <div className="p-6">
+                  <p className="text-gray-600 mb-4">Please enter your current password to confirm the profile changes.</p>
+                  {profilePasswordError && (
+                    <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-md">
+                      {profilePasswordError}
+                    </div>
+                  )}
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault()
+                      handleVerifyProfilePassword()
+                    }}
+                    className="space-y-4"
+                  >
+                    <div className="space-y-2">
+                      <label htmlFor="profilePassword" className="text-sm font-medium text-gray-700">
+                        Current Password
+                      </label>
+                      <input
+                        id="profilePassword"
+                        type="password"
+                        value={profilePassword}
+                        onChange={(e) => setProfilePassword(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Enter your current password"
+                        required
+                      />
+                    </div>
+                    <div className="flex gap-3 pt-4">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowProfilePasswordModal(false)
+                          setProfilePassword("")
+                          setProfilePasswordError("")
+                          setPendingProfileUpdate(null)
+                        }}
+                        className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={isVerifyingProfilePassword}
+                        className="flex-1 px-4 py-2 bg-black text-white rounded-md hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        {isVerifyingProfilePassword ? "Verifying..." : "Confirm"}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
             </div>
-          </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   )
 }

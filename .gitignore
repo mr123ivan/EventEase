@@ -72,3 +72,5 @@ test-results/
 
 config/
 docker-compose.yml
+.aiassistant/
+# .github/

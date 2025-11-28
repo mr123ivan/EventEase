@@ -256,7 +256,7 @@ const Navbar = () => {
             {/* Right side - bookings, notifications and profile */}
             <div className="flex items-center space-x-4">
               {/* Bookings link - only show for non-admin users */}
-              {user.role !== "Admin" && (
+              {user.role !== "Admin" && user.role !== "SubContractor" &&(
                 <button onClick={navigateToBookings} className="text-gray-600 hover:text-blue-500 relative">
                   <Calendar size={20} />
                 </button>

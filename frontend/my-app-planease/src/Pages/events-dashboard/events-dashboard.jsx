@@ -65,7 +65,7 @@ const EventPage = () => {
       </section>
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-5">
         {events.map((event) => (
-          <div key={event.id} className="shadow-lg rounded-lg overflow-hidden flex flex-col h-full">
+          <div key={event.event_Id} className="shadow-lg rounded-lg overflow-hidden flex flex-col h-full">
             {/* Image section */}
             <div className="h-52 w-full bg-gray-200 flex items-center justify-center">
               {event.event_image ? (
@@ -82,8 +82,10 @@ const EventPage = () => {
             {/* Content */}
             <div className="p-4 md:p-5 flex flex-col flex-1 text-center">
               <h3 className="text-lg md:text-xl font-semibold mb-2">{event.event_name || "Untitled Event"}</h3>
-              <p className="text-sm md:text-base text-gray-600 mb-2 flex-1 text-left">
-                {event.event_summary || "No description available."}
+              <p className="text-sm md:text-base text-gray-600 mb-2 flex-1 text-left break-words">
+                {event.event_summary && event.event_summary.length > 200
+                  ? `${event.event_summary.substring(0, 200)}...`
+                  : event.event_summary || "No description available."}
               </p>
 
               {/* Button */}

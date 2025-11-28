@@ -27,43 +27,42 @@ public class ShowcaseController {
     @Autowired
     private ShowcaseMediaService showcaseMediaService;
 
-
     @PostMapping(value = "/create-showcase")
     public ResponseEntity<?> addNewShowcase(@RequestBody ShowcaseDTO showcaseDTO) {
-       try {
-           ShowcaseEntity showcase = showcaseService.createShowcase(showcaseDTO);
-           if(showcaseDTO.getImageUrls().isEmpty()){
-               System.out.println("No images");
-           }
-           showcaseMediaService.createShowcaseMedia(showcaseDTO.getImageUrls(),showcase);
-           return ResponseEntity.ok().body(showcase);
-       }catch (Exception e){
-           return ResponseEntity.badRequest().body(e.getMessage());
-       }
+        try {
+            ShowcaseEntity showcase = showcaseService.createShowcase(showcaseDTO);
+            if (showcaseDTO.getImageUrls().isEmpty()) {
+                System.out.println("No images");
+            }
+            showcaseMediaService.createShowcaseMedia(showcaseDTO.getImageUrls(), showcase);
+            return ResponseEntity.ok().body(showcase);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @GetMapping("/getshowcase/{email}")
-    public ResponseEntity<?> getShowcaseByServiceName(@PathVariable String email){
-        List<ShowcaseEntity> showcase = null;
+    public ResponseEntity<?> getShowcaseByServiceName(@PathVariable String email) {
         try {
-            showcase = showcaseService.getAllShowcaseByUserEmail(email);
-            if(showcase == null) {
-                return ResponseEntity.notFound().build();
+            List<ShowcaseEntity> showcase = showcaseService.getAllShowcaseByUserEmail(email);
+            // Collection endpoints should return 200 with empty list, not 404
+            if (showcase == null) {
+                return ResponseEntity.ok().body(List.of());
             }
             return ResponseEntity.ok().body(showcase);
-        }catch (Exception e){
+        } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
     @DeleteMapping("/delete/{showcase_id}")
-    public ResponseEntity<?> deleteShowcase(@PathVariable int showcase_id){
+    public ResponseEntity<?> deleteShowcase(@PathVariable int showcase_id) {
 
         String message = showcaseService.deleteShowcase(showcase_id);
-        if(message == null){
+        if (message == null) {
             return ResponseEntity.notFound().build();
         }
-    return ResponseEntity.ok(message);
+        return ResponseEntity.ok(message);
     }
 
     @PutMapping("/edit-showcase/{showcase_id}")

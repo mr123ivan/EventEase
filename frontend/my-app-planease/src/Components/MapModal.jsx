@@ -232,17 +232,66 @@ const MapModal = ({ open, onClose, onLocationSelect, initialLocation }) => {
           </IconButton>
         </Box>
 
-        {/* Main Content - Two Column Layout */}
-        <Box sx={{ display: 'flex', height: 'calc(100% - 80px)' }}>
-          {/* Left Column - Search and Details */}
+        {/* Main Content - Responsive Layout */}
+        <Box sx={{
+          display: 'flex',
+          flexDirection: { xs: 'column', md: 'row' },
+          height: 'calc(100% - 80px)',
+          overflow: 'hidden'
+        }}>
+          {/* Map Section - Shows first on mobile */}
+          <Box sx={{
+            width: { xs: '100%', md: '65%' },
+            height: { xs: '300px', md: '100%' },
+            order: { xs: 1, md: 2 },
+            position: 'relative',
+            flexShrink: 0
+          }}>
+            <Box
+              sx={{
+                height: '100%',
+                width: '100%',
+                borderRadius: 0,
+                overflow: 'hidden',
+                '& .leaflet-container': {
+                  borderRadius: 0,
+                  height: '100%',
+                  width: '100%'
+                },
+              }}
+            >
+              <MapContainer
+                center={mapCenter}
+                zoom={zoom}
+                style={{ height: '100%', width: '100%' }}
+                key={`${mapCenter[0]}-${mapCenter[1]}-${zoom}`}
+              >
+                <TileLayer
+                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                />
+                <LocationMarker
+                  onLocationSelect={handleLocationSelect}
+                  selectedLocation={selectedLocation}
+                />
+              </MapContainer>
+            </Box>
+          </Box>
+
+          {/* Search and Details Section - Shows second on mobile */}
           <Box
             sx={{
               width: { xs: '100%', md: '35%' },
-              p: 3,
+              height: { xs: 'auto', md: '100%' },
+              maxHeight: { xs: 'calc(100% - 300px)', md: '100%' },
+              order: { xs: 2, md: 1 },
+              p: { xs: 2, md: 3 },
               borderRight: { xs: 'none', md: '1px solid #e0e0e0' },
+              borderTop: { xs: '1px solid #e0e0e0', md: 'none' },
               display: 'flex',
               flexDirection: 'column',
               gap: 2,
+              overflow: 'auto'
             }}
           >
             {/* Search Section */}
@@ -306,8 +355,6 @@ const MapModal = ({ open, onClose, onLocationSelect, initialLocation }) => {
               Type at least 3 characters to search
             </Typography>
 
-
-
             {/* Selected Location Display */}
             {selectedLocation && (
               <Card sx={{ boxShadow: 2, bgcolor: 'goldenrod', color: 'black' }}>
@@ -326,58 +373,28 @@ const MapModal = ({ open, onClose, onLocationSelect, initialLocation }) => {
               </Card>
             )}
 
-            {/* Spacer to push footer down */}
-            <Box sx={{ flexGrow: 1 }} />
+            {/* Spacer to push footer down on desktop */}
+            <Box sx={{ flexGrow: { xs: 0, md: 1 } }} />
 
             {/* Footer Actions */}
             <Box sx={{ display: 'flex', gap: 2, pt: 2 }}>
-                <Button
-                  onClick={handleClose}
-                  variant="outlined"
-                  fullWidth
-                  sx={{ py: 1.5, bgcolor: 'goldenrod', color: 'black', '&:hover': { bgcolor: '#daa520' } }}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleConfirmLocation}
-                  variant="contained"
-                  fullWidth
-                  disabled={!selectedLocation}
-                  sx={{ py: 1.5, bgcolor: 'goldenrod', color: 'black', '&:hover': { bgcolor: '#daa520' } }}
-                >
-                  Confirm Location
-                </Button>
-            </Box>
-          </Box>
-
-          {/* Right Column - Map */}
-          <Box sx={{ flex: 1, position: 'relative' }}>
-            <Box
-              sx={{
-                height: '100%',
-                width: '100%',
-                borderRadius: 0,
-                overflow: 'hidden',
-                '& .leaflet-container': {
-                  borderRadius: 0,
-                },
-              }}
-            >
-              <MapContainer
-                center={mapCenter}
-                zoom={zoom}
-                style={{ height: '100%', width: '100%' }}
+              <Button
+                onClick={handleClose}
+                variant="outlined"
+                fullWidth
+                sx={{ py: 1.5, bgcolor: 'goldenrod', color: 'black', '&:hover': { bgcolor: '#daa520' } }}
               >
-                <TileLayer
-                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                />
-                <LocationMarker
-                  onLocationSelect={handleLocationSelect}
-                  selectedLocation={selectedLocation}
-                />
-              </MapContainer>
+                CANCEL
+              </Button>
+              <Button
+                onClick={handleConfirmLocation}
+                variant="contained"
+                fullWidth
+                disabled={!selectedLocation}
+                sx={{ py: 1.5, bgcolor: 'goldenrod', color: 'black', '&:hover': { bgcolor: '#daa520' } }}
+              >
+                CONFIRM LOCATION
+              </Button>
             </Box>
           </Box>
         </Box>

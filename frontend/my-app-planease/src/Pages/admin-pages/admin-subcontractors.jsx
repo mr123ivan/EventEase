@@ -528,7 +528,7 @@ const AdminSubContractors = () => {
           Authorization: `Bearer ${token}`,
         },
       })
-      console.log(response.data)
+      // console.log(response.data) // COMMENTED OUT - Exposes subcontractor data including personal info
       setSubcontractors(response.data || [])
       setError(null)
     } catch (err) {
@@ -550,7 +550,7 @@ const AdminSubContractors = () => {
           Authorization: `Bearer ${token}`,
         },
       })
-      console.log("Category counts:", response.data)
+      // console.log("Category counts:", response.data) // COMMENTED OUT - Exposes internal analytics data
       setCategoryCounts(response.data || [])
     } catch (err) {
       console.error("Error fetching category counts:", err)

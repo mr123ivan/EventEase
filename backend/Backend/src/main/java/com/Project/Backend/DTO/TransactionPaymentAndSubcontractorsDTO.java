@@ -5,22 +5,20 @@ import java.util.Map;
 
 public class TransactionPaymentAndSubcontractorsDTO {
     int transaction_Id;
-    int paymentReferenceNumber;
+    String paymentReferenceNumber;
     String paymentNote;
     String paymentReciept;
     List<Map<String, Object>> subcontractors;
 
-
-    public TransactionPaymentAndSubcontractorsDTO(int transaction_Id, int paymentReferenceNumber,
-                                                  String paymentNote, String paymentReciept,
-                                                  List<Map<String, Object>> subcontractors) {
+    public TransactionPaymentAndSubcontractorsDTO(int transaction_Id, String paymentReferenceNumber,
+            String paymentNote, String paymentReciept,
+            List<Map<String, Object>> subcontractors) {
         this.transaction_Id = transaction_Id;
         this.paymentReferenceNumber = paymentReferenceNumber;
         this.paymentNote = paymentNote;
         this.paymentReciept = paymentReciept;
         this.subcontractors = subcontractors;
     }
-
 
     public int getTransaction_Id() {
         return transaction_Id;
@@ -30,11 +28,11 @@ public class TransactionPaymentAndSubcontractorsDTO {
         this.transaction_Id = transaction_Id;
     }
 
-    public int getPaymentReferenceNumber() {
+    public String getPaymentReferenceNumber() {
         return paymentReferenceNumber;
     }
 
-    public void setPaymentReferenceNumber(int paymentReferenceNumber) {
+    public void setPaymentReferenceNumber(String paymentReferenceNumber) {
         this.paymentReferenceNumber = paymentReferenceNumber;
     }
 

@@ -76,7 +76,7 @@ const SubcontractorDashboard = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     useEffect(()=>{
-        console.log("selectedImage", selectedImage);
+        // console.log("selectedImage", selectedImage); // COMMENTED OUT - Exposes image data and file information
     },[selectedImage])
 
     const handleOpen = () => setOpen(true);
@@ -112,7 +112,7 @@ const SubcontractorDashboard = () => {
     };
 
     const handleSubmitDescription = () => {
-        console.log("description", description);
+        // console.log("description", description); // COMMENTED OUT - Exposes business description content
         setIsEditingAbout(false);
 
         // Submit the updated description
@@ -140,14 +140,14 @@ const SubcontractorDashboard = () => {
     const dropRef = useRef(null);
 
     useEffect(() => {
-        console.log("deletedFileIds", deletedFileIds);
+        // console.log("deletedFileIds", deletedFileIds); // COMMENTED OUT - Exposes file deletion tracking IDs
     },[deletedFileIds])
 
     const handleRemoveImage = (indexToRemove) => {
         const removedItem = selectedImage[indexToRemove];
 
-        console.log(indexToRemove);
-        console.log("removedItem: ", removedItem);
+        // console.log(indexToRemove); // COMMENTED OUT - Exposes array index information
+        // console.log("removedItem: ", removedItem); // COMMENTED OUT - Exposes image file data
 
         if (removedItem?.id) {
             setDeletedFileIds((prev) => [...prev, removedItem.id]);
@@ -168,13 +168,13 @@ const SubcontractorDashboard = () => {
             }
         })
             .then((response) => {
-                console.log("response", response);
+                // console.log("response", response); // COMMENTED OUT - Exposes API response data
 
                 const user = response.data.user;
 
                 setShowcase(response.data.showcase);
                 setAbout(response.data.subcontractor_description);
-                console.log(user)
+                // console.log(user) // COMMENTED OUT - Exposes sensitive user data including personal information
                 setUserDetails({
                     fullname: `${user.firstname} ${user.lastname}`,
                     email: user.email,
@@ -186,7 +186,7 @@ const SubcontractorDashboard = () => {
                 fetchOverviewData(user.email);
             })
             .catch((error) => {
-                console.log("Error fetching user details:", error);
+                // console.log("Error fetching user details:", error); // COMMENTED OUT - Exposes error details and system internals
             });
     }
     
@@ -201,35 +201,35 @@ const SubcontractorDashboard = () => {
             }
         })
         .then(response => {
-            console.log("Subcontractor transactions:", response.data);
-            
+            // console.log("Subcontractor transactions:", response.data); // COMMENTED OUT - Exposes sensitive transaction data
+
             if (response.data) {
                 const transactions = response.data;
                 
                 // Count assigned events (unique events the subcontractor is assigned to)
                 // Using eventName since eventId is not available in the response
                 const uniqueEvents = [...new Set(transactions.map(t => t.eventName))];
-                console.log("Unique events:", uniqueEvents);
+                // console.log("Unique events:", uniqueEvents); // COMMENTED OUT - Exposes event information
                 setAssignedEvents(uniqueEvents.length);
                 
                 // Count transactions by status
                 // Using transactionStatus field from backend
                 // Status enum in Java: COMPLETED, DECLINED, CANCELLED, PENDING, ONGOING
-                console.log("Transaction statuses:", transactions.map(t => t.transactionStatus));
-                
+                // console.log("Transaction statuses:", transactions.map(t => t.transactionStatus)); // COMMENTED OUT - Exposes transaction status data
+
                 const active = transactions.filter(t => t.transactionStatus === "ONGOING" || t.transactionStatus === "PENDING").length;
                 const completed = transactions.filter(t => t.transactionStatus === "COMPLETED").length;
                 
-                console.log("Active transactions:", active);
-                console.log("Completed transactions:", completed);
-                
+                // console.log("Active transactions:", active); // COMMENTED OUT - Exposes business metrics
+                // console.log("Completed transactions:", completed); // COMMENTED OUT - Exposes business metrics
+
                 setActiveTransactions(active);
                 setCompletedTransactions(completed);
                 
                 // Get recent activity (latest 5 transactions)
                 // Using transactionDate field from backend for sorting
                 const sortedByDate = [...transactions].sort((a, b) => new Date(b.transactionDate) - new Date(a.transactionDate));
-                console.log("Sorted recent activity:", sortedByDate.slice(0, 5));
+                // console.log("Sorted recent activity:", sortedByDate.slice(0, 5)); // COMMENTED OUT - Exposes recent transaction data
                 setRecentActivity(sortedByDate.slice(0, 5));
             }
             
@@ -398,8 +398,8 @@ const SubcontractorDashboard = () => {
         setUploadError('');
 
         if (!selectVideo) {
-            console.log(isEditingShowcase ? "updating image showcase" : "submitting new image showcase");
-            console.log(selectedImage);
+            // console.log(isEditingShowcase ? "updating image showcase" : "submitting new image showcase"); // COMMENTED OUT - Exposes showcase operation details
+            // console.log(selectedImage); // COMMENTED OUT - Exposes image data and file information
             //need optimization <-----
             const resizedImages = await Promise.all(
                 selectedImage.map(async (img) => {
@@ -424,7 +424,7 @@ const SubcontractorDashboard = () => {
             );
 
             const filteredResizedImages = resizedImages.filter(img => img.file != null);
-            console.log("filteredResizedImages: ", filteredResizedImages);
+            // console.log("filteredResizedImages: ", filteredResizedImages); // COMMENTED OUT - Exposes image processing data
 
             const urlFiles = [];
             for (const img of filteredResizedImages) {
@@ -445,8 +445,8 @@ const SubcontractorDashboard = () => {
                     const presignedUrl = presignedResponse.data.presignedURL;
                     const baseUrl = presignedUrl.split('?')[0];
 
-                    console.log("image title: ", img.title);
-                    console.log("base url: ", baseUrl);
+                    // console.log("image title: ", img.title); // COMMENTED OUT - Exposes image file names
+                    // console.log("base url: ", baseUrl); // COMMENTED OUT - Exposes S3 URLs and storage structure
 
                     urlFiles.push({
                         imageUrl: baseUrl,
@@ -461,7 +461,7 @@ const SubcontractorDashboard = () => {
                         }
                     });
 
-                    console.log(`Uploaded: ${img.title}`);
+                    // console.log(`Uploaded: ${img.title}`); // COMMENTED OUT - Exposes file upload status and names
                 } catch (error) {
                     console.error(`Error uploading `, error);
                     setUploadError(`Failed to upload ${img.title}`);
@@ -470,7 +470,7 @@ const SubcontractorDashboard = () => {
                 }
             }
 
-            console.log("urlImages", urlFiles);
+            // console.log("urlImages", urlFiles);
 
             const endpoint = isEditingShowcase
                 ? `${API_BASE_URL}/showcase/edit-showcase/${editingShowcaseId}`
@@ -492,10 +492,10 @@ const SubcontractorDashboard = () => {
                 fetchShowcaseData();
             });
         } else {
-            console.log(isEditingShowcase ? "updating video showcase" : "submitting new video showcase");
+            // console.log(isEditingShowcase ? "updating video showcase" : "submitting new video showcase");
             // TODO: Handle video editing/uploading logic
-            console.log("submitting video showcase");
-            console.log(selectVideo)
+            // console.log("submitting video showcase");
+            // console.log(selectVideo)
             const urlFiles = [];
             try{
                 const presignedResponse = await axios.get(
@@ -525,7 +525,7 @@ const SubcontractorDashboard = () => {
                             'Content-Type': selectVideo.type,
                         },
                     });
-                    console.log(response);
+                    // console.log(response);
                 } catch (error) {
                     console.error("Error uploading video:", error);
                     setUploadError('Failed to upload video. Please try again.');

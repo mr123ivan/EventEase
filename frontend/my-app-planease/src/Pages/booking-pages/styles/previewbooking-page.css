@@ -285,4 +285,67 @@ label {
   .payment-button {
     width: 100%;
   }
+
+  /* Step indicator mobile improvements */
+  .step-indicator {
+    margin-bottom: 30px;
+    padding: 0 5px;
+  }
+
+  .step-number {
+    width: 35px;
+    height: 35px;
+    font-size: 14px;
+  }
+
+  .step-label {
+    font-size: 11px;
+    text-align: center;
+    max-width: 60px;
+    line-height: 1.2;
+  }
+
+  .step-line {
+    margin: 0 5px;
+    margin-bottom: 25px;
+  }
+}
+
+/* Extra small screens */
+@media (max-width: 480px) {
+  .booking-container {
+    padding: 15px 10px;
+  }
+
+  .step-indicator {
+    margin-bottom: 25px;
+    padding: 0;
+  }
+
+  .step-number {
+    width: 32px;
+    height: 32px;
+    font-size: 13px;
+    margin-bottom: 5px;
+  }
+
+  .step-label {
+    font-size: 10px;
+    max-width: 50px;
+  }
+
+  .step-line {
+    margin: 0 3px;
+    margin-bottom: 20px;
+    height: 2px;
+  }
+
+  .section-title {
+    font-size: 16px;
+  }
+
+  .breadcrumb {
+    font-size: 12px;
+    flex-wrap: wrap;
+  }
 }

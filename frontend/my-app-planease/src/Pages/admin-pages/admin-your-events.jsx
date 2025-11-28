@@ -117,6 +117,7 @@ const YourEvents = () => {
       event_image: event.event_image || "",
       imageFile: undefined,
     })
+
     // If backend later provides persisted sections, hydrate them here
     try {
       const raw = event.event_sections
@@ -144,6 +145,7 @@ const YourEvents = () => {
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target
+
     setFormData((prev) => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value,
@@ -316,9 +318,8 @@ const YourEvents = () => {
                     <td className="p-3 sm:p-4 text-[#667085] max-w-xs truncate">{event.event_summary}</td>
                     <td className="p-3 sm:p-4 whitespace-nowrap">
                       <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          event.event_isAvailable ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-                        }`}
+                        className={`px-2 py-1 rounded-full text-xs font-medium ${event.event_isAvailable ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                          }`}
                       >
                         {event.event_isAvailable ? "Available" : "Unavailable"}
                       </span>
@@ -342,7 +343,7 @@ const YourEvents = () => {
       {/* Add/Edit Event Modal */}
       <Dialog
         open={showModal}
-        onClose={() => setShowModal(false)}
+        onClose={() => { }}
         className="fixed z-1150 shadow-md inset-0 overflow-y-auto"
       >
         <div className="flex items-center justify-center min-h-screen px-4">
@@ -389,12 +390,7 @@ const YourEvents = () => {
                         name="event_description"
                         value={formData.event_description}
                         onChange={handleInputChange}
-                        className="border p-2 rounded w-full resize-none overflow-hidden"
-                        rows={3}
-                        onInput={(e) => {
-                          e.target.style.height = 'auto';
-                          e.target.style.height = e.target.scrollHeight + 'px';
-                        }}
+                        className="border p-2 rounded w-full resize-none h-32 overflow-y-auto"
                         placeholder="Enter detailed description of the event..."
                       />
                     </div>
@@ -507,134 +503,134 @@ const YourEvents = () => {
 
                   {/* Service Sections */}
                   <div className="space-y-3">
-                  <div className="flex justify-between items-center mb-4">
-                    <h4 className="font-semibold text-sm">Service Sections (drag services into sections)</h4>
-                    <button
-                      type="button"
-                      onClick={() => setServiceSections((prev) => [...prev, { title: "", required: false, multi: false, serviceIds: [] }])}
-                      className="flex items-center gap-1 text-sm bg-[#FFB22C] hover:bg-[#e6a028] text-white px-4 py-2 rounded-md"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                        <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
-                      </svg>
-                      Add Section
-                    </button>
-                  </div>
-                  {serviceSections.length === 0 && (
-                    <div className="bg-gray-50 border border-gray-200 rounded-md p-8 text-center">
-                      <div className="text-gray-400 mb-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" viewBox="0 0 16 16">
-                          <path d="M12.5 16a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Zm.5-5v1h1a.5.5 0 0 1 0 1h-1v1a.5.5 0 0 1-1 0v-1h-1a.5.5 0 0 1 0-1h1v-1a.5.5 0 0 1 1 0Z"/>
-                          <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5Zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5h-2Z"/>
+                    <div className="flex justify-between items-center mb-4">
+                      <h4 className="font-semibold text-sm">Service Sections (drag services into sections)</h4>
+                      <button
+                        type="button"
+                        onClick={() => setServiceSections((prev) => [...prev, { title: "", required: false, multi: false, serviceIds: [] }])}
+                        className="flex items-center gap-1 text-sm bg-[#FFB22C] hover:bg-[#e6a028] text-white px-4 py-2 rounded-md"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                          <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z" />
                         </svg>
-                      </div>
-                      <p className="text-sm text-gray-600 mb-1">No sections defined yet</p>
-                      <p className="text-xs text-gray-500">Click "Add Section" to create your first section</p>
+                        Add Section
+                      </button>
                     </div>
-                  )}
-                  {serviceSections.map((sec, idx) => (
-                    <div key={`svc-sec-${idx}`} className="border rounded-lg p-4 bg-white shadow-sm mb-4">
-                      <div className="flex flex-col gap-3 mb-3">
-                        {/* Section Title Input */}
-                        <div className="w-full">
-                          <label className="block text-xs font-medium text-gray-500 mb-1">Section Title</label>
-                          <input
-                            type="text"
-                            placeholder="Enter section title"
-                            className="border border-gray-300 p-2 rounded-md w-full text-sm focus:border-[#FFB22C] focus:ring-1 focus:ring-[#FFB22C] focus:outline-none transition-colors"
-                            value={sec.title}
-                            onChange={(e) => {
-                              const val = e.target.value
-                              setServiceSections((prev) => prev.map((s, i) => (i === idx ? { ...s, title: val } : s)))
-                            }}
-                          />
+                    {serviceSections.length === 0 && (
+                      <div className="bg-gray-50 border border-gray-200 rounded-md p-8 text-center">
+                        <div className="text-gray-400 mb-2">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M12.5 16a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Zm.5-5v1h1a.5.5 0 0 1 0 1h-1v1a.5.5 0 0 1-1 0v-1h-1a.5.5 0 0 1 0-1h1v-1a.5.5 0 0 1 1 0Z" />
+                            <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5L14 4.5Zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V4.5h-2Z" />
+                          </svg>
                         </div>
-
-                        {/* Options Row */}
-                        <div className="flex flex-wrap justify-between items-center gap-2 border-b border-gray-100 pb-3">
-                          <div className="flex flex-wrap gap-4">
-                            <label className="flex items-center gap-1.5 cursor-pointer">
-                              <input
-                                type="checkbox"
-                                checked={!!sec.required}
-                                onChange={(e) =>
-                                  setServiceSections((prev) => prev.map((s, i) => (i === idx ? { ...s, required: e.target.checked } : s)))
-                                }
-                                className="accent-[#FFB22C] h-4 w-4"
-                              />
-                              <span className="text-sm">Required</span>
-                            </label>
-
-                            <label className="flex items-center gap-1.5 cursor-pointer">
-                              <input
-                                type="checkbox"
-                                checked={!!sec.multi}
-                                onChange={(e) =>
-                                  setServiceSections((prev) => prev.map((s, i) => (i === idx ? { ...s, multi: e.target.checked } : s)))
-                                }
-                                className="accent-[#FFB22C] h-4 w-4"
-                              />
-                              <span className="text-sm">Multi-select</span>
-                            </label>
+                        <p className="text-sm text-gray-600 mb-1">No sections defined yet</p>
+                        <p className="text-xs text-gray-500">Click "Add Section" to create your first section</p>
+                      </div>
+                    )}
+                    {serviceSections.map((sec, idx) => (
+                      <div key={`svc-sec-${idx}`} className="border rounded-lg p-4 bg-white shadow-sm mb-4">
+                        <div className="flex flex-col gap-3 mb-3">
+                          {/* Section Title Input */}
+                          <div className="w-full">
+                            <label className="block text-xs font-medium text-gray-500 mb-1">Section Title</label>
+                            <input
+                              type="text"
+                              placeholder="Enter section title"
+                              className="border border-gray-300 p-2 rounded-md w-full text-sm focus:border-[#FFB22C] focus:ring-1 focus:ring-[#FFB22C] focus:outline-none transition-colors"
+                              value={sec.title}
+                              onChange={(e) => {
+                                const val = e.target.value
+                                setServiceSections((prev) => prev.map((s, i) => (i === idx ? { ...s, title: val } : s)))
+                              }}
+                            />
                           </div>
 
-                          <button
-                            type="button"
-                            onClick={() => setServiceSections((prev) => prev.filter((_, i) => i !== idx))}
-                            className="text-xs text-red-500 hover:text-red-700 flex items-center gap-1"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16">
-                              <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
-                              <path fillRule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
-                            </svg>
-                            Remove Section
-                          </button>
-                        </div>
-                      </div>
-                      <div
-                        className="mt-3 min-h-[100px] border-2 border-dashed border-gray-300 rounded-md p-3 bg-gray-50"
-                        onDragOver={(e) => e.preventDefault()}
-                        onDrop={(e) => {
-                          e.preventDefault()
-                          if (dragServiceId) {
-                            setServiceSections((prev) =>
-                              prev.map((s, i) =>
-                                i === idx ? { ...s, serviceIds: [...new Set([...(s.serviceIds || []), dragServiceId])] } : s,
-                              ),
-                            )
-                          }
-                          setDragServiceId(null)
-                        }}
-                      >
-                        {(!sec.serviceIds || sec.serviceIds.length === 0) && (
-                          <div className="text-center py-4 text-sm text-gray-400">Drop services here</div>
-                        )}
-                        <div className="flex flex-wrap gap-2">
-                          {(sec.serviceIds || []).map((sid, si) => {
-                            const svc = allServices.find((x) => (x.serviceId ?? x.id) === sid)
-                            return (
-                              <div key={`${sid}-${si}`} className="flex items-center justify-between gap-2 text-sm bg-white border border-gray-200 px-3 py-1.5 rounded-md shadow-sm">
-                                <span>{svc?.name || 'Service'}</span>
-                                <button
-                                  type="button"
-                                  className="ml-2 text-red-500 hover:text-red-700"
-                                  onClick={() =>
-                                    setServiceSections((prev) =>
-                                      prev.map((s, i) =>
-                                        i === idx ? { ...s, serviceIds: s.serviceIds.filter((_, j) => j !== si) } : s,
-                                      ),
-                                    )
+                          {/* Options Row */}
+                          <div className="flex flex-wrap justify-between items-center gap-2 border-b border-gray-100 pb-3">
+                            <div className="flex flex-wrap gap-4">
+                              <label className="flex items-center gap-1.5 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={!!sec.required}
+                                  onChange={(e) =>
+                                    setServiceSections((prev) => prev.map((s, i) => (i === idx ? { ...s, required: e.target.checked } : s)))
                                   }
-                                >
-                                  ×
-                                </button>
-                              </div>
-                            )
-                          })}
+                                  className="accent-[#FFB22C] h-4 w-4"
+                                />
+                                <span className="text-sm">Required</span>
+                              </label>
+
+                              <label className="flex items-center gap-1.5 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={!!sec.multi}
+                                  onChange={(e) =>
+                                    setServiceSections((prev) => prev.map((s, i) => (i === idx ? { ...s, multi: e.target.checked } : s)))
+                                  }
+                                  className="accent-[#FFB22C] h-4 w-4"
+                                />
+                                <span className="text-sm">Multi-select</span>
+                              </label>
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => setServiceSections((prev) => prev.filter((_, i) => i !== idx))}
+                              className="text-xs text-red-500 hover:text-red-700 flex items-center gap-1"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z" />
+                                <path fillRule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z" />
+                              </svg>
+                              Remove Section
+                            </button>
+                          </div>
+                        </div>
+                        <div
+                          className="mt-3 min-h-[100px] border-2 border-dashed border-gray-300 rounded-md p-3 bg-gray-50"
+                          onDragOver={(e) => e.preventDefault()}
+                          onDrop={(e) => {
+                            e.preventDefault()
+                            if (dragServiceId) {
+                              setServiceSections((prev) =>
+                                prev.map((s, i) =>
+                                  i === idx ? { ...s, serviceIds: [...new Set([...(s.serviceIds || []), dragServiceId])] } : s,
+                                ),
+                              )
+                            }
+                            setDragServiceId(null)
+                          }}
+                        >
+                          {(!sec.serviceIds || sec.serviceIds.length === 0) && (
+                            <div className="text-center py-4 text-sm text-gray-400">Drop services here</div>
+                          )}
+                          <div className="flex flex-wrap gap-2">
+                            {(sec.serviceIds || []).map((sid, si) => {
+                              const svc = allServices.find((x) => (x.serviceId ?? x.id) === sid)
+                              return (
+                                <div key={`${sid}-${si}`} className="flex items-center justify-between gap-2 text-sm bg-white border border-gray-200 px-3 py-1.5 rounded-md shadow-sm">
+                                  <span>{svc?.name || 'Service'}</span>
+                                  <button
+                                    type="button"
+                                    className="ml-2 text-red-500 hover:text-red-700"
+                                    onClick={() =>
+                                      setServiceSections((prev) =>
+                                        prev.map((s, i) =>
+                                          i === idx ? { ...s, serviceIds: s.serviceIds.filter((_, j) => j !== si) } : s,
+                                        ),
+                                      )
+                                    }
+                                  >
+                                    ×
+                                  </button>
+                                </div>
+                              )
+                            })}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
                   </div>
                 </div>
               </div>
@@ -717,6 +713,7 @@ const YourEvents = () => {
         autoHideDuration={6000}
         onClose={handleCloseSnackbar}
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+        sx={{ zIndex: 9999 }}
       >
         <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: "100%" }}>
           {snackbar.message}

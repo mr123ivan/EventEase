@@ -48,7 +48,7 @@ const InputDetailsPagePackage = () => {
         const existingServicesData = getServicesData()
 
         if (existingServicesData.livePackageData) {
-          console.log("Using existing live package data:", existingServicesData.livePackageData)
+          // console.log("Using existing live package data:", existingServicesData.livePackageData) // COMMENTED OUT - Exposes package data structure
           setPackageData(existingServicesData.livePackageData)
           return
         }
@@ -76,11 +76,11 @@ const InputDetailsPagePackage = () => {
             services: matchingPackage.services || [],
           }
 
-          console.log("Package ID type:", typeof livePackageData.packageId)
-          console.log("Package ID value:", livePackageData.packageId)
+          // console.log("Package ID type:", typeof livePackageData.packageId) // COMMENTED OUT - Exposes internal package ID type
+          // console.log("Package ID value:", livePackageData.packageId) // COMMENTED OUT - Exposes internal package ID value
 
           setPackageData(livePackageData)
-          
+
 
           // Save to booking storage
           saveServicesData({
@@ -91,7 +91,7 @@ const InputDetailsPagePackage = () => {
             livePackageData: livePackageData,
           })
 
-          console.log("Fetched and saved package data:", livePackageData)
+          // console.log("Fetched and saved package data:", livePackageData) // COMMENTED OUT - Exposes complete package data structure
         } else {
           // Fallback to static package mapping
           let packageId = null
@@ -152,17 +152,17 @@ const InputDetailsPagePackage = () => {
           setIsLoadingUserData(false);
           return;
         }
-  
+
         const response = await axios.get(`${API_BASE_URL}/user/getuser`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-  
+
         const userData = response.data;
-  
+
         const currentPersonalInfo = getPersonalInfo();
         const shouldAutoFill =
           !currentPersonalInfo.firstName && !currentPersonalInfo.lastName && !currentPersonalInfo.email;
-  
+
         if (shouldAutoFill && userData) {
           const autoFilledPersonalInfo = {
             firstName: userData.firstname || "",
@@ -170,10 +170,10 @@ const InputDetailsPagePackage = () => {
             email: userData.email || "",
             contact: userData.phoneNumber || "",
           };
-  
+
           setPersonalInfo(autoFilledPersonalInfo);
           savePersonalInfo(autoFilledPersonalInfo);
-  
+
           // 🔁 Wait until email is available, then call loadFormProgress
           await loadFormProgress(autoFilledPersonalInfo.email);
         } else {
@@ -191,7 +191,7 @@ const InputDetailsPagePackage = () => {
 
   const loadFormProgress = async (email) => {
     const token = localStorage.getItem("token");
-  
+
     try {
       const response = await axios.get(`${API_BASE_URL}/form-draft/load`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -200,12 +200,12 @@ const InputDetailsPagePackage = () => {
           eventName: currentPackageName
         }
       });
-  
+
       const { personalInfo, eventDetails } = response.data;
-      console.log(response.data)
+      // console.log(response.data) // COMMENTED OUT - Exposes form draft data including personal information
       if (personalInfo) setPersonalInfo(personalInfo);
       if (eventDetails) setEventDetails(eventDetails);
-      
+
     } catch (error) {
       console.error("Error fetching form progress:", error);
     }
@@ -214,7 +214,7 @@ const InputDetailsPagePackage = () => {
   const submitFormProgress = () => {
     const token = localStorage.getItem("token")
 
-    const body ={
+    const body = {
       email: personalInfo.email,
       eventName: currentPackageName,
       jsonData: JSON.stringify({
@@ -223,16 +223,16 @@ const InputDetailsPagePackage = () => {
       })
     }
 
-    console.log(body)
+    // console.log(body) // COMMENTED OUT - Exposes form submission data including personal info
     axios.post(`${API_BASE_URL}/form-draft/save`, body, {
       headers: { Authorization: `Bearer ${token}` },
     })
-    .then((response) => {
-      console.log(response.data)
-    })
-    .catch((error) => {
-      console.error("Error fetching form progress:", error)
-    })
+      .then((response) => {
+        // console.log(response.data) // COMMENTED OUT - Exposes API response data
+      })
+      .catch((error) => {
+        console.error("Error fetching form progress:", error)
+      })
   }
 
   // Handle personal info changes
@@ -299,9 +299,9 @@ const InputDetailsPagePackage = () => {
     savePersonalInfo(personalInfo)
     saveEventDetails(eventDetails)
 
-    console.log("Personal Info:", personalInfo)
-    console.log("Event Details:", eventDetails)
-    console.log("Package Data:", servicesData)
+    // console.log("Personal Info:", personalInfo) // COMMENTED OUT - Exposes sensitive personal information
+    // console.log("Event Details:", eventDetails) // COMMENTED OUT - Exposes event details including dates and venues
+    // console.log("Package Data:", servicesData) // COMMENTED OUT - Exposes package data structure
 
     // Ensure we have a valid package name for navigation
     const validPackageName = packageName || currentPackageName || sessionStorage.getItem("currentPackageName")
@@ -371,7 +371,7 @@ const InputDetailsPagePackage = () => {
               </div>
             </div>
 
-      
+
 
             {/* Form */}
             <form onSubmit={handleSubmit}>
@@ -458,7 +458,7 @@ const InputDetailsPagePackage = () => {
                     />
                   </div>
 
-<div className="input-group">
+                  <div className="input-group">
                     <label htmlFor="location">Location *</label>
                     <input
                       type="text"

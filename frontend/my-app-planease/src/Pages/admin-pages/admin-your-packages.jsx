@@ -86,7 +86,7 @@ const AdminPackages = () => {
           Authorization: `Bearer ${token}`,
         },
       })
-      console.log("Subcontractors data:", response.data)
+      // console.log("Subcontractors data:", response.data) // COMMENTED OUT - API response may contain sensitive contractor data
       setAllSubcontractors(response.data)
     } catch (error) {
       console.error("Error fetching subcontractors:", error)
@@ -219,8 +219,8 @@ const AdminPackages = () => {
     ]
 
     const email = possibleEmails.find((email) => email && email.trim() !== "")
-    console.log("Subcontractor object:", subcontractor)
-    console.log("Found email:", email)
+    // console.log("Subcontractor object:", subcontractor) // COMMENTED OUT - Exposes contractor data
+    // console.log("Found email:", email) // COMMENTED OUT - Exposes personal email address
     return email
   }
 
@@ -258,8 +258,8 @@ const AdminPackages = () => {
 
       // Add package services if any are selected
       if (selectedServices.length > 0) {
-        console.log("Adding services to package:", savedPackage.packageId)
-        console.log("Selected services:", selectedServices)
+        // console.log("Adding services to package:", savedPackage.packageId) // COMMENTED OUT - Exposes internal application flow
+        // console.log("Selected services:", selectedServices) // COMMENTED OUT - Exposes service data structure
 
         for (const service of selectedServices) {
           try {
@@ -275,7 +275,7 @@ const AdminPackages = () => {
               continue
             }
 
-            console.log("Adding service with email:", email)
+            // console.log("Adding service with email:", email) // COMMENTED OUT - Exposes personal email address
 
             const addServiceResponse = await axios.post(
               `${API_BASE_URL}/package/addService`,
@@ -290,7 +290,7 @@ const AdminPackages = () => {
               },
             )
 
-            console.log("Service added successfully:", addServiceResponse.data)
+            // console.log("Service added successfully:", addServiceResponse.data) // COMMENTED OUT - API response may contain sensitive data
           } catch (serviceError) {
             console.error("Error adding service:", serviceError)
             console.error("Service error response:", serviceError.response?.data)

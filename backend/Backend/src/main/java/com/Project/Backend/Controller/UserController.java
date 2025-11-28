@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -44,7 +45,6 @@ public class UserController {
     private OtpService otpService;
 
     private final TokenService tokenService;
-    
 
     public UserController(TokenService tokenService) {
         this.tokenService = tokenService;
@@ -76,9 +76,8 @@ public class UserController {
 
     @PostMapping("/upload/profile/{userId}")
     public ResponseEntity<?> uploadUserProfilePicture(
-        @PathVariable String userId,
-        @RequestParam(value = "file", required = false) MultipartFile file
-    ) {
+            @PathVariable String userId,
+            @RequestParam(value = "file", required = false) MultipartFile file) {
         try {
             UserEntity updatedUser = userService.updateUserProfilePicture(userId, file);
             return ResponseEntity.ok(updatedUser);
@@ -88,7 +87,7 @@ public class UserController {
     }
 
     @GetMapping("/getcurrentuser")
-     public ResponseEntity<Map<String, String>> getSchoolId(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<Map<String, String>> getSchoolId(@RequestHeader("Authorization") String authHeader) {
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Collections.singletonMap("error", "Invalid token"));
@@ -106,29 +105,31 @@ public class UserController {
             if (token == null || !token.startsWith("Bearer ")) {
                 return ResponseEntity.status(401).body("Invalid or missing token");
             }
-    
+
             // Extract the actual token (remove "Bearer " prefix)
             token = token.substring(7);
-    
+
             String email = tokenService.extractEmail(token);
             if (email == null || email.isEmpty()) {
                 return ResponseEntity.status(401).body("Invalid token: Email missing");
             }
-    
-            // System.out.println("Fetching profile image for schoolId: " + schoolId); // Debugging log
-    
+
+            // System.out.println("Fetching profile image for schoolId: " + schoolId); //
+            // Debugging log
+
             String profileImage = userService.getUserProfileImage(email);
-    
+
             if (profileImage == null || profileImage.isEmpty()) {
                 return ResponseEntity.badRequest().body("No profile image found");
             }
-    
+
             return ResponseEntity.ok(profileImage);
         } catch (Exception e) {
             e.printStackTrace(); // Debugging
             return ResponseEntity.status(500).body("Error fetching profile image: " + e.getMessage());
         }
     }
+
     @GetMapping("/getcurrentrole")
     public ResponseEntity<Map<String, String>> getUserRole(@RequestHeader("Authorization") String authHeader) {
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
@@ -136,7 +137,7 @@ public class UserController {
                     .body(Collections.singletonMap("error", "Invalid token"));
         }
 
-        String token = authHeader.substring(7); 
+        String token = authHeader.substring(7);
         String role = tokenService.extractRole(token);
 
         return ResponseEntity.ok(Collections.singletonMap("role", role));
@@ -144,45 +145,50 @@ public class UserController {
 
     @PostMapping("/logout")
     public String logout(HttpSession session) {
-        session.invalidate(); 
+        session.invalidate();
         return "Logout successful";
     }
 
     @PostMapping("/login")
     public ResponseEntity<Map<String, Object>> loginUser(@RequestBody LoginRequest loginRequest, HttpSession session) {
-        try{
+        try {
             boolean isAuthenticated = userService.authenticate(loginRequest.getEmail(), loginRequest.getPassword());
 
-            if(isAuthenticated){
+            if (isAuthenticated) {
 
                 UserEntity user = userService.getUserByEmail(loginRequest.getEmail());
 
-                Authentication authentication = new UsernamePasswordAuthenticationToken(user, null, Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getRole().toUpperCase())));
+                Authentication authentication = new UsernamePasswordAuthenticationToken(user, null,
+                        Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getRole().toUpperCase())));
 
-                String token = tokenService.generateToken(authentication,user.getEmail(),user.getRole());
+                String token = tokenService.generateToken(authentication, user.getEmail(), user.getRole());
 
                 session.setAttribute("user", loginRequest.getEmail());
-                //System.out.println(session.getAttribute("user"));
-                //System.out.println("Session ID: " + session.getId()); 
-
+                // System.out.println(session.getAttribute("user"));
+                // System.out.println("Session ID: " + session.getId());
 
                 Map<String, Object> responseBody = new HashMap<>();
                 responseBody.put("token", token);
                 responseBody.put("user", loginRequest.getEmail());
                 responseBody.put("role", user.getRole());
                 return ResponseEntity.ok(responseBody);
-            }else{
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Collections.singletonMap("message", "Invalid credentials"));
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Collections.singletonMap("message", "Invalid credentials"));
             }
-        }catch(Exception e){
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Collections.singletonMap("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Collections.singletonMap("error", e.getMessage()));
         }
     }
-    
 
     @GetMapping("/{id}")
     public ResponseEntity<UserEntity> getUserById(@PathVariable int id) {
-        return ResponseEntity.ok(userService.getUserById(id));
+        UserEntity user = userService.getUserById(id);
+        if (user == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(user);
     }
 
     @GetMapping("/getuser")
@@ -209,7 +215,8 @@ public class UserController {
     }
 
     @PutMapping("/update")
-    public ResponseEntity<UserEntity> updateUser(@RequestHeader("Authorization") String authHeader, @RequestBody UserEntity updatedUser) {
+    public ResponseEntity<UserEntity> updateUser(@RequestHeader("Authorization") String authHeader,
+            @RequestBody UserEntity updatedUser) {
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
@@ -226,7 +233,8 @@ public class UserController {
     }
 
     @PutMapping("/update-password")
-    public ResponseEntity<String> updatePassword(@RequestHeader("Authorization") String authHeader, @RequestBody Map<String, String> request) {
+    public ResponseEntity<String> updatePassword(@RequestHeader("Authorization") String authHeader,
+            @RequestBody Map<String, String> request) {
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Missing or invalid token");
         }
@@ -242,8 +250,10 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
         }
     }
+
     @PostMapping("/check-password")
-    public ResponseEntity<Map<String, Boolean>> checkPassword(@RequestHeader("Authorization") String authHeader, @RequestBody Map<String, String> request) {
+    public ResponseEntity<Map<String, Boolean>> checkPassword(@RequestHeader("Authorization") String authHeader,
+            @RequestBody Map<String, String> request) {
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Collections.singletonMap("match", false));
         }
@@ -280,5 +290,30 @@ public class UserController {
         }
     }
 
+    @GetMapping("/getCustomers")
+    public ResponseEntity<List<UserEntity>> getCustomerUser() {
+        List<UserEntity> customers = userService.getAllUsers()
+                .stream()
+                .filter(u -> u != null && u.getRole() != null && u.getRole().equalsIgnoreCase("User"))
+                .collect(Collectors.toList());
 
+        // Do not expose passwords in the API response
+        customers.forEach(u -> {
+            if (u != null) {
+                u.setPassword(null);
+            }
+        });
+
+        return ResponseEntity.ok(customers);
+    }
+
+    @PostMapping("/isEmailExist")
+    public ResponseEntity<Boolean> isEmailExist(@RequestBody String email) {
+
+        UserEntity user = userService.getUserByEmail(email);
+        if (user == null) {
+            return ResponseEntity.ok(true);
+        }
+        return ResponseEntity.ok(false);
+    }
 }

@@ -47,7 +47,7 @@ const InputDetailsPage = () => {
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
 
   const handleRemoveData = () => {
-      clearBookingData();
+    clearBookingData();
   }
 
   // Auto-fill user data on component mount
@@ -59,17 +59,17 @@ const InputDetailsPage = () => {
           setIsLoadingUserData(false);
           return;
         }
-  
+
         const response = await axios.get(`${API_BASE_URL}/user/getuser`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-  
+
         const userData = response.data;
-  
+
         const currentPersonalInfo = getPersonalInfo();
         const shouldAutoFill =
           !currentPersonalInfo.firstName && !currentPersonalInfo.lastName && !currentPersonalInfo.email;
-  
+
         if (shouldAutoFill && userData) {
           const autoFilledPersonalInfo = {
             firstName: userData.firstname || "",
@@ -77,10 +77,10 @@ const InputDetailsPage = () => {
             email: userData.email || "",
             contact: userData.phoneNumber || "",
           };
-  
+
           setPersonalInfo(autoFilledPersonalInfo);
           savePersonalInfo(autoFilledPersonalInfo);
-  
+
           // 🔁 Wait until email is available, then call loadFormProgress
           await loadFormProgress(autoFilledPersonalInfo.email);
         } else {
@@ -92,14 +92,14 @@ const InputDetailsPage = () => {
         setIsLoadingUserData(false);
       }
     };
-  
+
     fetchAndAutoFillUserData();
   }, []);
-  
+
 
   const loadFormProgress = async (email) => {
     const token = localStorage.getItem("token");
-  
+
     try {
       const response = await axios.get(`${API_BASE_URL}/form-draft/load`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -108,14 +108,14 @@ const InputDetailsPage = () => {
           eventName: currentEventName
         }
       });
-  
+
       const { personalInfo, eventDetails, selectedServices } = response.data;
-      console.log(response.data)
+      // console.log(response.data) // COMMENTED OUT - Exposes sensitive form data including personal information
       if (personalInfo) setPersonalInfo(personalInfo);
       if (eventDetails) setEventDetails(eventDetails);
       if (selectedServices) {
         let parsed = selectedServices;
-      
+
         // If it's a string, parse it
         if (typeof selectedServices === "string") {
           try {
@@ -124,21 +124,21 @@ const InputDetailsPage = () => {
             console.error("Failed to parse selectedServices:", e);
           }
         }
-      setSelectedServices(parsed);
-      saveServicesData({ selectedServices: parsed });
+        setSelectedServices(parsed);
+        saveServicesData({ selectedServices: parsed });
       }
-      
+
     } catch (error) {
       console.error("Error fetching form progress:", error);
     }
   };
-  
-  
-  
+
+
+
   const submitFormProgress = () => {
     const token = localStorage.getItem("token")
 
-    const body ={
+    const body = {
       email: personalInfo.email,
       eventName: currentEventName,
       jsonData: JSON.stringify({
@@ -148,16 +148,16 @@ const InputDetailsPage = () => {
       })
     }
 
-    console.log(body)
+    // console.log(body) // COMMENTED OUT - Exposes form submission data including personal info
     axios.post(`${API_BASE_URL}/form-draft/save`, body, {
       headers: { Authorization: `Bearer ${token}` },
     })
-    .then((response) => {
-      console.log(response.data)
-    })
-    .catch((error) => {
-      console.error("Error fetching form progress:", error)
-    })
+      .then((response) => {
+        // console.log(response.data) // COMMENTED OUT - Exposes API response data
+      })
+      .catch((error) => {
+        console.error("Error fetching form progress:", error)
+      })
   }
 
   // Handle personal info changes
@@ -233,13 +233,13 @@ const InputDetailsPage = () => {
     savePersonalInfo(personalInfo)
     saveEventDetails(eventDetails)
 
-    console.log("Personal Info:", personalInfo)
-    console.log("Event Details:", eventDetails)
-    console.log("Event Name:", eventName.toLowerCase())
+    // console.log("Personal Info:", personalInfo) // COMMENTED OUT - Exposes sensitive personal information
+    // console.log("Event Details:", eventDetails) // COMMENTED OUT - Exposes event details including dates and venues
+    // console.log("Event Name:", eventName.toLowerCase()) // COMMENTED OUT - Exposes event information
     // Navigate to services page with event name
     if (!eventName.toLowerCase().includes("package")) {
       navigate(`/book/${encodeURIComponent(eventName)}/services`)
-    } else{
+    } else {
       navigate(`/book/${encodeURIComponent(eventName)}/preview`)
     }
   }
@@ -267,7 +267,7 @@ const InputDetailsPage = () => {
         {/* Breadcrumb Navigation */}
         <div className="breadcrumb">
           <Link to="/events-dashboard"
-          onClick={()=> handleRemoveData()}
+            onClick={() => handleRemoveData()}
           >Home</Link> /
           <Link to={`/event/${encodeURIComponent(currentEventName)}`}>{currentEventName}</Link> / <span>Book Now</span>
         </div>
@@ -385,27 +385,28 @@ const InputDetailsPage = () => {
                       className="readonly-input"
                     />
                   </div>
-              <div className="input-group" style={{ display: 'flex', alignItems: 'center' }}>
-                <label htmlFor="location" style={{ flex: '0 0 auto', marginRight: '8px' }}>Location *</label>
-                <input
-                  type="text"
-                  id="location"
-                  name="location"
-                  value={eventDetails.location}
-                  onChange={handleEventDetailsChange}
-                  placeholder="Enter event location"
-                  required
-                  style={{ flex: '1 1 auto' }}
-                />
-                <IconButton
-                  aria-label="select location on map"
-                  onClick={() => setIsMapModalOpen(true)}
-                  size="small"
-                  sx={{ ml: 1 }}
-                >
-                  <MapIcon />
-                </IconButton>
-              </div>
+                  <div className="input-group" style={{ display: 'flex', alignItems: 'center' }}>
+                    <label htmlFor="location" style={{ flex: '0 0 auto', marginRight: '8px' }}>Location *</label>
+                    <input
+                      type="text"
+                      id="location"
+                      name="location"
+                      value={eventDetails.location}
+                      readOnly
+                      onClick={() => setIsMapModalOpen(true)}
+                      placeholder="Click to select location on map"
+                      required
+                      style={{ flex: '1 1 auto', cursor: 'pointer' }}
+                    />
+                    <IconButton
+                      aria-label="select location on map"
+                      onClick={() => setIsMapModalOpen(true)}
+                      size="small"
+                      sx={{ ml: 1 }}
+                    >
+                      <MapIcon />
+                    </IconButton>
+                  </div>
                 </div>
 
                 {/* Celebrant Names */}
