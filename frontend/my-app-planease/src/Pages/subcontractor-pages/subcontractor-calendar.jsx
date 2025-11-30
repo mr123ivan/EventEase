@@ -9,6 +9,7 @@ import { Menu as MenuIcon } from '@mui/icons-material';
 import { AuthContext } from '../../Components/AuthProvider';
 import axios from 'axios';
 import '../../index.css';
+import './calendar-fix.css';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -40,25 +41,25 @@ const SubcontractorCalendar = () => {
     const fetchUnavailableDates = async () => {
       try {
         setLoading(true);
-        
+
         // Get the token from localStorage (similar to subcontractor-bookings.jsx)
         const token = localStorage.getItem('token');
-        
+
         // First get the current user's email
         const userResponse = await axios.get(`${API_BASE_URL}/user/getcurrentuser`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
         });
-        
+
         const email = userResponse.data.email; // The API returns email as "schoolId"
-        
+
         if (!email) {
           setError('User email not found');
           setLoading(false);
           return;
         }
-        
+
         // Then fetch the unavailable dates using the email
         const response = await axios.get(`${API_BASE_URL}/api/subcontractor/unavailable-dates`, {
           params: { email: email },
@@ -97,7 +98,7 @@ const SubcontractorCalendar = () => {
     // Convert to start of day to ensure consistent date comparison
     const selectedDate = new Date(start);
     selectedDate.setHours(0, 0, 0, 0);
-    
+
     // Check if the date is already in the unavailable dates
     const dateExists = unavailableDates.some(date => {
       const existingDate = new Date(date.start);
@@ -112,7 +113,7 @@ const SubcontractorCalendar = () => {
         existingDate.setHours(0, 0, 0, 0);
         return existingDate.getTime() === selectedDate.getTime();
       });
-      
+
       setRemoveDialog({
         open: true,
         date: selectedDate,
@@ -127,26 +128,26 @@ const SubcontractorCalendar = () => {
       });
     }
   };
-  
+
   // Function to handle navigation between months/years
   const handleNavigate = (newDate) => {
     setCurrentDate(newDate);
   };
-  
+
   // Function to save unavailability to backend
   const saveUnavailabilityToServer = async (date, reason) => {
     try {
       // Get the token from localStorage (similar to subcontractor-bookings.jsx)
       const token = localStorage.getItem('token');
-      
+
       // First get the current user's email
       const userResponse = await axios.get(`${API_BASE_URL}/user/getcurrentuser`, {
         headers: {
-             'Content-Type': 'application/json',
-             'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         }
       });
-      
+
       const email = userResponse.data.email;
 
       if (!email) {
@@ -154,9 +155,9 @@ const SubcontractorCalendar = () => {
       }
 
       const formattedDate = moment(date).format('YYYY-MM-DD');
-      
+
       // Save the unavailable date
-      const response = await axios.post(`${API_BASE_URL}/api/subcontractor/unavailable-dates`, 
+      const response = await axios.post(`${API_BASE_URL}/api/subcontractor/unavailable-dates`,
         {
           email: email,
           date: formattedDate,
@@ -194,26 +195,26 @@ const SubcontractorCalendar = () => {
         // We'll add a temporary ID that will be replaced once server responds
         id: `temp-${Date.now()}`
       };
-      
+
       // Add to local state first for immediate feedback
       setUnavailableDates([
         ...unavailableDates,
         tempDate
       ]);
-      
+
       // Try to save to backend
       const savedDate = await saveUnavailabilityToServer(selectedDate, reason);
-      
+
       // Update the temporary date with the proper ID from server
-      setUnavailableDates(prev => 
-        prev.map(date => 
+      setUnavailableDates(prev =>
+        prev.map(date =>
           date.id === tempDate.id ? {
             ...date,
             id: savedDate.unavailableDate_id
           } : date
         )
       );
-      
+
       setSavedStatus('Date saved successfully');
     } catch (error) {
       console.error('Failed to save date:', error);
@@ -223,23 +224,23 @@ const SubcontractorCalendar = () => {
         setSavedStatus('Error saving date. Please try again.');
       }
     }
-    
+
     // Close the dialog
     setConfirmDialog({
       open: false,
       date: null
     });
   };
-  
+
   // Function to handle reason change
   const handleReasonChange = (event) => {
     setReason(event.target.value);
   };
-  
+
   // Function to confirm removal of unavailable date
   const handleConfirmRemoval = async () => {
     const { id, date } = removeDialog;
-    
+
     if (id) {
       // If the date has an ID, it's in the backend and needs to be deleted
       try {
@@ -250,11 +251,11 @@ const SubcontractorCalendar = () => {
           },
           credentials: 'include'
         });
-        
+
         if (!response.ok) {
           throw new Error('Failed to delete unavailable date');
         }
-        
+
         // Remove from local state after successful deletion
         setUnavailableDates(unavailableDates.filter(date => date.id !== id));
         setSavedStatus('Date removed successfully');
@@ -270,7 +271,7 @@ const SubcontractorCalendar = () => {
         return existingDate.getTime() !== date.getTime();
       }));
     }
-    
+
     // Close the dialog
     setRemoveDialog({
       open: false,
@@ -278,7 +279,7 @@ const SubcontractorCalendar = () => {
       id: null
     });
   };
-  
+
   // Function to cancel unavailability
   const handleCancelUnavailability = () => {
     setConfirmDialog({
@@ -287,7 +288,7 @@ const SubcontractorCalendar = () => {
     });
     setReason('');
   };
-  
+
   // Function to cancel removal
   const handleCancelRemoval = () => {
     setRemoveDialog({
@@ -317,20 +318,20 @@ const SubcontractorCalendar = () => {
     try {
       setSavedStatus('Saving...');
       const email = localStorage.getItem('email');
-      
+
       if (!email) {
         setSavedStatus('Error: User email not found');
         return;
       }
-      
+
       // Filter only new dates (those without an ID)
       const newDates = unavailableDates.filter(date => !date.id);
-      
+
       if (newDates.length === 0) {
         setSavedStatus('No new dates to save.');
         return;
       }
-      
+
       // Send dates one by one
       const savePromises = newDates.map(dateObj => {
         const requestBody = {
@@ -338,7 +339,7 @@ const SubcontractorCalendar = () => {
           date: moment(dateObj.start).format('YYYY-MM-DD'),
           reason: dateObj.reason || 'Unavailable'
         };
-        
+
         return fetch(`${API_BASE_URL}/api/subcontractor/unavailable-dates`, {
           method: 'POST',
           headers: {
@@ -352,9 +353,9 @@ const SubcontractorCalendar = () => {
           return res.json();
         });
       });
-      
+
       const savedDates = await Promise.all(savePromises);
-      
+
       // Update local state with saved dates (now with IDs)
       const updatedDates = [
         // Keep existing dates that have IDs
@@ -369,7 +370,7 @@ const SubcontractorCalendar = () => {
           reason: item.reason
         }))
       ];
-      
+
       setUnavailableDates(updatedDates);
       setSavedStatus('Unavailable dates saved successfully!');
     } catch (error) {
@@ -381,7 +382,7 @@ const SubcontractorCalendar = () => {
   return (
     <>
       <Navbar />
-      <div className="h-screen grid grid-rows-[auto_1fr]">
+      <div className="min-h-screen">
         {/* Hamburger menu for mobile */}
         <IconButton
           onClick={() => setIsSidebarOpen(true)}
@@ -401,56 +402,63 @@ const SubcontractorCalendar = () => {
           <div className="shadow hidden lg:block p-5">
             <NavPanel />
           </div>
-          <div className="flex flex-col rounded-lg gap-4 bg-gray-100 md:px-10 md:py-10">
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h1 className="text-2xl font-bold text-gray-800 mb-6">Availability Calendar</h1>
-              <p className="text-gray-600 mb-4">
-                Click on dates when you are <span className="font-semibold text-red-500">not available</span> to work. 
+          <div className="flex flex-col rounded-lg gap-4 bg-gray-100 p-4 md:px-10 md:py-10">
+            <div className="bg-white rounded-lg shadow-md p-4 md:p-6">
+              <h1 className="text-xl md:text-2xl font-bold text-gray-800 mb-4 md:mb-6">Availability Calendar</h1>
+              <p className="text-sm md:text-base text-gray-600 mb-4">
+                Click on dates when you are <span className="font-semibold text-red-500">not available</span> to work.
                 Click again to remove the selection.
               </p>
-              
+
               {savedStatus && (
-                <div className="mb-4 p-3 bg-green-100 text-green-700 rounded-md">
+                <div className="mb-4 p-3 bg-green-100 text-green-700 rounded-md text-sm">
                   {savedStatus}
                 </div>
               )}
-              
+
               {error && (
-                <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md">
+                <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md text-sm">
                   {error}
                 </div>
               )}
-              
+
               {loading ? (
-                <div className="mb-6 flex justify-center items-center" style={{ height: 600 }}>
+                <div className="mb-6 flex justify-center items-center calendar-container" style={{ height: window.innerWidth < 768 ? 500 : 600 }}>
                   <p>Loading calendar...</p>
                 </div>
               ) : (
-              <div className="mb-6" style={{ height: 600 }}>
-                <Calendar
-                  localizer={localizer}
-                  events={unavailableDates}
-                  startAccessor="start"
-                  endAccessor="end"
-                  selectable
-                  onSelectSlot={handleDateSelect}
-                  onNavigate={handleNavigate}
-                  eventPropGetter={eventStyleGetter}
-                  views={[Views.MONTH]}
-                  view={Views.MONTH}
-                  date={currentDate}
-                  style={{ height: '100%' }}
-                />
-              </div>
+                <div className="mb-6 calendar-container" style={{ height: window.innerWidth < 768 ? 500 : 600 }}>
+                  <Calendar
+                    localizer={localizer}
+                    events={unavailableDates}
+                    startAccessor="start"
+                    endAccessor="end"
+                    selectable
+                    onSelectSlot={handleDateSelect}
+                    onNavigate={handleNavigate}
+                    eventPropGetter={eventStyleGetter}
+                    views={[Views.MONTH]}
+                    view={Views.MONTH}
+                    date={currentDate}
+                    style={{ height: '100%' }}
+                  />
+                </div>
               )}
-              
-              
+
+
               {/* Confirmation Dialog for Adding Unavailable Date */}
               <Dialog
                 open={confirmDialog.open}
                 onClose={handleCancelUnavailability}
                 aria-labelledby="add-dialog-title"
                 aria-describedby="add-dialog-description"
+                sx={{
+                  '& .MuiDialog-paper': {
+                    width: { xs: '90%', sm: '80%', md: '500px' },
+                    maxWidth: '100%',
+                    m: 2
+                  }
+                }}
               >
                 <DialogTitle id="add-dialog-title">
                   Confirm Unavailability
@@ -481,13 +489,20 @@ const SubcontractorCalendar = () => {
                   </Button>
                 </DialogActions>
               </Dialog>
-              
+
               {/* Confirmation Dialog for Removing Unavailable Date */}
               <Dialog
                 open={removeDialog.open}
                 onClose={handleCancelRemoval}
                 aria-labelledby="remove-dialog-title"
                 aria-describedby="remove-dialog-description"
+                sx={{
+                  '& .MuiDialog-paper': {
+                    width: { xs: '90%', sm: '80%', md: '500px' },
+                    maxWidth: '100%',
+                    m: 2
+                  }
+                }}
               >
                 <DialogTitle id="remove-dialog-title">
                   Remove Unavailable Date
@@ -506,7 +521,7 @@ const SubcontractorCalendar = () => {
                   </Button>
                 </DialogActions>
               </Dialog>
-              
+
               {/* <div className="flex justify-end">
                 <button 
                   onClick={saveUnavailableDates}

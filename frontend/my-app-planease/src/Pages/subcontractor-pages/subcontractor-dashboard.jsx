@@ -30,7 +30,7 @@ const SubcontractorDashboard = () => {
 
     const MAX_IMAGE_COUNT = 5;
     const MAX_VIDEO_COUNT = 1;
-    const [error,setError] = useState(null);
+    const [error, setError] = useState(null);
     const [selectVideo, setSelectedVideo] = useState(null);
     const [deletedFileIds, setDeletedFileIds] = useState([]);
 
@@ -75,9 +75,9 @@ const SubcontractorDashboard = () => {
     // Mobile sidebar state
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-    useEffect(()=>{
+    useEffect(() => {
         // console.log("selectedImage", selectedImage); // COMMENTED OUT - Exposes image data and file information
-    },[selectedImage])
+    }, [selectedImage])
 
     const handleOpen = () => setOpen(true);
 
@@ -117,9 +117,9 @@ const SubcontractorDashboard = () => {
 
         // Submit the updated description
         axios.put(`${API_BASE_URL}/subcontractor/edit-description`, {
-                email: email,
-                description: description
-            },
+            email: email,
+            description: description
+        },
             {
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem('token')}`
@@ -141,7 +141,7 @@ const SubcontractorDashboard = () => {
 
     useEffect(() => {
         // console.log("deletedFileIds", deletedFileIds); // COMMENTED OUT - Exposes file deletion tracking IDs
-    },[deletedFileIds])
+    }, [deletedFileIds])
 
     const handleRemoveImage = (indexToRemove) => {
         const removedItem = selectedImage[indexToRemove];
@@ -189,56 +189,56 @@ const SubcontractorDashboard = () => {
                 // console.log("Error fetching user details:", error); // COMMENTED OUT - Exposes error details and system internals
             });
     }
-    
+
     // Fetch overview data for the subcontractor dashboard
     const fetchOverviewData = (subcontractorEmail) => {
         setIsLoadingOverview(true);
-        
+
         // Get assigned events count and transactions
         axios.get(`${API_BASE_URL}/api/transactions/getTransactionByEmail/${subcontractorEmail}`, {
             headers: {
                 Authorization: `Bearer ${localStorage.getItem('token')}`
             }
         })
-        .then(response => {
-            // console.log("Subcontractor transactions:", response.data); // COMMENTED OUT - Exposes sensitive transaction data
+            .then(response => {
+                // console.log("Subcontractor transactions:", response.data); // COMMENTED OUT - Exposes sensitive transaction data
 
-            if (response.data) {
-                const transactions = response.data;
-                
-                // Count assigned events (unique events the subcontractor is assigned to)
-                // Using eventName since eventId is not available in the response
-                const uniqueEvents = [...new Set(transactions.map(t => t.eventName))];
-                // console.log("Unique events:", uniqueEvents); // COMMENTED OUT - Exposes event information
-                setAssignedEvents(uniqueEvents.length);
-                
-                // Count transactions by status
-                // Using transactionStatus field from backend
-                // Status enum in Java: COMPLETED, DECLINED, CANCELLED, PENDING, ONGOING
-                // console.log("Transaction statuses:", transactions.map(t => t.transactionStatus)); // COMMENTED OUT - Exposes transaction status data
+                if (response.data) {
+                    const transactions = response.data;
 
-                const active = transactions.filter(t => t.transactionStatus === "ONGOING" || t.transactionStatus === "PENDING").length;
-                const completed = transactions.filter(t => t.transactionStatus === "COMPLETED").length;
-                
-                // console.log("Active transactions:", active); // COMMENTED OUT - Exposes business metrics
-                // console.log("Completed transactions:", completed); // COMMENTED OUT - Exposes business metrics
+                    // Count assigned events (unique events the subcontractor is assigned to)
+                    // Using eventName since eventId is not available in the response
+                    const uniqueEvents = [...new Set(transactions.map(t => t.eventName))];
+                    // console.log("Unique events:", uniqueEvents); // COMMENTED OUT - Exposes event information
+                    setAssignedEvents(uniqueEvents.length);
 
-                setActiveTransactions(active);
-                setCompletedTransactions(completed);
-                
-                // Get recent activity (latest 5 transactions)
-                // Using transactionDate field from backend for sorting
-                const sortedByDate = [...transactions].sort((a, b) => new Date(b.transactionDate) - new Date(a.transactionDate));
-                // console.log("Sorted recent activity:", sortedByDate.slice(0, 5)); // COMMENTED OUT - Exposes recent transaction data
-                setRecentActivity(sortedByDate.slice(0, 5));
-            }
-            
-            setIsLoadingOverview(false);
-        })
-        .catch(error => {
-            console.error("Error fetching subcontractor overview data:", error);
-            setIsLoadingOverview(false);
-        });
+                    // Count transactions by status
+                    // Using transactionStatus field from backend
+                    // Status enum in Java: COMPLETED, DECLINED, CANCELLED, PENDING, ONGOING
+                    // console.log("Transaction statuses:", transactions.map(t => t.transactionStatus)); // COMMENTED OUT - Exposes transaction status data
+
+                    const active = transactions.filter(t => t.transactionStatus === "ONGOING" || t.transactionStatus === "PENDING").length;
+                    const completed = transactions.filter(t => t.transactionStatus === "COMPLETED").length;
+
+                    // console.log("Active transactions:", active); // COMMENTED OUT - Exposes business metrics
+                    // console.log("Completed transactions:", completed); // COMMENTED OUT - Exposes business metrics
+
+                    setActiveTransactions(active);
+                    setCompletedTransactions(completed);
+
+                    // Get recent activity (latest 5 transactions)
+                    // Using transactionDate field from backend for sorting
+                    const sortedByDate = [...transactions].sort((a, b) => new Date(b.transactionDate) - new Date(a.transactionDate));
+                    // console.log("Sorted recent activity:", sortedByDate.slice(0, 5)); // COMMENTED OUT - Exposes recent transaction data
+                    setRecentActivity(sortedByDate.slice(0, 5));
+                }
+
+                setIsLoadingOverview(false);
+            })
+            .catch(error => {
+                console.error("Error fetching subcontractor overview data:", error);
+                setIsLoadingOverview(false);
+            });
     }
 
     const resizeImage = async (
@@ -497,7 +497,7 @@ const SubcontractorDashboard = () => {
             // console.log("submitting video showcase");
             // console.log(selectVideo)
             const urlFiles = [];
-            try{
+            try {
                 const presignedResponse = await axios.get(
                     `${API_BASE_URL}/showcasemedia/generate-PresignedUrl`,
                     {
@@ -551,7 +551,7 @@ const SubcontractorDashboard = () => {
                     }
                 })
 
-            }catch(err){
+            } catch (err) {
 
             }
 
@@ -585,7 +585,7 @@ const SubcontractorDashboard = () => {
 
         setSelectedImageLenght(event.target.files.length);
 
-        if(event.target.files.length + selectedImageLenght > MAX_IMAGE_COUNT){
+        if (event.target.files.length + selectedImageLenght > MAX_IMAGE_COUNT) {
             setError("Only 5 images can be uploaded")
         }
 
@@ -657,9 +657,8 @@ const SubcontractorDashboard = () => {
                             />
                         ) : null}
                         <div
-                            className={`w-20 h-20 rounded-full flex items-center justify-center text-white font-bold text-xl ${
-                                userdetails.profile_image && userdetails.profile_image.trim() !== '' ? 'hidden' : 'bg-blue-500'
-                            }`}
+                            className={`w-20 h-20 rounded-full flex items-center justify-center text-white font-bold text-xl ${userdetails.profile_image && userdetails.profile_image.trim() !== '' ? 'hidden' : 'bg-blue-500'
+                                }`}
                             style={{
                                 display: userdetails.profile_image && userdetails.profile_image.trim() !== '' ? 'none' : 'flex'
                             }}
@@ -677,38 +676,38 @@ const SubcontractorDashboard = () => {
                         <div className="flex flex-row w-full justify-between items-center md:p-4">
                             <h1 className="md:text-xl font-poppins">Overview</h1>
                         </div>
-                        
-                        
+
+
                         {/* Statistics Cards */}
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
                             {/* Assigned Events Card */}
-                            <Box className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-5 text-white shadow-lg">
-                                <Typography variant="h6" className="font-medium mb-1">Assigned Events</Typography>
-                                <Typography variant="h3" className="font-bold">{isLoadingOverview ? "..." : assignedEvents}</Typography>
-                                <Typography variant="body2" className="mt-2 opacity-80">
+                            <Box className="bg-white rounded-xl p-5 shadow-lg border border-gray-100">
+                                <Typography variant="h6" className="font-medium mb-1 text-gray-600">Assigned Events</Typography>
+                                <Typography variant="h3" className="font-bold text-blue-600">{isLoadingOverview ? "..." : assignedEvents}</Typography>
+                                <Typography variant="body2" className="mt-2 text-gray-500">
                                     Total events you're assigned to
                                 </Typography>
                             </Box>
-                            
+
                             {/* Active Transactions Card */}
-                            <Box className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-5 text-white shadow-lg">
-                                <Typography variant="h6" className="font-medium mb-1">Active Transactions</Typography>
-                                <Typography variant="h3" className="font-bold">{isLoadingOverview ? "..." : activeTransactions}</Typography>
-                                <Typography variant="body2" className="mt-2 opacity-80">
+                            <Box className="bg-white rounded-xl p-5 shadow-lg border border-gray-100">
+                                <Typography variant="h6" className="font-medium mb-1 text-gray-600">Active Transactions</Typography>
+                                <Typography variant="h3" className="font-bold text-green-600">{isLoadingOverview ? "..." : activeTransactions}</Typography>
+                                <Typography variant="body2" className="mt-2 text-gray-500">
                                     Ongoing transactions
                                 </Typography>
                             </Box>
-                            
+
                             {/* Completed Transactions Card */}
-                            <Box className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-5 text-white shadow-lg">
-                                <Typography variant="h6" className="font-medium mb-1">Completed</Typography>
-                                <Typography variant="h3" className="font-bold">{isLoadingOverview ? "..." : completedTransactions}</Typography>
-                                <Typography variant="body2" className="mt-2 opacity-80">
+                            <Box className="bg-white rounded-xl p-5 shadow-lg border border-gray-100">
+                                <Typography variant="h6" className="font-medium mb-1 text-gray-600">Completed</Typography>
+                                <Typography variant="h3" className="font-bold text-purple-600">{isLoadingOverview ? "..." : completedTransactions}</Typography>
+                                <Typography variant="body2" className="mt-2 text-gray-500">
                                     Completed transactions
                                 </Typography>
                             </Box>
                         </div>
-                        
+
                         {/* Recent Activity Section */}
                         <div className="p-4">
                             <Typography variant="h6" className="font-medium mb-3">Recent Activity</Typography>
@@ -749,7 +748,7 @@ const SubcontractorDashboard = () => {
                     </div>
                 </div>
             </div>
-            
+
             {/* Modal for adding/editing showcase items */}
             <Modal open={open} onClose={handleClose}>
                 <Box

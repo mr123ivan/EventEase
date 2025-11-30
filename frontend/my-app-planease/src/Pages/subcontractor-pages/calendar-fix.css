@@ -1,0 +1,89 @@
+/* FIX FOR DATE SELECTION BUG */
+/* Ensure click events target the correct date cell */
+.rbc-month-view .rbc-month-row {
+    position: relative;
+    z-index: 1;
+}
+
+.rbc-day-bg {
+    pointer-events: auto !important;
+    cursor: pointer;
+    z-index: 2;
+}
+
+.rbc-date-cell {
+    pointer-events: none;
+    position: relative;
+    z-index: 3;
+}
+
+.rbc-date-cell>button {
+    pointer-events: auto;
+}
+
+.rbc-event-content {
+    pointer-events: auto;
+}
+
+/* MOBILE RESPONSIVENESS */
+@media (max-width: 768px) {
+
+    /* Smaller calendar height on mobile */
+    .calendar-container {
+        height: 500px !important;
+    }
+
+    /* Larger touch targets for dates */
+    .rbc-date-cell {
+        font-size: 14px;
+        padding: 8px 4px;
+    }
+
+    /* Make navigation buttons larger */
+    .rbc-toolbar button {
+        padding: 8px 12px;
+        font-size: 14px;
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    /* Adjust event text size */
+    .rbc-event {
+        font-size: 11px;
+        padding: 2px 4px;
+    }
+
+    /* Make day headers smaller */
+    .rbc-header {
+        font-size: 12px;
+        padding: 4px;
+    }
+}
+
+@media (max-width: 480px) {
+    .calendar-container {
+        height: 450px !important;
+    }
+
+    /* Stack toolbar items on very small screens */
+    .rbc-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+
+    .rbc-toolbar-label {
+        order: -1;
+        text-align: center;
+        margin-bottom: 8px;
+    }
+
+    /* Even smaller fonts for very small screens */
+    .rbc-date-cell {
+        font-size: 12px;
+    }
+
+    .rbc-header {
+        font-size: 10px;
+    }
+}
