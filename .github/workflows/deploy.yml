@@ -14,18 +14,34 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # 1. NEW: Check which folders have changes
+      - name: Check for file changes
+        uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'backend/Backend/**'
+            frontend:
+              - 'frontend/my-app-planease/**'
+
       - name: Set up Docker Buildx
+        # Only run setup if at least one of them changed (OR condition)
+        if: steps.filter.outputs.backend == 'true' || steps.filter.outputs.frontend == 'true'
         uses: docker/setup-buildx-action@v3
 
       - name: Login to Docker Hub
+        # Only login if we actually plan to build something
+        if: steps.filter.outputs.backend == 'true' || steps.filter.outputs.frontend == 'true'
         uses: docker/login-action@v3
         with:
-          # Ensure your secret DOCKER_USERNAME matches "espina28"
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      # --- Backend Build ---
+      # --- Backend Build (Conditional) ---
       - name: Build and push Backend
+        # 2. This runs ONLY if files in backend/Backend/ change
+        if: steps.filter.outputs.backend == 'true'
         uses: docker/build-push-action@v5
         with:
           context: ./backend/Backend
@@ -33,8 +49,10 @@ jobs:
           push: true
           tags: espina28/eventease-be:latest
 
-      # --- Frontend Build ---
+      # --- Frontend Build (Conditional) ---
       - name: Build and push Frontend
+        # 3. This runs ONLY if files in frontend/my-app-planease/ change
+        if: steps.filter.outputs.frontend == 'true'
         uses: docker/build-push-action@v5
         with:
           context: ./frontend/my-app-planease
