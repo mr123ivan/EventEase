@@ -78,13 +78,37 @@ export default function LoginPage() {
       const response = await loginAction({ email, password }, navigate)
 
       if (!response || response.error) {
-        throw new Error(response?.error || "Invalid credentials. Please try again.")
+        throw new Error("INVALID_CREDENTIALS")
       }
     } catch (error) {
       console.error("Login error:", error)
 
-      // Improved error handling
-      setError(error?.response?.data?.message || error?.message || "Login failed. Please check your credentials.")
+      // User-friendly error handling with security in mind
+      let userMessage = "Something went wrong. Please try again."
+
+      // Check for specific error conditions
+      if (error.message === "INVALID_CREDENTIALS") {
+        userMessage = "Incorrect email or password. Please try again."
+      } else if (error.response) {
+        // HTTP errors
+        const status = error.response.status
+
+        if (status === 401 || status === 403 || status === 404) {
+          // Auth errors - use generic message for security
+          userMessage = "Incorrect email or password. Please try again."
+        } else if (status === 429) {
+          userMessage = "Too many login attempts. Please try again later."
+        } else if (status >= 500) {
+          userMessage = "Our servers are experiencing issues. Please try again later."
+        } else {
+          userMessage = "Unable to log in. Please check your connection and try again."
+        }
+      } else if (error.request) {
+        // Network error
+        userMessage = "Unable to connect. Please check your internet connection."
+      }
+
+      setError(userMessage)
     } finally {
       setIsLoading(false)
     }
@@ -864,16 +888,20 @@ export default function LoginPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     hint="Enter your password"
-                    className="w-full"
+                    className="w-full pr-12"
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                    className="absolute right-0 top-0 
+                      text-gray-500 hover:text-gray-700 active:text-amber-500
+                      p-2 rounded-md hover:bg-gray-100 active:bg-amber-50
+                      transition-colors duration-200 
+                      min-w-[44px] min-h-[44px] flex items-center justify-center"
                     aria-label={showPassword ? "Hide password" : "Show password"}
                   >
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
                 </div>
               </div>
