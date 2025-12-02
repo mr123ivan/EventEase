@@ -60,24 +60,24 @@ export default function SubcontractorBookings() {
 
   // Mobile sidebar state
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  
+
   const handleOpen = (row) => {
     setSelectedRow(row);
     setOpen(true);
   };
-  
+
   const handleClose = () => setOpen(false);
-  
+
   // Define loading and error states
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  
+
   // Load transaction data from backend on component mount
   useEffect(() => {
     const fetchTransactions = async () => {
       setLoading(true);
       setError(null);
-      
+
       try {
         const token = localStorage.getItem('token');
 
@@ -103,7 +103,7 @@ export default function SubcontractorBookings() {
         // Replace the map logic inside fetchTransactions in SubcontractorBookings
         const formattedBookings = response.data.map(transaction => {
           const eventName = transaction.eventName || 'N/A';
-          const formattedDate = new Date(transaction.transactionDate).toLocaleDateString('en-US', { 
+          const formattedDate = new Date(transaction.transactionDate).toLocaleDateString('en-US', {
             year: 'numeric', month: 'long', day: 'numeric'
           });
 
@@ -114,8 +114,8 @@ export default function SubcontractorBookings() {
             PENDING: "Pending",
             ONGOING: "Ongoing"
           };
-          
-          const displayStatus = displayStatusMap[transaction.transactionStatus] || "Unknown";   
+
+          const displayStatus = displayStatusMap[transaction.transactionStatus] || "Unknown";
 
           const formattedAmount = transaction.payment?.amountPaid
             ? `₱${Number(transaction.payment.amountPaid).toLocaleString()}`
@@ -140,22 +140,22 @@ export default function SubcontractorBookings() {
           };
         });
 
-        
+
         setBookings(formattedBookings);
         setLoading(false);
       } catch (err) {
         console.error('Error fetching transactions:', err);
         setError('Failed to load bookings. Please try again later.');
         setLoading(false);
-        
+
         // Fallback to empty array or mock data if needed
         setBookings([]);
       }
     };
-    
+
     fetchTransactions();
   }, []);
-  
+
   // Close filter menu when clicking outside
   useEffect(() => {
     function handleClickOutside(event) {
@@ -169,54 +169,54 @@ export default function SubcontractorBookings() {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [filterRef]);
-  
+
   // Filter bookings based on search term and status filter
   const filteredBookings = bookings.filter(booking => {
-    const matchesSearch = 
+    const matchesSearch =
       booking.name.toLowerCase().includes(search.toLowerCase()) ||
       booking.eventDate.toLowerCase().includes(search.toLowerCase()) ||
       booking.status.toLowerCase().includes(search.toLowerCase());
-    
+
     const matchesStatusFilter = statusFilter === "All" || booking.status === statusFilter;
-    
+
     return matchesSearch && matchesStatusFilter;
   });
-  
+
   // Pagination logic
   const indexOfLastBooking = currentPage * bookingsPerPage;
   const indexOfFirstBooking = indexOfLastBooking - bookingsPerPage;
   const currentBookings = filteredBookings.slice(indexOfFirstBooking, indexOfLastBooking);
   const totalPages = Math.ceil(filteredBookings.length / bookingsPerPage);
-  
+
   const handleNextPage = () => {
     if (currentPage < totalPages) {
       setCurrentPage(currentPage + 1);
     }
   };
-  
+
   const handlePrevPage = () => {
     if (currentPage > 1) {
       setCurrentPage(currentPage - 1);
     }
   };
-  
+
   // Static pagination display logic
   const getVisiblePageNumbers = () => {
     // Always show 5 page numbers if possible
     const maxVisiblePages = 5;
     let startPage = Math.max(1, currentPage - 2);
     let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-    
+
     // Adjust if we're near the end
     if (endPage - startPage + 1 < maxVisiblePages && startPage > 1) {
       startPage = Math.max(1, endPage - maxVisiblePages + 1);
     }
-    
+
     const visiblePages = [];
     for (let i = startPage; i <= endPage; i++) {
       visiblePages.push(i);
     }
-    
+
     return visiblePages;
   };
 
@@ -236,7 +236,7 @@ export default function SubcontractorBookings() {
         return { bgcolor: '#e0e0e0', color: '#000000' };
     }
   };
-  
+
   // Mock data for the modal
   const getSelectedRowDetails = (row) => row;
 
@@ -264,22 +264,23 @@ export default function SubcontractorBookings() {
         </div>
         <div className="flex flex-col direct rounded-lg gap-4 bg-gray-100 md:px-10 md:py-10">
           {/* Header with Search and Filter */}
-          <div className="flex justify-between items-center mb-4">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-3">
             <h1 className="text-xl font-semibold">Booking History</h1>
-            <div className="flex items-center gap-2">
-              <div ref={filterRef} className="relative">
-                <Button 
-                  variant="outlined" 
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full md:w-auto">
+              <div ref={filterRef} className="relative w-full sm:w-auto">
+                <Button
+                  variant="outlined"
                   endIcon={<FilterListIcon />}
                   size="small"
+                  fullWidth
                   sx={{ borderRadius: '4px' }}
                   onClick={() => setFilterMenuOpen(!filterMenuOpen)}
                 >
                   {statusFilter === "All" ? "Filter" : statusFilter}
                 </Button>
                 {filterMenuOpen && (
-                  <div className="absolute z-10 mt-1 bg-white rounded-md shadow-lg py-1 w-36 border border-gray-200">
-                    <button 
+                  <div className="absolute z-10 mt-1 bg-white rounded-md shadow-lg py-1 w-full sm:w-36 border border-gray-200">
+                    <button
                       className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${statusFilter === "All" ? "font-bold text-blue-600" : ""}`}
                       onClick={() => {
                         setStatusFilter("All");
@@ -288,7 +289,7 @@ export default function SubcontractorBookings() {
                     >
                       All
                     </button>
-                    <button 
+                    <button
                       className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${statusFilter === "Success" ? "font-bold text-blue-600" : ""}`}
                       onClick={() => {
                         setStatusFilter("Success");
@@ -297,7 +298,7 @@ export default function SubcontractorBookings() {
                     >
                       Success
                     </button>
-                    <button 
+                    <button
                       className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${statusFilter === "Cancelled" ? "font-bold text-blue-600" : ""}`}
                       onClick={() => {
                         setStatusFilter("Cancelled");
@@ -306,7 +307,7 @@ export default function SubcontractorBookings() {
                     >
                       Cancelled
                     </button>
-                    <button 
+                    <button
                       className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${statusFilter === "Pending" ? "font-bold text-blue-600" : ""}`}
                       onClick={() => {
                         setStatusFilter("Pending");
@@ -320,7 +321,13 @@ export default function SubcontractorBookings() {
               </div>
               <Paper
                 component="form"
-                sx={{ display: 'flex', alignItems: 'center', width: 250, borderRadius: '4px', pl: 1 }}
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  width: { xs: '100%', sm: 250 },
+                  borderRadius: '4px',
+                  pl: 1
+                }}
               >
                 <SearchIcon sx={{ color: 'action.active', mr: 1 }} />
                 <input
@@ -333,8 +340,15 @@ export default function SubcontractorBookings() {
             </div>
           </div>
 
-          {/* Booking Table */}
-          <TableContainer component={Paper} sx={{ boxShadow: 1, borderRadius: '8px' }}>
+          {/* Desktop Table View - Hidden on mobile */}
+          <TableContainer
+            component={Paper}
+            sx={{
+              boxShadow: 1,
+              borderRadius: '8px',
+              display: { xs: 'none', md: 'block' }
+            }}
+          >
             <Table sx={{ minWidth: 650 }}>
               <TableHead sx={{ backgroundColor: '#f9fafb' }}>
                 <TableRow>
@@ -346,9 +360,9 @@ export default function SubcontractorBookings() {
               </TableHead>
               <TableBody>
                 {currentBookings.map((booking) => (
-                  <TableRow 
-                    key={booking.id} 
-                    hover 
+                  <TableRow
+                    key={booking.id}
+                    hover
                     onClick={() => handleOpen(getSelectedRowDetails(booking))}
                     sx={{ cursor: 'pointer' }}
                   >
@@ -356,10 +370,10 @@ export default function SubcontractorBookings() {
                     <TableCell>{booking.eventDate}</TableCell>
                     {/* <TableCell>{booking.amount}</TableCell> */}
                     <TableCell>
-                      <Chip 
-                        label={booking.status} 
+                      <Chip
+                        label={booking.status}
                         size="small"
-                        sx={{ 
+                        sx={{
                           backgroundColor: getStatusChipColor(booking.status).bgcolor,
                           color: getStatusChipColor(booking.status).color,
                           fontWeight: 500,
@@ -373,31 +387,81 @@ export default function SubcontractorBookings() {
               </TableBody>
             </Table>
           </TableContainer>
-          
+
+          {/* Mobile Card View - Shown only on mobile */}
+          <Box sx={{ display: { xs: 'block', md: 'none' } }} className="space-y-3">
+            {currentBookings.map((booking) => (
+              <Paper
+                key={booking.id}
+                sx={{ p: 2, cursor: 'pointer' }}
+                onClick={() => handleOpen(getSelectedRowDetails(booking))}
+                className="hover:shadow-md transition-shadow"
+              >
+                {/* Booking Name */}
+                <Typography variant="h6" className="font-medium mb-2">
+                  {booking.name}
+                </Typography>
+
+                {/* Event Name */}
+                <Typography variant="body2" color="text.secondary" className="mb-2">
+                  {booking.eventName}
+                </Typography>
+
+                {/* Event Date & Status Row */}
+                <Box className="flex justify-between items-center">
+                  <Box>
+                    <Typography variant="caption" color="text.secondary" className="block">
+                      Event Date
+                    </Typography>
+                    <Typography variant="body2" className="font-medium">
+                      {booking.eventDate}
+                    </Typography>
+                  </Box>
+
+                  <Chip
+                    label={booking.status}
+                    size="small"
+                    sx={{
+                      backgroundColor: getStatusChipColor(booking.status).bgcolor,
+                      color: getStatusChipColor(booking.status).color,
+                      fontWeight: 500,
+                      borderRadius: '16px',
+                      minWidth: '80px'
+                    }}
+                  />
+                </Box>
+              </Paper>
+            ))}
+          </Box>
+
           {/* Pagination */}
-          <div className="flex justify-center items-center mt-4">
-            <div className="flex items-center justify-between w-72">
-              {/* Left arrow - always visible */}
-              <IconButton 
-                disabled={currentPage === 1} 
+          <div className="flex justify-center items-center mt-4 px-2">
+            <div className="flex items-center justify-between w-full max-w-md">
+              {/* Left arrow */}
+              <IconButton
+                disabled={currentPage === 1}
                 onClick={handlePrevPage}
                 size="small"
-                sx={{ visibility: currentPage === 1 ? 'hidden' : 'visible', width: '30px', height: '30px' }}
+                sx={{
+                  visibility: currentPage === 1 ? 'hidden' : 'visible',
+                  width: { xs: '36px', md: '30px' },
+                  height: { xs: '36px', md: '30px' }
+                }}
               >
                 <ArrowBackIcon fontSize="small" />
               </IconButton>
-              
-              <div className="flex items-center justify-center flex-1">
+
+              <div className="flex items-center justify-center flex-1 gap-1">
                 {/* First page button if not in first few pages */}
                 {currentPage > 3 && (
                   <>
-                    <Button 
+                    <Button
                       variant={currentPage === 1 ? "contained" : "text"}
                       size="small"
                       onClick={() => setCurrentPage(1)}
-                      sx={{ 
-                        minWidth: '30px', 
-                        height: '30px',
+                      sx={{
+                        minWidth: { xs: '36px', md: '30px' },
+                        height: { xs: '36px', md: '30px' },
                         borderRadius: '4px',
                         backgroundColor: currentPage === 1 ? '#1976d2' : 'transparent',
                         color: currentPage === 1 ? 'white' : 'inherit'
@@ -410,40 +474,40 @@ export default function SubcontractorBookings() {
                     )}
                   </>
                 )}
-                
+
                 {/* Visible page numbers */}
                 {getVisiblePageNumbers().map(number => (
-                  <Button 
+                  <Button
                     key={number}
                     variant={currentPage === number ? "contained" : "text"}
                     size="small"
                     onClick={() => setCurrentPage(number)}
-                    sx={{ 
-                      minWidth: '30px', 
-                      height: '30px',
+                    sx={{
+                      minWidth: { xs: '36px', md: '30px' },
+                      height: { xs: '36px', md: '30px' },
                       borderRadius: '4px',
                       backgroundColor: currentPage === number ? '#1976d2' : 'transparent',
                       color: currentPage === number ? 'white' : 'inherit',
-                      mx: 0.5
+                      mx: { xs: 0.25, md: 0.5 }
                     }}
                   >
                     {number}
                   </Button>
                 ))}
-                
+
                 {/* Last page button if not in last few pages */}
                 {totalPages > 5 && currentPage < totalPages - 2 && (
                   <>
                     {currentPage < totalPages - 3 && (
                       <span className="text-gray-500 mx-1">...</span>
                     )}
-                    <Button 
+                    <Button
                       variant={currentPage === totalPages ? "contained" : "text"}
                       size="small"
                       onClick={() => setCurrentPage(totalPages)}
-                      sx={{ 
-                        minWidth: '30px', 
-                        height: '30px',
+                      sx={{
+                        minWidth: { xs: '36px', md: '30px' },
+                        height: { xs: '36px', md: '30px' },
                         borderRadius: '4px',
                         backgroundColor: currentPage === totalPages ? '#1976d2' : 'transparent',
                         color: currentPage === totalPages ? 'white' : 'inherit'
@@ -454,13 +518,17 @@ export default function SubcontractorBookings() {
                   </>
                 )}
               </div>
-              
-              {/* Right arrow - always visible */}
-              <IconButton 
-                disabled={currentPage === totalPages} 
+
+              {/* Right arrow */}
+              <IconButton
+                disabled={currentPage === totalPages}
                 onClick={handleNextPage}
                 size="small"
-                sx={{ visibility: currentPage === totalPages ? 'hidden' : 'visible', width: '30px', height: '30px' }}
+                sx={{
+                  visibility: currentPage === totalPages ? 'hidden' : 'visible',
+                  width: { xs: '36px', md: '30px' },
+                  height: { xs: '36px', md: '30px' }
+                }}
               >
                 <ArrowForwardIcon fontSize="small" />
               </IconButton>
@@ -470,131 +538,133 @@ export default function SubcontractorBookings() {
       </div>
 
       <Modal open={open} onClose={handleClose} aria-labelledby="modal-title">
-  <Box
-    sx={{
-      position: 'absolute',
-      top: '50%',
-      left: '50%',
-      transform: 'translate(-50%, -50%)',
-      width: 650,
-      bgcolor: 'background.paper',
-      boxShadow: 24,
-      borderRadius: 3,
-      p: 4,
-    }}
-  >
-    {selectedRow && (
-      <>
-        <Typography id="modal-title" variant="h6" fontWeight="bold" gutterBottom>
-          Event Details
-        </Typography>
+        <Box
+          sx={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: { xs: '90%', sm: '90%', md: 650 },
+            maxHeight: '90vh',
+            overflow: 'auto',
+            bgcolor: 'background.paper',
+            boxShadow: 24,
+            borderRadius: 3,
+            p: { xs: 2, md: 4 },
+          }}
+        >
+          {selectedRow && (
+            <>
+              <Typography id="modal-title" variant="h6" fontWeight="bold" gutterBottom>
+                Event Details
+              </Typography>
 
-        {/* PERSONAL DETAIL */}
-        <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 600, color: '#2196f3' }}>
-          Personal Detail
-        </Typography>
+              {/* PERSONAL DETAIL */}
+              <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 600, color: '#2196f3' }}>
+                Personal Detail
+              </Typography>
 
-        <Grid container spacing={2}>
-          <Grid item xs={12}>
-            <TextField
-              fullWidth
-              label="Customer Name"
-              value={selectedRow.name}
-              InputProps={{ readOnly: true }}
-            />
-          </Grid>
-          <Grid item xs={6}>
-            <TextField
-              fullWidth
-              label="Email"
-              value={selectedRow.email}
-              InputProps={{ readOnly: true }}
-            />
-          </Grid>
-          <Grid item xs={6}>
-            <TextField
-              fullWidth
-              label="Contact"
-              value={selectedRow.contact}
-              InputProps={{ readOnly: true }}
-            />
-          </Grid>
-        </Grid>
+              <Grid container spacing={2}>
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    label="Customer Name"
+                    value={selectedRow.name}
+                    InputProps={{ readOnly: true }}
+                  />
+                </Grid>
+                <Grid item xs={6}>
+                  <TextField
+                    fullWidth
+                    label="Email"
+                    value={selectedRow.email}
+                    InputProps={{ readOnly: true }}
+                  />
+                </Grid>
+                <Grid item xs={6}>
+                  <TextField
+                    fullWidth
+                    label="Contact"
+                    value={selectedRow.contact}
+                    InputProps={{ readOnly: true }}
+                  />
+                </Grid>
+              </Grid>
 
-        {/* EVENT DETAIL */}
-        <Typography variant="subtitle1" sx={{ mt: 3, mb: 1, fontWeight: 600, color: '#2196f3' }}>
-          Event Detail
-        </Typography>
+              {/* EVENT DETAIL */}
+              <Typography variant="subtitle1" sx={{ mt: 3, mb: 1, fontWeight: 600, color: '#2196f3' }}>
+                Event Detail
+              </Typography>
 
-        <Grid container spacing={2}>
-          <Grid item xs={6}>
-            <div className="flex items-center gap-2">
+              <Grid container spacing={2}>
+                <Grid item xs={6}>
+                  <div className="flex items-center gap-2">
+                    <TextField
+                      fullWidth
+                      label="Location"
+                      value={selectedRow.place}
+                      InputProps={{ readOnly: true }}
+                    />
+                    <IconButton
+                      onClick={() => setViewMapModal(true)}
+                      sx={{ color: '#FFB22C', '&:hover': { backgroundColor: '#f0f0f0' } }}
+                    >
+                      <MapIcon />
+                    </IconButton>
+                  </div>
+                </Grid>
+                <Grid item xs={6}>
+                  <TextField
+                    fullWidth
+                    label="Date"
+                    value={selectedRow.range}
+                    InputProps={{ readOnly: true }}
+                  />
+                </Grid>
+              </Grid>
+
               <TextField
                 fullWidth
-                label="Location"
-                value={selectedRow.place}
+                label="Note"
+                margin="normal"
+                multiline
+                rows={3}
+                value={selectedRow.note}
                 InputProps={{ readOnly: true }}
               />
-              <IconButton
-                onClick={() => setViewMapModal(true)}
-                sx={{ color: '#FFB22C', '&:hover': { backgroundColor: '#f0f0f0' } }}
-              >
-                <MapIcon />
-              </IconButton>
-            </div>
-          </Grid>
-          <Grid item xs={6}>
-            <TextField
-              fullWidth
-              label="Date"
-              value={selectedRow.range}
-              InputProps={{ readOnly: true }}
-            />
-          </Grid>
-        </Grid>
 
-        <TextField
-          fullWidth
-          label="Note"
-          margin="normal"
-          multiline
-          rows={3}
-          value={selectedRow.note}
-          InputProps={{ readOnly: true }}
-        />
-
-        <Box mt={3} textAlign="right">
-          <Button onClick={handleClose} variant="outlined" color="primary">
-            Close
-          </Button>
+              <Box mt={3} textAlign="right">
+                <Button onClick={handleClose} variant="outlined" color="primary">
+                  Close
+                </Button>
+              </Box>
+            </>
+          )}
         </Box>
-      </>
-    )}
-  </Box>
-</Modal>
+      </Modal>
 
-<MapViewModal
-  open={viewMapModal}
-  onClose={() => setViewMapModal(false)}
-  location={selectedRow?.place}
-/>
+      <MapViewModal
+        open={viewMapModal}
+        onClose={() => setViewMapModal(false)}
+        location={selectedRow?.place}
+      />
 
-<Drawer
-  anchor="left"
-  open={isSidebarOpen}
-  onClose={() => setIsSidebarOpen(false)}
-  sx={{
-    '& .MuiDrawer-paper': {
-      width: 250,
-      backgroundColor: '#f9fafb',
-      boxShadow: 3
-    }
-  }}
->
-  <div className="p-5">
-    <NavPanel />
-  </div>
-</Drawer>
+      <Drawer
+        anchor="left"
+        open={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+        sx={{
+          '& .MuiDrawer-paper': {
+            width: 250,
+            backgroundColor: '#f9fafb',
+            boxShadow: 3
+          }
+        }}
+      >
+        <div className="p-5">
+          <NavPanel />
+        </div>
+      </Drawer>
 
     </div>
   );

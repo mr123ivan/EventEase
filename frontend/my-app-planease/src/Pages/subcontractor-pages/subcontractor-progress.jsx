@@ -33,6 +33,7 @@ import {
   CircularProgress,
   IconButton,
   Drawer,
+  Divider,
 } from "@mui/material"
 import { Edit as EditIcon, Refresh as RefreshIcon, Work as WorkIcon, Menu as MenuIcon } from "@mui/icons-material"
 import MapViewModal from "../../Components/MapViewModal.jsx"
@@ -246,15 +247,15 @@ const SubcontractorProgress = () => {
           <NavPanel />
         </div>
         <div className="flex flex-col rounded-lg gap-4 bg-gray-100 md:px-10 md:py-10">
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="flex justify-between items-center mb-6">
-              <div className="flex items-center gap-3">
-                <WorkIcon sx={{ color: "#FFB22C", fontSize: 32 }} />
+          <div className="bg-white rounded-lg shadow-md p-4 md:p-6">
+            <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+              <div className="flex items-center gap-3 w-full md:w-auto">
+                <WorkIcon sx={{ color: "#FFB22C", fontSize: { xs: 28, md: 32 } }} />
                 <div>
-                  <Typography variant="h5" component="h1" className="font-bold">
+                  <Typography variant="h5" component="h1" className="font-bold text-lg md:text-2xl">
                     My Progress Dashboard
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography variant="body2" color="text.secondary" className="text-xs md:text-sm">
                     Track your event assignments and update progress
                   </Typography>
                 </div>
@@ -265,6 +266,7 @@ const SubcontractorProgress = () => {
                 sx={{
                   backgroundColor: "#FFB22C",
                   color: "#1a1a1a",
+                  width: { xs: '100%', md: 'auto' },
                   "&:hover": { backgroundColor: "#e6a028", color: "#1a1a1a" },
                 }}
                 onClick={() => fetchSubcontractorProgress(userEmail)}
@@ -324,7 +326,8 @@ const SubcontractorProgress = () => {
               </Grid>
             </Grid>
 
-            <TableContainer component={Paper} className="shadow rounded-lg">
+            {/* Desktop Table View - Hidden on mobile */}
+            <TableContainer component={Paper} className="shadow rounded-lg" sx={{ display: { xs: 'none', md: 'block' } }}>
               <Table>
                 <TableHead sx={{ backgroundColor: "#F1F1FB" }}>
                   <TableRow>
@@ -375,11 +378,11 @@ const SubcontractorProgress = () => {
                         </Typography>
                       </TableCell>
                       <TableCell>
-                          <Chip
-                            label={transaction.myProgress.serviceName || transaction.myProgress.serviceCategory}
-                            size="small"
-                            sx={{ backgroundColor: "#FFB22C", color: "white" }}
-                          />
+                        <Chip
+                          label={transaction.myProgress.serviceName || transaction.myProgress.serviceCategory}
+                          size="small"
+                          sx={{ backgroundColor: "#FFB22C", color: "white" }}
+                        />
                       </TableCell>
                       <TableCell>
                         <Box className="flex items-center gap-2">
@@ -442,6 +445,131 @@ const SubcontractorProgress = () => {
                 </TableBody>
               </Table>
             </TableContainer>
+
+            {/* Mobile Card View - Shown only on mobile */}
+            <Box sx={{ display: { xs: 'block', md: 'none' } }} className="space-y-4">
+              {transactions.map((transaction) => (
+                <Card key={transaction.id} className="shadow-md">
+                  <CardContent>
+                    {/* Event Details */}
+                    <Typography variant="h6" className="font-medium mb-2">
+                      {transaction.eventName}
+                    </Typography>
+
+                    {/* Location & Date */}
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      className="mb-1 cursor-pointer hover:text-amber-500"
+                      onClick={() => {
+                        setSelectedLocation(transaction.location);
+                        setViewMapModal(true);
+                      }}
+                    >
+                      📍 {transaction.location}
+                    </Typography>
+
+                    <Typography variant="caption" color="text.secondary" className="block mb-3">
+                      📅 {transaction.eventDate}
+                    </Typography>
+
+                    <Divider className="my-3" />
+
+                    {/* Client & Service */}
+                    <Box className="grid grid-cols-2 gap-2 mb-3">
+                      <Box>
+                        <Typography variant="caption" color="text.secondary">Client</Typography>
+                        <Typography variant="body2" className="font-medium">{transaction.clientName}</Typography>
+                      </Box>
+                      <Box>
+                        <Typography variant="caption" color="text.secondary" className="block mb-1">Service</Typography>
+                        <Chip
+                          label={transaction.myProgress.serviceName || transaction.myProgress.serviceCategory}
+                          size="small"
+                          sx={{ backgroundColor: "#FFB22C", color: "white" }}
+                        />
+                      </Box>
+                    </Box>
+
+                    {/* Progress Bar */}
+                    <Box className="mb-3">
+                      <Box className="flex justify-between items-center mb-1">
+                        <Typography variant="caption" color="text.secondary">
+                          My Progress
+                        </Typography>
+                        <Typography variant="caption" className="font-medium">
+                          {transaction.myProgress.progressPercentage}%
+                        </Typography>
+                      </Box>
+                      <LinearProgress
+                        variant="determinate"
+                        value={transaction.myProgress.progressPercentage}
+                        sx={{
+                          height: 8,
+                          borderRadius: 4,
+                          "& .MuiLinearProgress-bar": {
+                            backgroundColor: "#FFB22C",
+                          },
+                        }}
+                      />
+                    </Box>
+
+                    {/* Status Chips */}
+                    <Box className="grid grid-cols-2 gap-2 mb-3">
+                      <Box>
+                        <Typography variant="caption" color="text.secondary" className="block mb-1">
+                          Check-in
+                        </Typography>
+                        <Chip
+                          label={transaction.myProgress.checkInStatus}
+                          color={getCheckInColor(transaction.myProgress.checkInStatus)}
+                          size="small"
+                          sx={{ width: '100%' }}
+                        />
+                      </Box>
+                      <Box>
+                        <Typography variant="caption" color="text.secondary" className="block mb-1">
+                          Status
+                        </Typography>
+                        <Chip
+                          label={transaction.transactionStatus.replace("-", " ")}
+                          color={getStatusColor(transaction.transactionStatus)}
+                          size="small"
+                          sx={{ width: '100%' }}
+                        />
+                      </Box>
+                    </Box>
+
+                    {/* Last Update */}
+                    <Typography variant="caption" color="text.secondary" className="block mb-3">
+                      Last Update: {transaction.lastUpdate}
+                    </Typography>
+
+                    {/* Action Button */}
+                    {transaction.myProgress.checkInStatus !== "approved" && (
+                      <Button
+                        fullWidth
+                        variant="contained"
+                        onClick={() => handleUpdateProgress(transaction)}
+                        startIcon={<EditIcon />}
+                        sx={{
+                          backgroundColor: "#FFB22C",
+                          color: "#1a1a1a",
+                          "&:hover": {
+                            backgroundColor: "#e6a028",
+                            color: "#1a1a1a"
+                          },
+                        }}
+                      >
+                        {transaction.myProgress.checkInStatus === "pending"
+                          ? "Check-in"
+                          : "Edit Submission"}
+                      </Button>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </Box>
           </div>
         </div>
       </div>
@@ -608,17 +736,17 @@ const SubcontractorProgress = () => {
                 <Typography variant="body2" color="text.secondary" className="mb-1">
                   Your Description {selectedTransaction?.myProgress.checkInStatus !== "approved" && <EditIcon sx={{ fontSize: 16, ml: 1, color: "#FFB22C" }} />}
                 </Typography>
-              <TextField
-                fullWidth
-                multiline
-                rows={2}
-                label="Description"
-                value={updateData.description}
-                onChange={(e) => setUpdateData(prev => ({ ...prev, description: e.target.value }))}
-                InputProps={{ readOnly: selectedTransaction?.myProgress.checkInStatus === "approved" }}
-                placeholder="Describe your current progress and any updates..."
-                required
-              />
+                <TextField
+                  fullWidth
+                  multiline
+                  rows={2}
+                  label="Description"
+                  value={updateData.description}
+                  onChange={(e) => setUpdateData(prev => ({ ...prev, description: e.target.value }))}
+                  InputProps={{ readOnly: selectedTransaction?.myProgress.checkInStatus === "approved" }}
+                  placeholder="Describe your current progress and any updates..."
+                  required
+                />
               </Box>
 
               <Box className="flex justify-end gap-4 pt-4">
