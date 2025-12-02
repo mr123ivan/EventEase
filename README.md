@@ -1,5 +1,39 @@
 # EventEase - Web-Based Event Subcontractor Management and Reservation System
 
+<p align="center">
+  <a href="https://react.dev/" target="_blank" rel="noopener noreferrer">
+    <img src="https://img.icons8.com/?size=512&id=123603&format=png&color=61DAFB" width="160" alt="React">
+  </a>
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="https://spring.io/" target="_blank" rel="noopener noreferrer">
+    <img width="160" src="https://img.icons8.com/?size=512&id=90519&format=png&color=000000" alt="Spring Boot">
+  </a>
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="https://aws.amazon.com/" target="_blank" rel="noopener noreferrer">
+    <img width="140" src="https://img.icons8.com/?size=512&id=33039&format=png&color=000000" alt="AWS" style="background-color: white; border-radius: 50%; padding: 8px;">
+  </a>
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="https://www.docker.com/" target="_blank" rel="noopener noreferrer">
+    <img width="160" src="https://img.icons8.com/?size=512&id=cdYUlRaag9G9&format=png&color=000000" alt="Docker">
+  </a>
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <a href="https://www.mysql.com/" target="_blank" rel="noopener noreferrer">
+    <img width="140" src="https://img.icons8.com/?size=512&id=UFXRpPFebwa2&format=png&color=000000" alt="MySQL" style="background-color: white; border-radius: 50%; padding: 8px;">
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://npmjs.com/package/react"><img src="https://img.shields.io/badge/React-v18.3.1-61DAFB?logo=react&logoColor=white" alt="React version"></a>
+  &nbsp;
+  <a href="https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter"><img src="https://img.shields.io/badge/Spring%20Boot-v3.2.11-6DB33F?logo=springboot&logoColor=white" alt="Spring Boot version"></a>
+  &nbsp;
+  <a href="https://aws.amazon.com/s3/"><img src="https://img.shields.io/badge/AWS%20S3-Storage-FF9900?logo=amazons3&logoColor=white" alt="AWS S3"></a>
+  &nbsp;
+  <a href="https://www.docker.com/"><img src="https://img.shields.io/badge/Docker-Containerization-2496ED?logo=docker&logoColor=white" alt="Docker"></a>
+  &nbsp;
+  <a href="https://www.mysql.com/"><img src="https://img.shields.io/badge/MySQL-v8.0-4479A1?logo=mysql&logoColor=white" alt="MySQL"></a>
+</p>
+
 EventEase is a comprehensive web-based platform designed to streamline the entire event planning process from customer booking to subcontractor coordination. The system enables efficient management of event services, bookings, and subcontractor workflows while providing transparency and security for event organizers, customers, and subcontractors.
 
 ## 🎯 Overview
