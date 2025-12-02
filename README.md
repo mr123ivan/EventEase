@@ -10,7 +10,7 @@
   </a>
   &nbsp;&nbsp;&nbsp;&nbsp;
   <a href="https://aws.amazon.com/" target="_blank" rel="noopener noreferrer">
-    <img width="100" src="https://upload.wikimedia.org/wikipedia/commons/9/93/Amazon_Web_Services_Logo.svg" alt="AWS">
+    <img width="100" src="https://img.icons8.com/color/480/amazon-web-services.png" alt="AWS">
   </a>
   &nbsp;&nbsp;&nbsp;&nbsp;
   <a href="https://www.docker.com/" target="_blank" rel="noopener noreferrer">
@@ -18,7 +18,7 @@
   </a>
   &nbsp;&nbsp;&nbsp;&nbsp;
   <a href="https://www.mysql.com/" target="_blank" rel="noopener noreferrer">
-    <img width="100" src="https://c8.alamy.com/comp/2M94X2G/mysql-logo-white-background-2M94X2G.jpg" alt="MySQL">
+    <img width="100" src="https://img.icons8.com/color/480/mysql-logo.png" alt="MySQL">
   </a>
 </p>
 
