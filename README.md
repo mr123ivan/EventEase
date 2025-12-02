@@ -2,23 +2,23 @@
 
 <p align="center">
   <a href="https://react.dev/" target="_blank" rel="noopener noreferrer">
-    <img src="https://img.icons8.com/?size=512&id=123603&format=png&color=61DAFB" width="160" alt="React">
+    <img src="https://img.icons8.com/?size=512&id=123603&format=png&color=61DAFB" width="100" alt="React">
   </a>
   &nbsp;&nbsp;&nbsp;&nbsp;
   <a href="https://spring.io/" target="_blank" rel="noopener noreferrer">
-    <img width="160" src="https://img.icons8.com/?size=512&id=90519&format=png&color=000000" alt="Spring Boot">
+    <img width="100" src="https://img.icons8.com/?size=512&id=90519&format=png&color=000000" alt="Spring Boot">
   </a>
   &nbsp;&nbsp;&nbsp;&nbsp;
   <a href="https://aws.amazon.com/" target="_blank" rel="noopener noreferrer">
-    <img width="140" src="https://img.icons8.com/?size=512&id=33039&format=png&color=000000" alt="AWS" style="background-color: white; border-radius: 50%; padding: 8px;">
+    <img width="100" src="https://upload.wikimedia.org/wikipedia/commons/9/93/Amazon_Web_Services_Logo.svg" alt="AWS">
   </a>
   &nbsp;&nbsp;&nbsp;&nbsp;
   <a href="https://www.docker.com/" target="_blank" rel="noopener noreferrer">
-    <img width="160" src="https://img.icons8.com/?size=512&id=cdYUlRaag9G9&format=png&color=000000" alt="Docker">
+    <img width="100" src="https://img.icons8.com/?size=512&id=cdYUlRaag9G9&format=png&color=000000" alt="Docker">
   </a>
   &nbsp;&nbsp;&nbsp;&nbsp;
   <a href="https://www.mysql.com/" target="_blank" rel="noopener noreferrer">
-    <img width="140" src="https://img.icons8.com/?size=512&id=UFXRpPFebwa2&format=png&color=000000" alt="MySQL" style="background-color: white; border-radius: 50%; padding: 8px;">
+    <img width="100" src="https://c8.alamy.com/comp/2M94X2G/mysql-logo-white-background-2M94X2G.jpg" alt="MySQL">
   </a>
 </p>
 
@@ -27,6 +27,14 @@
   &nbsp;
   <a href="https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter"><img src="https://img.shields.io/badge/Spring%20Boot-v3.2.11-6DB33F?logo=springboot&logoColor=white" alt="Spring Boot version"></a>
   &nbsp;
+  <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/Node.js-v18+-339933?logo=nodedotjs&logoColor=white" alt="Node.js"></a>
+  &nbsp;
+  <a href="https://www.npmjs.com/"><img src="https://img.shields.io/badge/npm-v9+-CB3837?logo=npm&logoColor=white" alt="npm"></a>
+  &nbsp;
+  <a href="https://www.oracle.com/java/"><img src="https://img.shields.io/badge/Java-17+-007396?logo=openjdk&logoColor=white" alt="Java"></a>
+  &nbsp;
+  <a href="https://maven.apache.org/"><img src="https://img.shields.io/badge/Maven-3.8+-C71A36?logo=apachemaven&logoColor=white" alt="Maven"></a>
+  &nbsp;
   <a href="https://aws.amazon.com/s3/"><img src="https://img.shields.io/badge/AWS%20S3-Storage-FF9900?logo=amazons3&logoColor=white" alt="AWS S3"></a>
   &nbsp;
   <a href="https://www.docker.com/"><img src="https://img.shields.io/badge/Docker-Containerization-2496ED?logo=docker&logoColor=white" alt="Docker"></a>
@@ -34,7 +42,35 @@
   <a href="https://www.mysql.com/"><img src="https://img.shields.io/badge/MySQL-v8.0-4479A1?logo=mysql&logoColor=white" alt="MySQL"></a>
 </p>
 
+---
+
+
 EventEase is a comprehensive web-based platform designed to streamline the entire event planning process from customer booking to subcontractor coordination. The system enables efficient management of event services, bookings, and subcontractor workflows while providing transparency and security for event organizers, customers, and subcontractors.
+
+## 📑 Table of Contents
+
+- [🎯 Overview](#-overview)
+- [📖 User Guide](#-user-guide)
+- [✨ Features](#-features)
+  - [For Customers](#for-customers)
+  - [For Admins (Event Organizers)](#for-admins-event-organizers)
+  - [For Subcontractors](#for-subcontractors)
+- [🛠️ Technology Stack](#️-technology-stack)
+- [🚀 Getting Started](#-getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Database Setup](#database-setup)
+  - [Backend Deployment](#backend-deployment-spring-boot)
+  - [Frontend Deployment](#frontend-deployment-react--vite)
+  - [Running with Docker](#running-with-docker-optional)
+- [🔐 Authentication / Testing Credentials](#-authentication--testing-credentials)
+- [📁 Project Structure](#-project-structure)
+- [🔧 Configuration](#-configuration)
+- [📝 API Documentation](#-api-documentation)
+- [🤝 Contributing](#-contributing)
+- [👥 Developer Members](#-developer-members)
+- [📧 Support](#-support)
+
+---
 
 ## 🎯 Overview
 
@@ -44,24 +80,32 @@ EventEase serves three primary user roles:
 - **Customers**: Browse and book event services, manage reservations, and track event progress
 - **Subcontractors**: View assigned tasks, submit proof of work, manage availability, and track transactions
 
+## 📖 User Guide
+
+For detailed step-by-step instructions on how to use EventEase, please refer to the following user guides:
+
+- **[Customer Guide](https://docs.google.com/document/d/17gsCR6r9NK4nvM1tg5vDh_CaSLxvtgD58sF8kmtvO7w/edit?tab=t.0)** - Complete guide for customers on browsing, booking, and managing events
+- **[Subcontractor Guide](https://docs.google.com/document/d/1Uo6bb0YNuBaRs_4CkT-IpD939_5jzmYJDjNsvNGj9-U/edit?tab=t.0#heading=h.203ipuueam35)** - Instructions for subcontractors on task management and work submission
+- **[Admin Guide](https://docs.google.com/document/d/1fuvmu7k2g9jWIHAchBigGSKkOYMq0_jqnI0Kt92NY_c/edit?tab=t.0)** - Comprehensive admin dashboard and management guide
+
 ## ✨ Features
 
 ### For Customers
 
-- **Event Discovery & Booking**
+- ✅ **Event Discovery & Booking**
   - Browse available event services
   - View detailed event descriptions, pricing, and availability
   - Book individual services
   - Interactive service selection with visual previews
 
-- **Booking Management**
+- ✅ **Booking Management**
   - Input custom event details (date, location, requirements)
   - Preview booking summaries before confirmation
   - Upload payment proof with chunked file upload support
   - Track booking status and event progress
   - Receive real-time notifications about booking updates
 
-- **Account Management**
+- ✅ **Account Management**
   - Secure registration with OTP email verification
   - Profile management with customizable settings
   - View booking history and transaction records
@@ -69,56 +113,56 @@ EventEase serves three primary user roles:
 
 ### For Admins (Event Organizers)
 
-- **Dashboard & Analytics**
+- ✅ **Dashboard & Analytics**
   - Comprehensive business overview with key metrics
   - Visual analytics for bookings, revenue, and performance
   - Monitor active events and pending requests
 
-- **Event Management**
+- ✅ **Event Management**
   - Create, edit, and delete event services
   - Set pricing, availability, and service details
   - Upload showcase images and event portfolios
   - Manage service categories and customization options
 
-- **Booking Operations**
+- ✅ **Booking Operations**
   - View and manage all customer bookings
   - Review payment proofs and verify transactions
   - Approve or reject booking requests
   - Track event progress from booking to completion
   - Assign subcontractors to events
 
-- **Subcontractor Management**
+- ✅ **Subcontractor Management**
   - Add and manage subcontractor accounts
   - Assign tasks and events to subcontractors
   - Review submitted proof of work
   - Track subcontractor performance and availability
 
-- **Customer Management**
+- ✅ **Customer Management**
   - View customer profiles
 
-- **Communication System**
+- ✅ **Communication System**
   - In-app notification system
   - Email notifications for important events
   - Real-time updates on booking status changes
 
 ### For Subcontractors
 
-- **Task Management**
+- ✅ **Task Management**
   - View assigned events and tasks
   - Access event details and requirements
   - Manage service availability
   - Track upcoming and completed assignments
 
-- **Proof of Work Submission**
+- ✅ **Proof of Work Submission**
   - Upload work completion documentation
   - Submit photos and files for admin review
   - Track submission status and feedback
 
-- **Transaction Tracking**
+- ✅ **Transaction Tracking**
   - View payment history
   - Access transaction records
 
-- **Profile Management**
+- ✅ **Profile Management**
   - Update availability status
   - Manage personal information
 
