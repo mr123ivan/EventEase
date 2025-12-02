@@ -3,7 +3,7 @@ name: CI/CD Build and Push Docker Images
 on:
   push:
     branches:
-      - "master"
+      - "main"
   workflow_dispatch:
 
 jobs:
