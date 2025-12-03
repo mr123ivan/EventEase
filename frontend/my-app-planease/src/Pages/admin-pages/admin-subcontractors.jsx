@@ -23,6 +23,7 @@ import {
   Button,
   Grid,
   Card,
+  CardContent,
   Avatar,
   CircularProgress,
   Snackbar,
@@ -785,10 +786,10 @@ const AdminSubContractors = () => {
 
           {/* Manage Subcontractors Section */}
           <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-            <div className="flex justify-between items-center mb-4">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
               <div>
-                <h3 className="text-xl font-semibold">Manage Your Subcontractors</h3>
-                <p className="text-sm text-gray-500">Register new vendors and manage existing ones.</p>
+                <h3 className="text-lg sm:text-xl font-semibold">Manage Your Subcontractors</h3>
+                <p className="text-xs sm:text-sm text-gray-500">Register new vendors and manage existing ones.</p>
               </div>
               <Button
                 variant="contained"
@@ -798,6 +799,7 @@ const AdminSubContractors = () => {
                   "&:hover": { bgcolor: "#FF8C00" },
                   borderRadius: "8px",
                   boxShadow: "none",
+                  width: { xs: '100%', sm: 'auto' },
                   fontWeight: "bold",
                 }}
                 onClick={handleOpen}
@@ -879,12 +881,13 @@ const AdminSubContractors = () => {
             <h3 className="text-xl font-semibold mb-4">List of subcontractors</h3>
 
             {/* Search and Filter */}
-            <Box display="flex" justifyContent="space-between" mb={3}>
+            <Box display="flex" flexDirection={{ xs: 'column', sm: 'row' }} gap={2} mb={3}>
               <TextField
                 placeholder="Search..."
                 variant="outlined"
                 size="small"
-                sx={{ width: 250 }}
+                fullWidth
+                sx={{ width: { sm: 250 } }}
                 value={searchQuery}
                 onChange={(e) => {
                   setSearchQuery(e.target.value)
@@ -895,7 +898,7 @@ const AdminSubContractors = () => {
                 }}
               />
 
-              <FormControl size="small" sx={{ width: 180 }}>
+              <FormControl size="small" fullWidth sx={{ width: { sm: 180 } }}>
                 <Select
                   value={selectedCategory}
                   onChange={(e) => {
@@ -925,6 +928,8 @@ const AdminSubContractors = () => {
               </Box>
             ) : (
               <>
+                {/* Desktop Table */}
+                <Box sx={{ display: { xs: 'none', md: 'block' } }}>
                 <div style={{ overflowX: "auto" }}>
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
@@ -989,6 +994,63 @@ const AdminSubContractors = () => {
                     </tbody>
                   </table>
                 </div>
+                </Box>
+
+                {/* Mobile Cards */}
+                <Box sx={{ display: { xs: 'block', md: 'none' } }}>
+                  <div className="space-y-3">
+                    {filteredSubcontractors
+                      .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                      .map((subcontractor) => (
+                        <Card key={subcontractor.subcontractor_Id} className="shadow-sm">
+                          <CardContent>
+                            <Box className="flex items-start gap-3 mb-3">
+                              <BusinessIcon sx={{ color: "#FFA500", fontSize: 28 }} />
+                              <Box flex={1}>
+                                <Typography variant="subtitle1" className="font-medium mb-1">
+                                  {subcontractor.businessName || "—"}
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary" display="block">
+                                  {(subcontractor.services?.length || 0) > 0
+                                    ? `${subcontractor.services.length} service(s)`
+                                    : "No services"}
+                                </Typography>
+                              </Box>
+                            </Box>
+                            
+                            <Box className="flex items-center gap-2 mb-3">
+                              <PersonIcon sx={{ color: "text.secondary", fontSize: 20 }} />
+                              <Typography variant="body2" color="text.secondary">
+                                {subcontractor.contactPerson || "—"}
+                              </Typography>
+                            </Box>
+                            
+                            <Box className="flex gap-2">
+                              <Button
+                                variant="outlined"
+                                size="small"
+                                fullWidth
+                                color="primary"
+                                onClick={() => handleOpenModal(subcontractor.subcontractor_Id)}
+                                disabled={isViewingProfile}
+                              >
+                                {isViewingProfile ? "Loading..." : "View Profile"}
+                              </Button>
+                              <Button
+                                variant="outlined"
+                                size="small"
+                                fullWidth
+                                sx={{ color: "#FFA500", borderColor: "#FFA500" }}
+                                onClick={() => handleEditSubcontractor(subcontractor.subcontractor_Id)}
+                              >
+                                Edit
+                              </Button>
+                            </Box>
+                          </CardContent>
+                        </Card>
+                      ))}
+                  </div>
+                </Box>
                 {/* Pagination */}
                 <Box display="flex" justifyContent="center" mt={3}>
                   <div className="flex items-center space-x-1">
