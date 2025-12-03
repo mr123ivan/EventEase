@@ -295,7 +295,7 @@ const SubcontractorProgress = () => {
                       In Progress
                     </Typography>
                     <Typography variant="h4" component="p" className="font-bold text-blue-600">
-                      {transactions.filter((t) => t.transactionStatus === "in-progress").length}
+                      {transactions.filter((t) => t.transactionStatus === "ongoing").length}
                     </Typography>
                   </CardContent>
                 </Card>

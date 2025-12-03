@@ -206,11 +206,8 @@ const SubcontractorDashboard = () => {
                 if (response.data) {
                     const transactions = response.data;
 
-                    // Count assigned events (unique events the subcontractor is assigned to)
-                    // Using eventName since eventId is not available in the response
-                    const uniqueEvents = [...new Set(transactions.map(t => t.eventName))];
-                    // console.log("Unique events:", uniqueEvents); // COMMENTED OUT - Exposes event information
-                    setAssignedEvents(uniqueEvents.length);
+                    // Count assigned events (total assignments)
+                    setAssignedEvents(transactions.length);
 
                     // Count transactions by status
                     // Using transactionStatus field from backend
