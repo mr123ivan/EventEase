@@ -48,7 +48,7 @@ const NavPanel = () => {
           }
         >
           <Calendar size={20} />
-          Calendar
+          Availability Calendar
         </NavLink>
 
         {/*<NavLink*/}

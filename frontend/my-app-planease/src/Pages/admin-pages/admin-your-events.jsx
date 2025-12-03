@@ -57,6 +57,18 @@ const YourEvents = () => {
     fetchAllServices()
   }, [])
 
+  // Lock body scroll when modals are open
+  useEffect(() => {
+    if (showModal || showDeleteModal) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [showModal, showDeleteModal])
+
   const fetchEvents = async () => {
     try {
       const response = await axios.get(`${API_BASE_URL}/api/events/getEvents`)
@@ -301,7 +313,8 @@ const YourEvents = () => {
             </button>
           </div>
 
-          <div className="bg-white shadow rounded-lg overflow-x-auto">
+          {/* Desktop Table */}
+          <div className="hidden md:block bg-white shadow rounded-lg overflow-x-auto">
             <table className="min-w-full text-left text-sm">
               <thead className="bg-[#F1F1FB] text-gray-700">
                 <tr>
@@ -337,6 +350,38 @@ const YourEvents = () => {
               </tbody>
             </table>
           </div>
+
+          {/* Mobile Cards */}
+          <div className="md:hidden space-y-3">
+            {events?.map((event) => (
+              <div key={event.event_Id} className="bg-white shadow rounded-lg p-4">
+                <div className="mb-3">
+                  <h3 className="font-medium text-base text-gray-900">{event.event_name}</h3>
+                </div>
+                
+                <div className="mb-3">
+                  <span className="text-xs font-medium text-gray-500">Summary:</span>
+                  <p className="text-sm text-[#667085] mt-1">{event.event_summary}</p>
+                </div>
+                
+                <div className="mb-3">
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs font-medium ${event.event_isAvailable ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                      }`}
+                  >
+                    {event.event_isAvailable ? "Available" : "Unavailable"}
+                  </span>
+                </div>
+                
+                <button
+                  onClick={() => handleEditEvent(event)}
+                  className="w-full bg-[#FFB22C] hover:bg-[#e6a028] text-white px-4 py-2 rounded-lg font-medium"
+                >
+                  Edit Event
+                </button>
+              </div>
+            ))}
+          </div>
         </main>
       </div>
 
@@ -347,15 +392,15 @@ const YourEvents = () => {
         className="fixed z-1150 shadow-md inset-0 overflow-y-auto"
       >
         <div className="flex items-center justify-center min-h-screen px-4">
-          <Dialog.Panel className="bg-white w-full max-w-5xl rounded-lg shadow-lg p-4 sm:p-6">
-            <div className="flex justify-between items-center border-b pb-2 mb-6">
-              <h3 className="text-xl font-semibold">{isEditing ? "Edit Event" : "Add New Event"}</h3>
+          <Dialog.Panel className="bg-white w-full max-w-5xl max-h-[90vh] flex flex-col rounded-lg shadow-lg p-4 sm:p-6">
+            <div className="flex justify-between items-center border-b pb-2 mb-4 sm:mb-6">
+              <h3 className="text-lg sm:text-xl font-semibold">{isEditing ? "Edit Event" : "Add New Event"}</h3>
               <button onClick={() => setShowModal(false)} className="text-xl hover:cursor-pointer">
                 ×
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6 overflow-y-auto">
               {/* Two Column Layout: Left - Basic Info & Available Services, Right - Event Image & Service Sections */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Left Column: Basic Info & Available Services */}
@@ -673,7 +718,7 @@ const YourEvents = () => {
         className="fixed z-1200 shadow-md inset-0 overflow-y-auto"
       >
         <div className="flex items-center justify-center min-h-screen px-4">
-          <Dialog.Panel className="bg-white w-full max-w-md rounded-lg shadow-lg p-6">
+          <Dialog.Panel className="bg-white w-full max-w-md rounded-lg shadow-lg p-4 sm:p-6">
             <div className="text-center">
               <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
                 <svg className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">

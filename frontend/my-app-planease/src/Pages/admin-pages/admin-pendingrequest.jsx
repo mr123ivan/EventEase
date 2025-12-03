@@ -238,7 +238,7 @@ const AdminPendingRequest = () => {
                       // console.log(subcontractor.subcontractorUserId) // COMMENTED OUT - Exposes subcontractor ID
                       // console.log(selectedRequest.eventName) // COMMENTED OUT - Exposes event details
                       const response = await axios.post(
-                        `${API_BASE_URL}/api/notifications/notify-subcontractors-byid`,
+                        `${API_BASE_URL}/api/notifications/notify-subcontractors-by-id`,
                         null,
                         {
                           params: {
