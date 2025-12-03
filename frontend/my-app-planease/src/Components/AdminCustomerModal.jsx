@@ -29,6 +29,18 @@ const AdminCustomerModal = ({ open, onClose, user }) => {
     return () => document.removeEventListener("keydown", onKeyDown)
   }, [open, onClose])
 
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [open])
+
   useEffect(() => {
     if (open && user) {
       setForm({
@@ -53,15 +65,15 @@ const AdminCustomerModal = ({ open, onClose, user }) => {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center" aria-modal="true" role="dialog">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" aria-modal="true" role="dialog">
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/40" onClick={onClose} aria-hidden="true" />
 
       {/* Panel */}
-      <div className="relative z-10 w-full max-w-xl rounded-lg bg-white border border-gray-200">
+      <div className="relative z-10 w-full max-w-xl max-h-[90vh] flex flex-col rounded-lg bg-white border border-gray-200">
         {/* Header */}
-        <div className="flex items-center justify-between border-b px-6 py-4">
-          <h2 className="text-lg font-semibold text-gray-800">Customer Details</h2>
+        <div className="flex items-center justify-between border-b px-4 sm:px-6 py-3 sm:py-4">
+          <h2 className="text-base sm:text-lg font-semibold text-gray-800">Customer Details</h2>
           <button
             onClick={onClose}
             aria-label="Close details"
@@ -71,8 +83,8 @@ const AdminCustomerModal = ({ open, onClose, user }) => {
           </button>
         </div>
 
-        {/* Body */}
-        <div className="px-6 py-5 space-y-4">
+        {/* Body - Scrollable */}
+        <div className="px-4 sm:px-6 py-4 sm:py-5 space-y-4 overflow-y-auto">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label htmlFor="firstname" className="block text-sm text-gray-600">First name</label>
@@ -176,7 +188,7 @@ const AdminCustomerModal = ({ open, onClose, user }) => {
         </div>
 
         {/* Footer actions */}
-        <div className="flex items-center justify-end border-t px-6 py-4">
+        <div className="flex items-center justify-end border-t px-4 sm:px-6 py-3 sm:py-4">
           <button
             onClick={onClose}
             className="inline-flex items-center justify-center rounded-md border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-sky-400"

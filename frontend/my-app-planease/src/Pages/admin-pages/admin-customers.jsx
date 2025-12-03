@@ -85,8 +85,8 @@ const AdminCustomers = () => {
           <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
             <div className="mb-6 flex items-center justify-between">
               <div>
-                <h1 className="text-2xl font-semibold text-gray-800">Customers</h1>
-                <p className="text-sm text-gray-500">Manage your platform users</p>
+                <h1 className="text-xl sm:text-2xl font-semibold text-gray-800">Customers</h1>
+                <p className="text-xs sm:text-sm text-gray-500">Manage your platform users</p>
               </div>
             </div>
 
@@ -105,7 +105,9 @@ const AdminCustomers = () => {
               ) : customers.length === 0 ? (
                 <div className="px-4 py-8 text-center text-sm text-gray-500">No Customers</div>
               ) : (
-                <div className="overflow-x-auto">
+                <>
+                  {/* Desktop Table */}
+                  <div className="hidden md:block overflow-x-auto">
                   <table className="min-w-full divide-y divide-gray-200" role="table" aria-label="Customers">
                     <thead className="bg-gray-50">
                       <tr>
@@ -148,6 +150,41 @@ const AdminCustomers = () => {
                     </tbody>
                   </table>
                 </div>
+
+                {/* Mobile Cards */}
+                <div className="md:hidden space-y-3 p-4">
+                  {customers.map((u) => (
+                    <div key={(u.userId ?? u.id)} className="border border-gray-200 rounded-lg p-4 bg-white">
+                      <div className="mb-3">
+                        <h3 className="font-medium text-gray-900 text-base">
+                          {u.firstname || ""} {u.lastname || ""}
+                        </h3>
+                      </div>
+                      
+                      {addressOf(u) && (
+                        <div className="mb-2 flex items-start gap-2">
+                          <span className="text-xs font-medium text-gray-500 min-w-[80px]">Address:</span>
+                          <span className="text-sm text-gray-700">{addressOf(u)}</span>
+                        </div>
+                      )}
+                      
+                      <div className="mb-3 flex items-center gap-2">
+                        <span className="text-xs font-medium text-gray-500 min-w-[80px]">Contact:</span>
+                        <span className="text-sm text-gray-700">{u.phoneNumber || "—"}</span>
+                      </div>
+                      
+                      <button
+                        onClick={() => openDetails(u)}
+                        aria-label={`View details for ${u.firstname || ""} ${u.lastname || ""}`}
+                        className="w-full inline-flex items-center justify-center gap-2 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-sky-400"
+                      >
+                        <Eye className="h-4 w-4 text-sky-500" />
+                        View Details
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </>
               )}
             </div>
           </div>
