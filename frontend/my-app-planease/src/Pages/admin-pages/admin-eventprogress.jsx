@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import axios from "axios"
-import AdminSideBar from "../../Components/admin-sidebar.jsx"
-import Navbar from "../../Components/Navbar"
+import { useState, useEffect } from "react";
+import axios from "axios";
+import AdminSideBar from "../../Components/admin-sidebar.jsx";
+import Navbar from "../../Components/Navbar";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 import {
@@ -38,8 +38,8 @@ import {
   Tooltip,
   IconButton,
   Drawer,
-} from "@mui/material"
-import MenuIcon from "@mui/icons-material/Menu"
+} from "@mui/material";
+import MenuIcon from "@mui/icons-material/Menu";
 import {
   Edit as EditIcon,
   Refresh as RefreshIcon,
@@ -48,79 +48,87 @@ import {
   MoreVert as MoreVertIcon,
   CheckCircle as CheckCircleIcon,
   Undo as UndoIcon,
-} from "@mui/icons-material"
-import MapViewModal from "../../Components/MapViewModal.jsx"
+} from "@mui/icons-material";
+import MapViewModal from "../../Components/MapViewModal.jsx";
 
 const EventTrackingAdmin = () => {
-  const [events, setEvents] = useState([])
-  const [filteredEvents, setFilteredEvents] = useState([])
-  const [statusFilter, setStatusFilter] = useState("all")
-  const [eventNameFilter, setEventNameFilter] = useState("")
-  const [ownerFilter, setOwnerFilter] = useState("")
-  const [selectedEvent, setSelectedEvent] = useState(null)
-  const [selectedSubcontractor, setSelectedSubcontractor] = useState(null)
-  const [showModal, setShowModal] = useState(false)
-  const [showSubcontractorModal, setShowSubcontractorModal] = useState(false)
-  const [showIndividualUpdateModal, setShowIndividualUpdateModal] = useState(false)
-  const [showSubcontractorSelectionModal, setShowSubcontractorSelectionModal] = useState(false)
-  const [actionDropdownOpen, setActionDropdownOpen] = useState(false)
-  const [loadingMarkComplete, setLoadingMarkComplete] = useState(false)
-  const [currentImageIndex, setCurrentImageIndex] = useState(0)
-  const [images, setImages] = useState([])
+  const [events, setEvents] = useState([]);
+  const [filteredEvents, setFilteredEvents] = useState([]);
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [eventNameFilter, setEventNameFilter] = useState("");
+  const [ownerFilter, setOwnerFilter] = useState("");
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [selectedSubcontractor, setSelectedSubcontractor] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [showSubcontractorModal, setShowSubcontractorModal] = useState(false);
+  const [showIndividualUpdateModal, setShowIndividualUpdateModal] =
+    useState(false);
+  const [showSubcontractorSelectionModal, setShowSubcontractorSelectionModal] =
+    useState(false);
+  const [actionDropdownOpen, setActionDropdownOpen] = useState(false);
+  const [loadingMarkComplete, setLoadingMarkComplete] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [images, setImages] = useState([]);
   const [updateData, setUpdateData] = useState({
     status: "",
     checkInStatus: "",
     notes: "",
     comment: "",
     progressPercentage: 0,
-  })
-  const [viewMapModal, setViewMapModal] = useState(false)
-  const [selectedLocation, setSelectedLocation] = useState(null)
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  });
+  const [viewMapModal, setViewMapModal] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
-    fetchEventsProgress()
-  }, [])
-  
+    fetchEventsProgress();
+  }, []);
+
   // Apply filters to events whenever filter criteria or events data changes
   useEffect(() => {
     if (!events.length) {
-      setFilteredEvents([])
-      return
+      setFilteredEvents([]);
+      return;
     }
-    
-    let result = [...events]
-    
+
+    let result = [...events];
+
     // Apply status filter
     if (statusFilter !== "all") {
-      result = result.filter(event => event.currentStatus === statusFilter)
+      result = result.filter((event) => event.currentStatus === statusFilter);
     }
-    
+
     // Apply event name filter
     if (eventNameFilter) {
-      result = result.filter(event => 
+      result = result.filter((event) =>
         event.eventName.toLowerCase().includes(eventNameFilter.toLowerCase())
-      )
+      );
     }
-    
+
     // Apply owner filter
     if (ownerFilter) {
-      result = result.filter(event => 
-        (event.userName && event.userName.toLowerCase().includes(ownerFilter.toLowerCase())) ||
-        (event.userEmail && event.userEmail.toLowerCase().includes(ownerFilter.toLowerCase()))
-      )
+      result = result.filter(
+        (event) =>
+          (event.userName &&
+            event.userName.toLowerCase().includes(ownerFilter.toLowerCase())) ||
+          (event.userEmail &&
+            event.userEmail.toLowerCase().includes(ownerFilter.toLowerCase()))
+      );
     }
-    
-    setFilteredEvents(result)
-  }, [events, statusFilter, eventNameFilter, ownerFilter])
+
+    setFilteredEvents(result);
+  }, [events, statusFilter, eventNameFilter, ownerFilter]);
 
   const fetchEventsProgress = async () => {
     try {
-      const token = localStorage.getItem("token")
+      const token = localStorage.getItem("token");
       // Fetch all transactions for admin (no email filter)
-      const response = await axios.get(`${API_BASE_URL}/api/transactions/getAllTransactions`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      const response = await axios.get(
+        `${API_BASE_URL}/api/transactions/getAllTransactions`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
       // Fetch subcontractor progress data for each transaction
       const eventsData = await Promise.all(
@@ -132,8 +140,8 @@ const EventTrackingAdmin = () => {
               {
                 headers: { Authorization: `Bearer ${token}` },
               }
-            )
-            const eventProgressData = eventProgressResponse.data
+            );
+            const eventProgressData = eventProgressResponse.data;
             // console.log(`DEBUG: Event progress data for transaction ${transaction.transaction_Id}:`, eventProgressData)
 
             // Fetch subcontractor progress data for each transaction
@@ -142,36 +150,47 @@ const EventTrackingAdmin = () => {
               {
                 headers: { Authorization: `Bearer ${token}` },
               }
-            )
-            const subcontractorProgressData = subcontractorProgressResponse.data
+            );
+            const subcontractorProgressData =
+              subcontractorProgressResponse.data;
             // console.log(`DEBUG: Subcontractor progress data for transaction ${transaction.transaction_Id}:`, subcontractorProgressData)
 
             // Merge subcontractor data with progress data
             const subcontractors = transaction.subcontractors.map((sub) => {
-                const progressData = subcontractorProgressData.find(
-                  (progress) => progress.userId === parseInt(sub.subcontractorUserId) &&
-                               progress.eventServiceId === sub.eventServiceId
-                )
-                // console.log(`DEBUG: For subcontractor ${sub.subcontractorUserId} (${sub.subcontractorName}), service ${sub.serviceName}, eventServiceId ${sub.eventServiceId}, progressData found:`, progressData) // COMMENTED OUT - Development debug with potentially sensitive data
+              const progressData = subcontractorProgressData.find(
+                (progress) =>
+                  progress.userId === parseInt(sub.subcontractorUserId) &&
+                  progress.eventServiceId === sub.eventServiceId
+              );
+              // console.log(`DEBUG: For subcontractor ${sub.subcontractorUserId} (${sub.subcontractorName}), service ${sub.serviceName}, eventServiceId ${sub.eventServiceId}, progressData found:`, progressData) // COMMENTED OUT - Development debug with potentially sensitive data
 
-                return {
-                  id: sub.subcontractorUserId.toString(),
-                  subcontractorEntityId: sub.subcontractorEntityId || sub.subcontractorUserId, // Add subcontractorEntityId for API calls
-                  progressId: progressData?.subcontractorProgressId, // Store the subcontractor progress ID for individual endpoint
-                  name: progressData?.subcontractorName || sub.subcontractorName,
-                  serviceName: progressData?.subcontractorRole || sub.serviceName,
-                  progressPercentage: progressData?.progressPercentage ?? sub.progressPercentage ?? 0,
-                  checkInStatus: progressData?.checkInStatus?.toLowerCase() || sub.checkInStatus || "pending",
-                  notes: progressData?.progressNotes || sub.notes || "",
-                  progressImageUrl: progressData?.progressImageUrl || "",
-                  lastUpdate: progressData?.updatedAt || sub.lastUpdate || "",
-                  avatar: progressData?.subcontractorAvatar && progressData.subcontractorAvatar.trim() !== ""
-                    ? (progressData.subcontractorAvatar.startsWith('http')
-                        ? progressData.subcontractorAvatar
-                        : `${API_BASE_URL}/uploads/${progressData.subcontractorAvatar}`)
+              return {
+                id: sub.subcontractorUserId.toString(),
+                subcontractorEntityId:
+                  sub.subcontractorEntityId || sub.subcontractorUserId, // Add subcontractorEntityId for API calls
+                progressId: progressData?.subcontractorProgressId, // Store the subcontractor progress ID for individual endpoint
+                name: progressData?.subcontractorName || sub.subcontractorName,
+                serviceName: progressData?.subcontractorRole || sub.serviceName,
+                progressPercentage:
+                  progressData?.progressPercentage ??
+                  sub.progressPercentage ??
+                  0,
+                checkInStatus:
+                  progressData?.checkInStatus?.toLowerCase() ||
+                  sub.checkInStatus ||
+                  "pending",
+                notes: progressData?.progressNotes || sub.notes || "",
+                progressImageUrl: progressData?.progressImageUrl || "",
+                lastUpdate: progressData?.updatedAt || sub.lastUpdate || "",
+                avatar:
+                  progressData?.subcontractorAvatar &&
+                  progressData.subcontractorAvatar.trim() !== ""
+                    ? progressData.subcontractorAvatar.startsWith("http")
+                      ? progressData.subcontractorAvatar
+                      : `${API_BASE_URL}/uploads/${progressData.subcontractorAvatar}`
                     : "/placeholder.svg?key=" + sub.subcontractorUserId, // Use avatar from progress data if available
-                }
-              })
+              };
+            });
 
             return {
               id: transaction.transaction_Id.toString(),
@@ -187,9 +206,12 @@ const EventTrackingAdmin = () => {
               checkInStatus: eventProgressData.checkInStatus,
               notes: transaction.transactionNote || "",
               progressPercentage: eventProgressData.progressPercentage,
-            }
+            };
           } catch (error) {
-            console.error(`Failed to fetch progress for transaction ${transaction.transaction_Id}:`, error)
+            console.error(
+              `Failed to fetch progress for transaction ${transaction.transaction_Id}:`,
+              error
+            );
             // Fallback to original data if progress fetch fails
             return {
               id: transaction.transaction_Id.toString(),
@@ -199,7 +221,8 @@ const EventTrackingAdmin = () => {
               phoneNumber: transaction.phoneNumber || "",
               subcontractors: transaction.subcontractors.map((sub) => ({
                 id: sub.subcontractorUserId.toString(),
-                subcontractorEntityId: sub.subcontractorEntityId || sub.subcontractorUserId, // Add subcontractorEntityId for API calls
+                subcontractorEntityId:
+                  sub.subcontractorEntityId || sub.subcontractorUserId, // Add subcontractorEntityId for API calls
                 name: sub.subcontractorName,
                 serviceName: sub.serviceName,
                 progressPercentage: sub.progressPercentage || 0,
@@ -213,74 +236,84 @@ const EventTrackingAdmin = () => {
               location: transaction.transactionVenue || "N/A",
               startDate: transaction.transactionDate || "",
               lastUpdate: transaction.lastUpdate || "",
-              checkInStatus: getOverallCheckInStatus(transaction.subcontractors),
+              checkInStatus: getOverallCheckInStatus(
+                transaction.subcontractors
+              ),
               notes: transaction.transactionNote || "",
-              progressPercentage: calculateOverallProgress(transaction.subcontractors),
-            }
+              progressPercentage: calculateOverallProgress(
+                transaction.subcontractors
+              ),
+            };
           }
         })
-      )
+      );
 
-      setEvents(eventsData)
-      setFilteredEvents(eventsData) // Initialize filteredEvents with all events
+      setEvents(eventsData);
+      setFilteredEvents(eventsData); // Initialize filteredEvents with all events
     } catch (error) {
-      console.error("Failed to fetch all transactions for admin:", error)
+      console.error("Failed to fetch all transactions for admin:", error);
     }
-  }
+  };
 
   const calculateOverallProgress = (subcontractors) => {
-    if (subcontractors.length === 1) return subcontractors[0].progressPercentage
-    const totalProgress = subcontractors.reduce((sum, sub) => sum + sub.progressPercentage, 0)
-    return Math.round(totalProgress / subcontractors.length)
-  }
+    if (subcontractors.length === 1)
+      return subcontractors[0].progressPercentage;
+    const totalProgress = subcontractors.reduce(
+      (sum, sub) => sum + sub.progressPercentage,
+      0
+    );
+    return Math.round(totalProgress / subcontractors.length);
+  };
 
   const getOverallCheckInStatus = (subcontractors) => {
-    if (subcontractors.length === 1) return subcontractors[0].checkInStatus
-    const allApproved = subcontractors.every((sub) => sub.checkInStatus === "approved")
+    if (subcontractors.length === 1) return subcontractors[0].checkInStatus;
+    const allApproved = subcontractors.every(
+      (sub) => sub.checkInStatus === "approved"
+    );
 
-    if (allApproved) return "completed"
-    return "pending"
-  }
+    if (allApproved) return "completed";
+    return "pending";
+  };
 
   const groupSubcontractorsByName = (subcontractors) => {
     const grouped = subcontractors.reduce((acc, sub) => {
-      const key = sub.name
+      const key = sub.name;
       if (!acc[key]) {
-        acc[key] = []
+        acc[key] = [];
       }
-      acc[key].push(sub)
-      return acc
-    }, {})
+      acc[key].push(sub);
+      return acc;
+    }, {});
 
     return Object.entries(grouped).map(([name, subs]) => ({
       name,
       serviceName: subs[0].serviceName,
       avatar: subs[0].avatar,
       count: subs.length,
-      subcontractors: subs
-    }))
-  }
+      subcontractors: subs,
+    }));
+  };
 
   const handleUpdateEvent = (event) => {
-    setSelectedEvent(event)
+    setSelectedEvent(event);
     setUpdateData({
       status: event.currentStatus,
       checkInStatus: event.checkInStatus,
       notes: event.notes,
       progressPercentage: event.progressPercentage,
-    })
-    setShowModal(true)
-  }
+    });
+    setShowModal(true);
+  };
 
   const handleViewSubcontractors = (event) => {
-    setSelectedEvent(event)
-    setShowSubcontractorSelectionModal(true)
-  }
+    setSelectedEvent(event);
+    setShowSubcontractorSelectionModal(true);
+  };
 
   const handleSubmitUpdate = async () => {
     if (selectedEvent) {
       try {
-        const token = localStorage.getItem("token")
+        const token = localStorage.getItem("token");
         await axios.put(
           `${API_BASE_URL}/api/transactions/updateProgress/${selectedEvent.id}`,
           null,
@@ -291,57 +324,61 @@ const EventTrackingAdmin = () => {
             },
             headers: { Authorization: `Bearer ${token}` },
           }
-        )
+        );
         // Refetch the events data to get the updated status from backend
-        await fetchEventsProgress()
-        setShowModal(false)
-        setSelectedEvent(null)
+        await fetchEventsProgress();
+        setShowModal(false);
+        setSelectedEvent(null);
       } catch (error) {
-        console.error("Failed to update event progress:", error)
+        console.error("Failed to update event progress:", error);
       }
     }
-  }
+  };
 
   const getStatusColor = (status) => {
     switch (status) {
       case "pending":
-        return "warning"
+        return "warning";
       case "in-progress":
-        return "info"
+        return "info";
       case "review":
-        return "secondary"
+        return "secondary";
       case "completed":
-        return "success"
+        return "success";
       default:
-        return "default"
+        return "default";
     }
-  }
+  };
 
   const getCheckInColor = (status) => {
     switch (status) {
       case "pending":
-        return "warning"
+        return "warning";
       case "approved":
-        return "success"
+        return "success";
       case "rejected":
-        return "error"
+        return "error";
       case "completed":
-        return "success"
+        return "success";
       default:
-        return "default"
+        return "default";
     }
-  }
+  };
 
   const renderSubcontractorProfiles = (subcontractors) => {
     if (subcontractors.length === 1) {
       return (
         <Box className="flex items-center gap-2">
-          <Avatar src={subcontractors[0].avatar} alt={subcontractors[0].name} sx={{ width: 32, height: 32 }} />
+          <Avatar
+            src={subcontractors[0].avatar}
+            alt={subcontractors[0].name}
+            sx={{ width: 32, height: 32 }}
+          />
           <Typography variant="body2" className="text-[#667085]">
             {subcontractors[0].name}
           </Typography>
         </Box>
-      )
+      );
     }
 
     if (subcontractors.length <= 3) {
@@ -351,7 +388,11 @@ const EventTrackingAdmin = () => {
             <Box>
               {subcontractors.map((sub) => (
                 <Box key={sub.id} className="flex items-center gap-2 py-1">
-                  <Avatar src={sub.avatar} alt={sub.name} sx={{ width: 24, height: 24 }} />
+                  <Avatar
+                    src={sub.avatar}
+                    alt={sub.name}
+                    sx={{ width: 24, height: 24 }}
+                  />
                   <Typography variant="body2">{sub.name}</Typography>
                 </Box>
               ))}
@@ -360,14 +401,17 @@ const EventTrackingAdmin = () => {
           arrow
         >
           <Box className="flex items-center">
-            <AvatarGroup max={3} sx={{ "& .MuiAvatar-root": { width: 32, height: 32 } }}>
+            <AvatarGroup
+              max={3}
+              sx={{ "& .MuiAvatar-root": { width: 32, height: 32 } }}
+            >
               {subcontractors.map((sub) => (
                 <Avatar key={sub.id} src={sub.avatar} alt={sub.name} />
               ))}
             </AvatarGroup>
           </Box>
         </Tooltip>
-      )
+      );
     }
 
     return (
@@ -376,7 +420,11 @@ const EventTrackingAdmin = () => {
           <Box>
             {subcontractors.map((sub) => (
               <Box key={sub.id} className="flex items-center gap-2 py-1">
-                <Avatar src={sub.avatar} alt={sub.name} sx={{ width: 24, height: 24 }} />
+                <Avatar
+                  src={sub.avatar}
+                  alt={sub.name}
+                  sx={{ width: 24, height: 24 }}
+                />
                 <Typography variant="body2">{sub.name}</Typography>
               </Box>
             ))}
@@ -385,44 +433,54 @@ const EventTrackingAdmin = () => {
         arrow
       >
         <Box className="flex items-center">
-          <AvatarGroup max={2} sx={{ "& .MuiAvatar-root": { width: 32, height: 32 } }}>
+          <AvatarGroup
+            max={2}
+            sx={{ "& .MuiAvatar-root": { width: 32, height: 32 } }}
+          >
             {subcontractors.slice(0, 2).map((sub) => (
               <Avatar key={sub.id} src={sub.avatar} alt={sub.name} />
             ))}
-            <Avatar sx={{ bgcolor: "#FFB22C", width: 32, height: 32, fontSize: "0.75rem" }}>
+            <Avatar
+              sx={{
+                bgcolor: "#FFB22C",
+                width: 32,
+                height: 32,
+                fontSize: "0.75rem",
+              }}
+            >
               +{subcontractors.length - 2}
             </Avatar>
           </AvatarGroup>
         </Box>
       </Tooltip>
-    )
-  }
+    );
+  };
 
   const handleUpdateSubcontractor = async (event, subcontractor) => {
-    setSelectedEvent(event)
-    setSelectedSubcontractor(subcontractor)
+    setSelectedEvent(event);
+    setSelectedSubcontractor(subcontractor);
     setUpdateData({
       status: event.currentStatus,
       checkInStatus: subcontractor.checkInStatus,
       notes: subcontractor.notes,
       comment: "",
       progressPercentage: subcontractor.progressPercentage,
-    })
+    });
 
     // Fetch detailed progress data using the individual endpoint
     try {
-      const token = localStorage.getItem("token")
+      const token = localStorage.getItem("token");
       // console.log("DEBUG: Calling API with progressId:", subcontractor.progressId) // COMMENTED OUT - Development debug message
       const progressResponse = await axios.get(
         `${API_BASE_URL}/api/transactions/subcontractor-progress/id/${subcontractor.progressId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
-      )
+      );
       // console.log("DEBUG: Detailed subcontractor progress data fetched:", progressResponse.data) // COMMENTED OUT - API response may contain sensitive data
 
       // Update subcontractor with fresh data from individual endpoint
-      const detailedProgress = progressResponse.data
+      const detailedProgress = progressResponse.data;
       setSelectedSubcontractor({
         ...subcontractor,
         name: detailedProgress.subcontractorName,
@@ -433,74 +491,76 @@ const EventTrackingAdmin = () => {
         progressImageUrl: detailedProgress.progressImageUrl,
         lastUpdate: detailedProgress.updatedAt,
         avatar: detailedProgress.subcontractorAvatar,
-      })
+      });
 
       // Set images array for carousel
       if (detailedProgress.progressImageUrl) {
         try {
           // First try to parse as JSON (for multiple images)
           const parsedUrls = JSON.parse(detailedProgress.progressImageUrl);
-          const imageUrls = Array.isArray(parsedUrls) ? parsedUrls : [detailedProgress.progressImageUrl];
+          const imageUrls = Array.isArray(parsedUrls)
+            ? parsedUrls
+            : [detailedProgress.progressImageUrl];
 
           // Filter out empty/null URLs and ensure they are valid
-          const validImageUrls = imageUrls.filter(url => url && url.trim() !== '')
+          const validImageUrls = imageUrls.filter(
+            (url) => url && url.trim() !== ""
+          );
 
           // console.log("DEBUG: Setting images for carousel:", validImageUrls) // COMMENTED OUT - Development debug message
-          setImages(validImageUrls)
-          setCurrentImageIndex(0) // Reset to first image
+          setImages(validImageUrls);
+          setCurrentImageIndex(0); // Reset to first image
         } catch (error) {
           // Fallback for single image URL (backward compatibility)
-          const imageUrls = [detailedProgress.progressImageUrl].filter(url => url && url.trim() !== '')
+          const imageUrls = [detailedProgress.progressImageUrl].filter(
+            (url) => url && url.trim() !== ""
+          );
           // console.log("DEBUG: Setting single image for carousel:", imageUrls) // COMMENTED OUT - Development debug message
-          setImages(imageUrls)
-          setCurrentImageIndex(0)
+          setImages(imageUrls);
+          setCurrentImageIndex(0);
         }
       } else {
         // console.log("DEBUG: No progress image URL found") // COMMENTED OUT - Development debug message
-        setImages([])
-        setCurrentImageIndex(0)
+        setImages([]);
+        setCurrentImageIndex(0);
       }
     } catch (error) {
-      console.error("Failed to fetch detailed subcontractor progress:", error)
+      console.error("Failed to fetch detailed subcontractor progress:", error);
       // Fall back to existing data if individual endpoint fails
     }
 
-    setShowIndividualUpdateModal(true)
-  }
+    setShowIndividualUpdateModal(true);
+  };
 
   const handleMarkComplete = async (event, subcontractor) => {
     // console.log("DEBUG: handleMarkComplete called with:", { event: event.id, subcontractor: subcontractor.name, progressId: subcontractor.progressId, subcontractorEntityId: subcontractor.subcontractorEntityId, subcontractorEmail: subcontractor.subcontractorEmail }) // COMMENTED OUT - Exposes sensitive subcontractor and event data
 
-    setLoadingMarkComplete(true)
+    setLoadingMarkComplete(true);
 
     try {
-      const token = localStorage.getItem("token")
+      const token = localStorage.getItem("token");
 
       // Use progressId endpoint if available, otherwise fallback to entity ID or email
-      let apiUrl
+      let apiUrl;
       if (subcontractor.progressId) {
-        apiUrl = `${API_BASE_URL}/api/transactions/subcontractor-progress/id/${subcontractor.progressId}`
+        apiUrl = `${API_BASE_URL}/api/transactions/subcontractor-progress/id/${subcontractor.progressId}`;
       } else if (subcontractor.subcontractorEntityId) {
-        apiUrl = `${API_BASE_URL}/api/transactions/subcontractor-progress/${event.id}/${subcontractor.subcontractorEntityId}`
+        apiUrl = `${API_BASE_URL}/api/transactions/subcontractor-progress/${event.id}/${subcontractor.subcontractorEntityId}`;
       } else {
-        apiUrl = `${API_BASE_URL}/api/transactions/subcontractor-progress/${event.id}/email/${subcontractor.subcontractorEmail}`
+        apiUrl = `${API_BASE_URL}/api/transactions/subcontractor-progress/${event.id}/email/${subcontractor.subcontractorEmail}`;
       }
 
       // console.log("DEBUG: API URL:", apiUrl) // COMMENTED OUT - Exposes internal API URL structure
 
-      const response = await axios.put(
-        apiUrl,
-        null,
-        {
-          params: {
-            progressPercentage: 100,
-            checkInStatus: "approved",
-            notes: "Approved by admin - Work completed successfully",
-            comment: updateData.comment,
-          },
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      )
+      const response = await axios.put(apiUrl, null, {
+        params: {
+          progressPercentage: 100,
+          checkInStatus: "approved",
+          notes: "Approved by admin - Work completed successfully",
+          comment: updateData.comment,
+        },
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       // console.log("DEBUG: API Response:", response) // COMMENTED OUT - Exposes API response data
 
@@ -533,66 +593,68 @@ const EventTrackingAdmin = () => {
                 }
               : e
           )
-        )
+        );
         // console.log("DEBUG: State updated locally") // COMMENTED OUT - Debug message for state update
 
         // Refetch the events data to get the updated status from backend
-        await fetchEventsProgress()
+        await fetchEventsProgress();
         // console.log("DEBUG: Events data refetched successfully") // COMMENTED OUT - Debug message for data refetch
 
         // Close the modal after successful completion
-        setShowIndividualUpdateModal(false)
-        setSelectedEvent(null)
-        setSelectedSubcontractor(null)
+        setShowIndividualUpdateModal(false);
+        setSelectedEvent(null);
+        setSelectedSubcontractor(null);
       } else {
-        console.error("Failed to mark subcontractor as complete: Unexpected response status", response.status)
+        console.error(
+          "Failed to mark subcontractor as complete: Unexpected response status",
+          response.status
+        );
       }
     } catch (error) {
-      console.error("Failed to mark subcontractor as complete:", error)
+      console.error("Failed to mark subcontractor as complete:", error);
       if (error.response) {
-        console.error("Error response:", error.response.data)
-        console.error("Error status:", error.response.status)
+        console.error("Error response:", error.response.data);
+        console.error("Error status:", error.response.status);
       }
     } finally {
-      setLoadingMarkComplete(false)
+      setLoadingMarkComplete(false);
     }
-  }
+  };
 
   const handleMarkIncomplete = async (event, subcontractor) => {
     // console.log("DEBUG: handleMarkIncomplete called with:", { event: event.id, subcontractor: subcontractor.name, progressId: subcontractor.progressId, subcontractorEntityId: subcontractor.subcontractorEntityId, subcontractorEmail: subcontractor.subcontractorEmail }) // COMMENTED OUT - Exposes sensitive subcontractor and event data
 
-    setLoadingMarkComplete(true)
+    setLoadingMarkComplete(true);
 
     try {
-      const token = localStorage.getItem("token")
+      const token = localStorage.getItem("token");
 
       // Use progressId endpoint if available, otherwise fallback to entity ID or email
-      let apiUrl
+      let apiUrl;
       if (subcontractor.progressId) {
-        apiUrl = `${API_BASE_URL}/api/transactions/subcontractor-progress/id/${subcontractor.progressId}`
+        apiUrl = `${API_BASE_URL}/api/transactions/subcontractor-progress/id/${subcontractor.progressId}`;
       } else if (subcontractor.subcontractorEntityId) {
-        apiUrl = `${API_BASE_URL}/api/transactions/subcontractor-progress/${event.id}/${subcontractor.subcontractorEntityId}`
+        apiUrl = `${API_BASE_URL}/api/transactions/subcontractor-progress/${event.id}/${subcontractor.subcontractorEntityId}`;
       } else {
-        apiUrl = `${API_BASE_URL}/api/transactions/subcontractor-progress/${event.id}/email/${subcontractor.subcontractorEmail}`
+        apiUrl = `${API_BASE_URL}/api/transactions/subcontractor-progress/${event.id}/email/${subcontractor.subcontractorEmail}`;
       }
 
       // console.log("DEBUG: API URL:", apiUrl) // COMMENTED OUT - Exposes internal API URL structure
 
-      const newProgress = Math.min(selectedSubcontractor.progressPercentage + 20, 100)
+      const newProgress = Math.min(
+        selectedSubcontractor.progressPercentage + 20,
+        100
+      );
 
-      const response = await axios.put(
-        apiUrl,
-        null,
-        {
-          params: {
-            progressPercentage: newProgress,
-            checkInStatus: "pending",
-            notes: "Marked as incomplete by admin - Work pending",
-            comment: updateData.comment,
-          },
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      )
+      const response = await axios.put(apiUrl, null, {
+        params: {
+          progressPercentage: newProgress,
+          checkInStatus: "pending",
+          notes: "Marked as incomplete by admin - Work pending",
+          comment: updateData.comment,
+        },
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       // console.log("DEBUG: API Response:", response)
 
@@ -625,63 +687,62 @@ const EventTrackingAdmin = () => {
                 }
               : e
           )
-        )
+        );
         // console.log("DEBUG: State updated locally after marking incomplete")
 
         // Refetch the events data to get the updated status from backend
-        await fetchEventsProgress()
+        await fetchEventsProgress();
         // console.log("DEBUG: Events data refetched successfully after marking incomplete")
 
         // Close the modal after successful completion
-        setShowIndividualUpdateModal(false)
-        setSelectedEvent(null)
-        setSelectedSubcontractor(null)
+        setShowIndividualUpdateModal(false);
+        setSelectedEvent(null);
+        setSelectedSubcontractor(null);
       } else {
-        console.error("Failed to mark subcontractor as incomplete: Unexpected response status", response.status)
+        console.error(
+          "Failed to mark subcontractor as incomplete: Unexpected response status",
+          response.status
+        );
       }
     } catch (error) {
-      console.error("Failed to mark subcontractor as incomplete:", error)
+      console.error("Failed to mark subcontractor as incomplete:", error);
       if (error.response) {
-        console.error("Error response:", error.response.data)
-        console.error("Error status:", error.response.status)
+        console.error("Error response:", error.response.data);
+        console.error("Error status:", error.response.status);
       }
     } finally {
-      setLoadingMarkComplete(false)
+      setLoadingMarkComplete(false);
     }
-  }
+  };
 
   const handleSubmitSubcontractorUpdate = async () => {
     if (selectedEvent && selectedSubcontractor) {
       try {
-        const token = localStorage.getItem("token")
+        const token = localStorage.getItem("token");
 
         // Use email endpoint if subcontractorEntityId is undefined, otherwise use entity ID endpoint
         const apiUrl = selectedSubcontractor.subcontractorEntityId
           ? `${API_BASE_URL}/api/transactions/subcontractor-progress/${selectedEvent.id}/${selectedSubcontractor.subcontractorEntityId}`
-          : `${API_BASE_URL}/api/transactions/subcontractor-progress/${selectedEvent.id}/email/${selectedSubcontractor.subcontractorEmail}`
+          : `${API_BASE_URL}/api/transactions/subcontractor-progress/${selectedEvent.id}/email/${selectedSubcontractor.subcontractorEmail}`;
 
-        await axios.put(
-          apiUrl,
-          null,
-          {
-            params: {
-              progressPercentage: updateData.progressPercentage,
-              checkInStatus: updateData.checkInStatus,
-              notes: updateData.notes,
-            },
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        )
+        await axios.put(apiUrl, null, {
+          params: {
+            progressPercentage: updateData.progressPercentage,
+            checkInStatus: updateData.checkInStatus,
+            notes: updateData.notes,
+          },
+          headers: { Authorization: `Bearer ${token}` },
+        });
         // Refetch the events data to get the updated status from backend
-        await fetchEventsProgress()
-        setShowIndividualUpdateModal(false)
-        setSelectedEvent(null)
-        setSelectedSubcontractor(null)
+        await fetchEventsProgress();
+        setShowIndividualUpdateModal(false);
+        setSelectedEvent(null);
+        setSelectedSubcontractor(null);
       } catch (error) {
-        console.error("Failed to update subcontractor progress:", error)
+        console.error("Failed to update subcontractor progress:", error);
       }
     }
-  }
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -696,24 +757,32 @@ const EventTrackingAdmin = () => {
           <IconButton
             onClick={() => setIsSidebarOpen(true)}
             sx={{
-              display: { xs: 'block', md: 'none' },
-              position: 'fixed',
+              display: { xs: "block", md: "none" },
+              position: "fixed",
               top: 80,
               left: 16,
               zIndex: 50,
-              bgcolor: 'white',
-              boxShadow: 2
+              bgcolor: "white",
+              boxShadow: 2,
             }}
           >
             <MenuIcon />
           </IconButton>
 
-          <div className="flex justify-between items-center mb-4 sm:mb-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 gap-3">
             <div>
-              <Typography variant="h4" component="h2" className="font-bold">
+              <Typography
+                variant="h5"
+                component="h2"
+                className="font-bold text-xl sm:text-2xl"
+              >
                 Event Tracking Dashboard
               </Typography>
-              <Typography variant="body2" color="text.secondary" className="mt-1">
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                className="mt-1 text-xs sm:text-sm"
+              >
                 Monitor events in progress and manage subcontractor updates
               </Typography>
             </div>
@@ -723,6 +792,7 @@ const EventTrackingAdmin = () => {
               sx={{
                 backgroundColor: "#FFB22C",
                 "&:hover": { backgroundColor: "#e6a028" },
+                width: { xs: "100%", sm: "auto" },
               }}
               onClick={fetchEventsProgress}
             >
@@ -749,8 +819,15 @@ const EventTrackingAdmin = () => {
                   <Typography variant="body2" color="text.secondary">
                     In Progress
                   </Typography>
-                  <Typography variant="h4" component="p" className="font-bold text-blue-600">
-                    {events.filter((e) => e.currentStatus === "in-progress").length}
+                  <Typography
+                    variant="h4"
+                    component="p"
+                    className="font-bold text-blue-600"
+                  >
+                    {
+                      events.filter((e) => e.currentStatus === "in-progress")
+                        .length
+                    }
                   </Typography>
                 </CardContent>
               </Card>
@@ -761,7 +838,11 @@ const EventTrackingAdmin = () => {
                   <Typography variant="body2" color="text.secondary">
                     Pending Check-ins
                   </Typography>
-                  <Typography variant="h4" component="p" className="font-bold text-orange-600">
+                  <Typography
+                    variant="h4"
+                    component="p"
+                    className="font-bold text-orange-600"
+                  >
                     {events.filter((e) => e.checkInStatus === "pending").length}
                   </Typography>
                 </CardContent>
@@ -773,17 +854,26 @@ const EventTrackingAdmin = () => {
                   <Typography variant="body2" color="text.secondary">
                     Completed
                   </Typography>
-                  <Typography variant="h4" component="p" className="font-bold text-green-600">
-                    {events.filter((e) => e.currentStatus === "completed").length}
+                  <Typography
+                    variant="h4"
+                    component="p"
+                    className="font-bold text-green-600"
+                  >
+                    {
+                      events.filter((e) => e.currentStatus === "completed")
+                        .length
+                    }
                   </Typography>
                 </CardContent>
               </Card>
             </Grid>
           </Grid>
-          
+
           {/* Filter Controls */}
           <Box className="mb-6 p-4 bg-white rounded-lg shadow-sm">
-            <Typography variant="h6" className="mb-4">Filters</Typography>
+            <Typography variant="h6" className="mb-4">
+              Filters
+            </Typography>
             <Grid container spacing={3} alignItems="center">
               <Grid item xs={12} sm={4} md={3}>
                 <FormControl fullWidth size="small">
@@ -823,8 +913,14 @@ const EventTrackingAdmin = () => {
                   placeholder="Name or email..."
                 />
               </Grid>
-              <Grid item xs={12} sm={12} md={3}>
-                <Box display="flex" justifyContent="flex-end">
+              <Grid item xs={12} md={3}>
+                <Box
+                  display="flex"
+                  flexDirection={{ xs: "column", md: "row" }}
+                  gap={2}
+                  alignItems={{ xs: "stretch", md: "center" }}
+                  justifyContent={{ md: "flex-end" }}
+                >
                   <Button
                     variant="outlined"
                     onClick={() => {
@@ -832,11 +928,15 @@ const EventTrackingAdmin = () => {
                       setEventNameFilter("");
                       setOwnerFilter("");
                     }}
-                    sx={{ marginRight: 1 }}
+                    fullWidth={{ xs: true, md: false }}
                   >
                     Clear Filters
                   </Button>
-                  <Typography variant="subtitle2" className="ml-4 pt-2">
+                  <Typography
+                    variant="subtitle2"
+                    className="text-center md:text-left"
+                    sx={{ width: { xs: "100%", md: "auto" } }}
+                  >
                     Showing {filteredEvents.length} of {events.length} events
                   </Typography>
                 </Box>
@@ -844,75 +944,220 @@ const EventTrackingAdmin = () => {
             </Grid>
           </Box>
 
-          <TableContainer component={Paper} className="shadow rounded-lg">
-            <Table>
-              <TableHead sx={{ backgroundColor: "#F1F1FB" }}>
-                <TableRow>
-                  <TableCell>Event Name</TableCell>
-                  <TableCell>Owner</TableCell>
-                  <TableCell>Subcontractor(s)</TableCell>
-                  <TableCell>Location</TableCell>
-                  <TableCell>Progress</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell>Check-in</TableCell>
-                  <TableCell>Last Update</TableCell>
-                  <TableCell>Actions</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {filteredEvents.length > 0 ? filteredEvents.map((event) => (
-                  <TableRow key={event.id} hover>
-                    <TableCell>
-                      <Typography variant="body2" className="font-medium text-[#667085]">
+          {/* Desktop Table - Hidden on mobile */}
+          <Box sx={{ display: { xs: "none", md: "block" } }}>
+            <TableContainer component={Paper} className="shadow rounded-lg">
+              <Table>
+                <TableHead sx={{ backgroundColor: "#F1F1FB" }}>
+                  <TableRow>
+                    <TableCell>Event Name</TableCell>
+                    <TableCell>Owner</TableCell>
+                    <TableCell>Subcontractor(s)</TableCell>
+                    <TableCell>Location</TableCell>
+                    <TableCell>Progress</TableCell>
+                    <TableCell>Status</TableCell>
+                    <TableCell>Check-in</TableCell>
+                    <TableCell>Last Update</TableCell>
+                    <TableCell>Actions</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {filteredEvents.length > 0 ? (
+                    filteredEvents.map((event) => (
+                      <TableRow key={event.id} hover>
+                        <TableCell>
+                          <Typography
+                            variant="body2"
+                            className="font-medium text-[#667085]"
+                          >
+                            {event.eventName}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Typography
+                            variant="body2"
+                            className="text-[#667085]"
+                          >
+                            {event.userName || "N/A"}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Box className="flex items-center gap-2">
+                            {renderSubcontractorProfiles(
+                              groupSubcontractorsByName(event.subcontractors)
+                            )}
+                            {groupSubcontractorsByName(event.subcontractors)
+                              .length > 1 && (
+                              <Button
+                                size="small"
+                                onClick={() => handleViewSubcontractors(event)}
+                                sx={{
+                                  color: "#FFB22C",
+                                  textTransform: "none",
+                                  fontSize: "0.75rem",
+                                  "&:hover": {
+                                    backgroundColor: "rgba(255, 178, 44, 0.1)",
+                                  },
+                                }}
+                              >
+                                View All (
+                                {
+                                  groupSubcontractorsByName(
+                                    event.subcontractors
+                                  ).length
+                                }
+                                )
+                              </Button>
+                            )}
+                          </Box>
+                        </TableCell>
+                        <TableCell>
+                          <Typography
+                            variant="body2"
+                            className="text-[#667085] cursor-pointer hover:text-blue-600"
+                            noWrap
+                            onClick={() => {
+                              setSelectedLocation(event.location);
+                              setViewMapModal(true);
+                            }}
+                          >
+                            {event.location}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Box className="flex items-center gap-2">
+                            <LinearProgress
+                              variant="determinate"
+                              value={calculateOverallProgress(
+                                event.subcontractors
+                              )}
+                              sx={{
+                                width: 64,
+                                height: 8,
+                                borderRadius: 4,
+                                "& .MuiLinearProgress-bar": {
+                                  backgroundColor: "#FFB22C",
+                                },
+                              }}
+                            />
+                            <Typography
+                              variant="caption"
+                              className="text-gray-600"
+                            >
+                              {calculateOverallProgress(event.subcontractors)}%
+                            </Typography>
+                          </Box>
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            label={event.currentStatus.replace("-", " ")}
+                            color={getStatusColor(event.currentStatus)}
+                            size="small"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            label={event.checkInStatus}
+                            color={getCheckInColor(event.checkInStatus)}
+                            size="small"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Typography
+                            variant="caption"
+                            className="text-[#667085]"
+                          >
+                            {event.lastUpdate}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            onClick={() => handleViewSubcontractors(event)}
+                            size="small"
+                            startIcon={<EditIcon />}
+                            sx={{
+                              color: "#FFB22C",
+                              "&:hover": {
+                                backgroundColor: "rgba(255, 178, 44, 0.1)",
+                                color: "#e6a028",
+                              },
+                            }}
+                          >
+                            View Details ({event.subcontractors.length})
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={9} align="center" className="py-8">
+                        <Typography variant="subtitle1" color="text.secondary">
+                          No events match your filter criteria
+                        </Typography>
+                        <Button
+                          variant="text"
+                          color="primary"
+                          onClick={() => {
+                            setStatusFilter("all");
+                            setEventNameFilter("");
+                            setOwnerFilter("");
+                          }}
+                          sx={{ mt: 1 }}
+                        >
+                          Clear Filters
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Box>
+
+          {/* Mobile Card View - Shown only on mobile */}
+          <Box sx={{ display: { xs: "block", md: "none" } }} className="mt-4">
+            {filteredEvents.length > 0 ? (
+              <div className="space-y-3">
+                {filteredEvents.map((event) => (
+                  <Card key={event.id} className="shadow-md">
+                    <CardContent>
+                      <Typography variant="h6" className="font-medium mb-2">
                         {event.eventName}
                       </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="body2" className="text-[#667085]">
-                        {event.userName || "N/A"}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-          <Box className="flex items-center gap-2">
-            {renderSubcontractorProfiles(groupSubcontractorsByName(event.subcontractors))}
-            {groupSubcontractorsByName(event.subcontractors).length > 1 && (
-              <Button
-                size="small"
-                onClick={() => handleViewSubcontractors(event)}
-                sx={{
-                  color: "#FFB22C",
-                  textTransform: "none",
-                  fontSize: "0.75rem",
-                  "&:hover": {
-                    backgroundColor: "rgba(255, 178, 44, 0.1)",
-                  },
-                }}
-              >
-                View All ({groupSubcontractorsByName(event.subcontractors).length})
-              </Button>
-            )}
-          </Box>
-                    </TableCell>
-                    <TableCell>
+
                       <Typography
                         variant="body2"
-                        className="text-[#667085] cursor-pointer hover:text-blue-600"
-                        noWrap
+                        color="text.secondary"
+                        className="mb-2"
+                      >
+                        👤 {event.userName || "N/A"}
+                      </Typography>
+
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        className="mb-2 cursor-pointer hover:text-blue-600"
                         onClick={() => {
                           setSelectedLocation(event.location);
                           setViewMapModal(true);
                         }}
                       >
-                        {event.location}
+                        📍 {event.location}
                       </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Box className="flex items-center gap-2">
+
+                      <Box className="mb-3">
+                        <Box className="flex justify-between items-center mb-1">
+                          <Typography variant="caption" color="text.secondary">
+                            Progress
+                          </Typography>
+                          <Typography variant="caption" className="font-medium">
+                            {calculateOverallProgress(event.subcontractors)}%
+                          </Typography>
+                        </Box>
                         <LinearProgress
                           variant="determinate"
                           value={calculateOverallProgress(event.subcontractors)}
                           sx={{
-                            width: 64,
                             height: 8,
                             borderRadius: 4,
                             "& .MuiLinearProgress-bar": {
@@ -920,103 +1165,165 @@ const EventTrackingAdmin = () => {
                             },
                           }}
                         />
-                        <Typography variant="caption" className="text-gray-600">
-                          {calculateOverallProgress(event.subcontractors)}%
-                        </Typography>
                       </Box>
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        label={event.currentStatus.replace("-", " ")}
-                        color={getStatusColor(event.currentStatus)}
-                        size="small"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        label={event.checkInStatus}
-                        color={getCheckInColor(event.checkInStatus)}
-                        size="small"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="caption" className="text-[#667085]">
-                        {event.lastUpdate}
+
+                      <Box className="flex gap-2 mb-3 flex-wrap">
+                        <Chip
+                          label={event.currentStatus.replace("-", " ")}
+                          color={getStatusColor(event.currentStatus)}
+                          size="small"
+                        />
+                        <Chip
+                          label={event.checkInStatus}
+                          color={getCheckInColor(event.checkInStatus)}
+                          size="small"
+                        />
+                      </Box>
+
+                      <Box className="mb-3">
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          className="block mb-1"
+                        >
+                          Subcontractors
+                        </Typography>
+                        <Box className="flex items-center gap-2 flex-wrap">
+                          {renderSubcontractorProfiles(
+                            groupSubcontractorsByName(event.subcontractors)
+                          )}
+                          {groupSubcontractorsByName(event.subcontractors)
+                            .length > 1 && (
+                            <Button
+                              size="small"
+                              onClick={() => handleViewSubcontractors(event)}
+                              sx={{
+                                color: "#FFB22C",
+                                textTransform: "none",
+                                fontSize: "0.75rem",
+                              }}
+                            >
+                              View All (
+                              {
+                                groupSubcontractorsByName(event.subcontractors)
+                                  .length
+                              }
+                              )
+                            </Button>
+                          )}
+                        </Box>
+                      </Box>
+
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        className="block mb-3"
+                      >
+                        Last Update: {event.lastUpdate}
                       </Typography>
-                    </TableCell>
-                    <TableCell>
+
                       <Button
+                        fullWidth
+                        variant="outlined"
                         onClick={() => handleViewSubcontractors(event)}
-                        size="small"
-                        startIcon={<EditIcon />}
                         sx={{
                           color: "#FFB22C",
+                          borderColor: "#FFB22C",
                           "&:hover": {
+                            borderColor: "#e6a028",
                             backgroundColor: "rgba(255, 178, 44, 0.1)",
-                            color: "#e6a028",
                           },
                         }}
                       >
                         View Details ({event.subcontractors.length})
                       </Button>
-                    </TableCell>
-                  </TableRow>
-                )) : (
-                  <TableRow>
-                    <TableCell colSpan={9} align="center" className="py-8">
-                      <Typography variant="subtitle1" color="text.secondary">
-                        No events match your filter criteria
-                      </Typography>
-                      <Button 
-                        variant="text" 
-                        color="primary"
-                        onClick={() => {
-                          setStatusFilter("all");
-                          setEventNameFilter("");
-                          setOwnerFilter("");
-                        }}
-                        sx={{ mt: 1 }}
-                      >
-                        Clear Filters
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <Card>
+                <CardContent className="text-center py-8">
+                  <Typography
+                    variant="body1"
+                    color="text.secondary"
+                    className="mb-3"
+                  >
+                    No events found matching your filters
+                  </Typography>
+                  <Button
+                    variant="outlined"
+                    onClick={() => {
+                      setStatusFilter("all");
+                      setEventNameFilter("");
+                      setOwnerFilter("");
+                    }}
+                  >
+                    Clear Filters
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+          </Box>
         </main>
       </div>
 
-      <Dialog open={showSubcontractorSelectionModal} onClose={() => setShowSubcontractorSelectionModal(false)} maxWidth="md" fullWidth>
+      <Dialog
+        open={showSubcontractorSelectionModal}
+        onClose={() => setShowSubcontractorSelectionModal(false)}
+        maxWidth="md"
+        fullWidth
+      >
         <DialogTitle>Select Subcontractor to Review</DialogTitle>
         <DialogContent>
-          {selectedEvent && selectedEvent.subcontractors.map((sub) => (
-            <Box
-              key={sub.id}
-              className="flex items-center justify-between p-3 border-b cursor-pointer hover:bg-gray-50"
-              onClick={() => {
-                handleUpdateSubcontractor(selectedEvent, sub);
-                setShowSubcontractorSelectionModal(false);
-              }}
-            >
-              <Box className="flex items-center gap-3">
-                <Avatar src={sub.avatar} alt={sub.name} sx={{ width: 32, height: 32 }} />
-                <Box>
-                  <Typography variant="body1" className="font-medium">{sub.name} ({sub.serviceName})</Typography>
+          {selectedEvent &&
+            selectedEvent.subcontractors.map((sub) => (
+              <Box
+                key={sub.id}
+                className="flex items-center justify-between p-3 border-b cursor-pointer hover:bg-gray-50"
+                onClick={() => {
+                  handleUpdateSubcontractor(selectedEvent, sub);
+                  setShowSubcontractorSelectionModal(false);
+                }}
+              >
+                <Box className="flex items-center gap-3">
+                  <Avatar
+                    src={sub.avatar}
+                    alt={sub.name}
+                    sx={{ width: 32, height: 32 }}
+                  />
+                  <Box>
+                    <Typography variant="body1" className="font-medium">
+                      {sub.name} ({sub.serviceName})
+                    </Typography>
+                  </Box>
+                </Box>
+                <Box className="flex items-center gap-2">
+                  <LinearProgress
+                    variant="determinate"
+                    value={sub.progressPercentage}
+                    sx={{ width: 60, height: 6 }}
+                  />
+                  <Typography variant="caption">
+                    {sub.progressPercentage}%
+                  </Typography>
+                  <Chip
+                    label={sub.checkInStatus}
+                    color={getCheckInColor(sub.checkInStatus)}
+                    size="small"
+                  />
                 </Box>
               </Box>
-              <Box className="flex items-center gap-2">
-                <LinearProgress variant="determinate" value={sub.progressPercentage} sx={{ width: 60, height: 6 }} />
-                <Typography variant="caption">{sub.progressPercentage}%</Typography>
-                <Chip label={sub.checkInStatus} color={getCheckInColor(sub.checkInStatus)} size="small" />
-              </Box>
-            </Box>
-          ))}
+            ))}
         </DialogContent>
       </Dialog>
 
-      <Dialog open={showModal} onClose={() => setShowModal(false)} maxWidth="md" fullWidth>
+      <Dialog
+        open={showModal}
+        onClose={() => setShowModal(false)}
+        maxWidth="md"
+        fullWidth
+      >
         <DialogTitle>Update Event Progress</DialogTitle>
         <DialogContent>
           {selectedEvent && (
@@ -1047,7 +1354,9 @@ const EventTrackingAdmin = () => {
                     <Select
                       value={updateData.status}
                       label="Event Status"
-                      onChange={(e) => setUpdateData({ ...updateData, status: e.target.value })}
+                      onChange={(e) =>
+                        setUpdateData({ ...updateData, status: e.target.value })
+                      }
                     >
                       <MenuItem value="pending">Pending</MenuItem>
                       <MenuItem value="in-progress">In Progress</MenuItem>
@@ -1062,7 +1371,12 @@ const EventTrackingAdmin = () => {
                     <Select
                       value={updateData.checkInStatus}
                       label="Check-in Status"
-                      onChange={(e) => setUpdateData({ ...updateData, checkInStatus: e.target.value })}
+                      onChange={(e) =>
+                        setUpdateData({
+                          ...updateData,
+                          checkInStatus: e.target.value,
+                        })
+                      }
                     >
                       <MenuItem value="pending">Pending</MenuItem>
                       <MenuItem value="approved">Approved</MenuItem>
@@ -1079,7 +1393,10 @@ const EventTrackingAdmin = () => {
                 inputProps={{ min: 0, max: 100 }}
                 value={updateData.progressPercentage}
                 onChange={(e) =>
-                  setUpdateData({ ...updateData, progressPercentage: Number.parseInt(e.target.value) || 0 })
+                  setUpdateData({
+                    ...updateData,
+                    progressPercentage: Number.parseInt(e.target.value) || 0,
+                  })
                 }
               />
 
@@ -1089,7 +1406,9 @@ const EventTrackingAdmin = () => {
                 rows={3}
                 label="Update Notes"
                 value={updateData.notes}
-                onChange={(e) => setUpdateData({ ...updateData, notes: e.target.value })}
+                onChange={(e) =>
+                  setUpdateData({ ...updateData, notes: e.target.value })
+                }
                 placeholder="Add notes about the current progress..."
               />
 
@@ -1121,10 +1440,14 @@ const EventTrackingAdmin = () => {
       >
         <DialogTitle>
           <Box className="flex items-center justify-between">
-            <Typography variant="h6">Review Subcontractor Submission</Typography>
+            <Typography variant="h6">
+              Review Subcontractor Submission
+            </Typography>
             <Chip
               label={selectedSubcontractor?.checkInStatus || "pending"}
-              color={getCheckInColor(selectedSubcontractor?.checkInStatus || "pending")}
+              color={getCheckInColor(
+                selectedSubcontractor?.checkInStatus || "pending"
+              )}
               size="small"
             />
           </Box>
@@ -1135,7 +1458,11 @@ const EventTrackingAdmin = () => {
               {/* Header Info */}
               <Grid container spacing={3}>
                 <Grid item xs={12} md={6}>
-                  <Typography variant="body2" color="text.secondary" className="mb-1">
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    className="mb-1"
+                  >
                     Event
                   </Typography>
                   <Typography variant="h6" className="font-medium">
@@ -1146,7 +1473,11 @@ const EventTrackingAdmin = () => {
                   </Typography>
                 </Grid>
                 <Grid item xs={12} md={6}>
-                  <Typography variant="body2" color="text.secondary" className="mb-1">
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    className="mb-1"
+                  >
                     Subcontractor
                   </Typography>
                   <Box className="flex items-center gap-3">
@@ -1175,36 +1506,53 @@ const EventTrackingAdmin = () => {
 
                 {selectedSubcontractor.progressImageUrl ? (
                   <Box className="mb-6">
-                    <Typography variant="body2" color="text.secondary" className="mb-3">
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      className="mb-3"
+                    >
                       Progress Images
                     </Typography>
                     <Box className="flex justify-center items-center gap-4">
                       <Button
                         variant="outlined"
-                        onClick={() => setCurrentImageIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1))}
+                        onClick={() =>
+                          setCurrentImageIndex((prev) =>
+                            prev === 0 ? images.length - 1 : prev - 1
+                          )
+                        }
                         disabled={images.length <= 1}
                       >
                         ‹
                       </Button>
                       <img
                         src={images[currentImageIndex]}
-                        alt={`Subcontractor progress submission ${currentImageIndex + 1}`}
+                        alt={`Subcontractor progress submission ${
+                          currentImageIndex + 1
+                        }`}
                         style={{
-                          maxWidth: '80%',
-                          maxHeight: '400px',
-                          objectFit: 'contain',
-                          borderRadius: '12px',
-                          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                          maxWidth: "80%",
+                          maxHeight: "400px",
+                          objectFit: "contain",
+                          borderRadius: "12px",
+                          boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
                         }}
                         onError={(e) => {
-                          console.error("Failed to load image:", images[currentImageIndex])
-                          e.target.src = "/placeholder.svg?key=image-error" // Fallback placeholder
-                          e.target.alt = "Image failed to load"
+                          console.error(
+                            "Failed to load image:",
+                            images[currentImageIndex]
+                          );
+                          e.target.src = "/placeholder.svg?key=image-error"; // Fallback placeholder
+                          e.target.alt = "Image failed to load";
                         }}
                       />
                       <Button
                         variant="outlined"
-                        onClick={() => setCurrentImageIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1))}
+                        onClick={() =>
+                          setCurrentImageIndex((prev) =>
+                            prev === images.length - 1 ? 0 : prev + 1
+                          )
+                        }
                         disabled={images.length <= 1}
                       >
                         ›
@@ -1220,7 +1568,11 @@ const EventTrackingAdmin = () => {
                 )}
 
                 <Box className="mb-4">
-                  <Typography variant="body2" color="text.secondary" className="mb-2">
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    className="mb-2"
+                  >
                     Description
                   </Typography>
                   <Box className="bg-white p-4 rounded-lg border">
@@ -1248,7 +1600,10 @@ const EventTrackingAdmin = () => {
                           },
                         }}
                       />
-                      <Typography variant="body2" className="font-medium min-w-[40px]">
+                      <Typography
+                        variant="body2"
+                        className="font-medium min-w-[40px]"
+                      >
                         {selectedSubcontractor.progressPercentage}%
                       </Typography>
                     </Box>
@@ -1264,7 +1619,11 @@ const EventTrackingAdmin = () => {
                 </Grid>
 
                 <Box className="mt-4">
-                  <Typography variant="body2" color="text.secondary" className="mb-2">
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    className="mb-2"
+                  >
                     Comment
                   </Typography>
                   <TextField
@@ -1273,11 +1632,13 @@ const EventTrackingAdmin = () => {
                     rows={3}
                     placeholder="Add a comment about this submission..."
                     value={updateData.comment}
-                    onChange={(e) => setUpdateData({ ...updateData, comment: e.target.value })}
+                    onChange={(e) =>
+                      setUpdateData({ ...updateData, comment: e.target.value })
+                    }
                     sx={{
-                      '& .MuiOutlinedInput-root': {
-                        backgroundColor: 'white',
-                      }
+                      "& .MuiOutlinedInput-root": {
+                        backgroundColor: "white",
+                      },
                     }}
                   />
                 </Box>
@@ -1295,12 +1656,15 @@ const EventTrackingAdmin = () => {
                   Close Review
                 </Button>
 
-                {selectedSubcontractor.checkInStatus === "submitted_for_review" && (
+                {selectedSubcontractor.checkInStatus ===
+                  "submitted_for_review" && (
                   <>
                     <Button
                       variant="contained"
                       startIcon={<CheckCircleIcon />}
-                      onClick={() => handleMarkComplete(selectedEvent, selectedSubcontractor)}
+                      onClick={() =>
+                        handleMarkComplete(selectedEvent, selectedSubcontractor)
+                      }
                       disabled={loadingMarkComplete}
                       sx={{
                         backgroundColor: "#4CAF50",
@@ -1314,12 +1678,19 @@ const EventTrackingAdmin = () => {
                         },
                       }}
                     >
-                      {loadingMarkComplete ? "Marking Complete..." : "Mark as Complete"}
+                      {loadingMarkComplete
+                        ? "Marking Complete..."
+                        : "Mark as Complete"}
                     </Button>
                     <Button
                       variant="outlined"
                       startIcon={<UndoIcon />}
-                      onClick={() => handleMarkIncomplete(selectedEvent, selectedSubcontractor)}
+                      onClick={() =>
+                        handleMarkIncomplete(
+                          selectedEvent,
+                          selectedSubcontractor
+                        )
+                      }
                       disabled={loadingMarkComplete}
                       sx={{
                         borderColor: "#FFB22C",
@@ -1344,7 +1715,12 @@ const EventTrackingAdmin = () => {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={showSubcontractorModal} onClose={() => setShowSubcontractorModal(false)} maxWidth="lg" fullWidth>
+      <Dialog
+        open={showSubcontractorModal}
+        onClose={() => setShowSubcontractorModal(false)}
+        maxWidth="lg"
+        fullWidth
+      >
         <DialogTitle>
           <Box className="flex items-center gap-2">
             <GroupIcon sx={{ color: "#FFB22C" }} />
@@ -1363,7 +1739,11 @@ const EventTrackingAdmin = () => {
                   <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                     <Box className="flex items-center justify-between w-full mr-4">
                       <Box className="flex items-center gap-3">
-                        <Avatar src={subcontractor.avatar} alt={subcontractor.name} sx={{ width: 32, height: 32 }} />
+                        <Avatar
+                          src={subcontractor.avatar}
+                          alt={subcontractor.name}
+                          sx={{ width: 32, height: 32 }}
+                        />
                         <Typography variant="subtitle1" className="font-medium">
                           {subcontractor.name}
                         </Typography>
@@ -1400,13 +1780,23 @@ const EventTrackingAdmin = () => {
                   <AccordionDetails>
                     <Grid container spacing={3}>
                       <Grid item xs={12} md={6}>
-                        <Typography variant="body2" color="text.secondary" className="mb-1">
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          className="mb-1"
+                        >
                           Last Update
                         </Typography>
-                        <Typography variant="body2">{subcontractor.lastUpdate}</Typography>
+                        <Typography variant="body2">
+                          {subcontractor.lastUpdate}
+                        </Typography>
                       </Grid>
                       <Grid item xs={12} md={6}>
-                        <Typography variant="body2" color="text.secondary" className="mb-1">
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          className="mb-1"
+                        >
                           Check-in Status
                         </Typography>
                         <Chip
@@ -1418,7 +1808,11 @@ const EventTrackingAdmin = () => {
                       <Grid item xs={12}>
                         {subcontractor.progressImageUrl && (
                           <Box className="mb-4">
-                            <Typography variant="body2" color="text.secondary" className="mb-2">
+                            <Typography
+                              variant="body2"
+                              color="text.secondary"
+                              className="mb-2"
+                            >
                               Submission Image
                             </Typography>
                             {(() => {
@@ -1428,7 +1822,10 @@ const EventTrackingAdmin = () => {
                               let imageUrls = [];
 
                               // Check if it looks like a JSON array
-                              if (urlString.startsWith('[') && urlString.endsWith(']')) {
+                              if (
+                                urlString.startsWith("[") &&
+                                urlString.endsWith("]")
+                              ) {
                                 try {
                                   const parsed = JSON.parse(urlString);
                                   if (Array.isArray(parsed)) {
@@ -1439,8 +1836,12 @@ const EventTrackingAdmin = () => {
                                 } catch (error) {
                                   // Manual parsing for malformed JSON
                                   const content = urlString.slice(1, -1); // Remove brackets
-                                  const urls = content.split('","').map(url => url.replace(/^"|"$/g, '')); // Split by "," and remove quotes
-                                  imageUrls = urls.filter(url => url && url.trim());
+                                  const urls = content
+                                    .split('","')
+                                    .map((url) => url.replace(/^"|"$/g, "")); // Split by "," and remove quotes
+                                  imageUrls = urls.filter(
+                                    (url) => url && url.trim()
+                                  );
                                 }
                               } else {
                                 // Single URL
@@ -1452,10 +1853,18 @@ const EventTrackingAdmin = () => {
                                   key={index}
                                   src={url}
                                   alt={`Subcontractor submission ${index + 1}`}
-                                  style={{ width: '100%', maxWidth: 300, height: 200, objectFit: 'cover', borderRadius: 8, marginBottom: 8 }}
+                                  style={{
+                                    width: "100%",
+                                    maxWidth: 300,
+                                    height: 200,
+                                    objectFit: "cover",
+                                    borderRadius: 8,
+                                    marginBottom: 8,
+                                  }}
                                   onError={(e) => {
                                     console.error("Failed to load image:", url);
-                                    e.target.src = "/placeholder.svg?key=image-error";
+                                    e.target.src =
+                                      "/placeholder.svg?key=image-error";
                                     e.target.alt = "Image failed to load";
                                   }}
                                 />
@@ -1463,10 +1872,17 @@ const EventTrackingAdmin = () => {
                             })()}
                           </Box>
                         )}
-                        <Typography variant="body2" color="text.secondary" className="mb-1">
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          className="mb-1"
+                        >
                           Progress Notes
                         </Typography>
-                        <Typography variant="body2" className="bg-gray-50 p-3 rounded">
+                        <Typography
+                          variant="body2"
+                          className="bg-gray-50 p-3 rounded"
+                        >
                           {subcontractor.notes}
                         </Typography>
                       </Grid>
@@ -1475,7 +1891,12 @@ const EventTrackingAdmin = () => {
                           <Button
                             variant="outlined"
                             startIcon={<EditIcon />}
-                            onClick={() => handleUpdateSubcontractor(selectedEvent, subcontractor)}
+                            onClick={() =>
+                              handleUpdateSubcontractor(
+                                selectedEvent,
+                                subcontractor
+                              )
+                            }
                             sx={{
                               color: "#FFB22C",
                               borderColor: "#FFB22C",
@@ -1487,11 +1908,14 @@ const EventTrackingAdmin = () => {
                           >
                             Update This Subcontractor
                           </Button>
-                          {subcontractor.checkInStatus === "submitted_for_review" && (
+                          {subcontractor.checkInStatus ===
+                            "submitted_for_review" && (
                             <Button
                               variant="contained"
                               color="success"
-                              onClick={() => handleMarkComplete(selectedEvent, subcontractor)}
+                              onClick={() =>
+                                handleMarkComplete(selectedEvent, subcontractor)
+                              }
                               disabled={loadingMarkComplete}
                               sx={{
                                 backgroundColor: "#4caf50",
@@ -1504,7 +1928,9 @@ const EventTrackingAdmin = () => {
                                 },
                               }}
                             >
-                              {loadingMarkComplete ? "Marking Complete..." : "Mark as Complete"}
+                              {loadingMarkComplete
+                                ? "Marking Complete..."
+                                : "Mark as Complete"}
                             </Button>
                           )}
                         </Box>
@@ -1515,11 +1941,14 @@ const EventTrackingAdmin = () => {
               ))}
 
               <Box className="flex justify-end pt-4">
-                <Button variant="outlined" onClick={() => setShowSubcontractorModal(false)}>
+                <Button
+                  variant="outlined"
+                  onClick={() => setShowSubcontractorModal(false)}
+                >
                   Close
                 </Button>
               </Box>
-            </Box>  
+            </Box>
           )}
         </DialogContent>
       </Dialog>
@@ -1538,7 +1967,7 @@ const EventTrackingAdmin = () => {
         <AdminSideBar />
       </Drawer>
     </div>
-  )
-}
+  );
+};
 
-export default EventTrackingAdmin
+export default EventTrackingAdmin;
