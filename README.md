@@ -49,26 +49,32 @@ EventEase is a comprehensive web-based platform designed to streamline the entir
 
 ## 📑 Table of Contents
 
-- [🎯 Overview](#-overview)
-- [📖 User Guide](#-user-guide)
-- [✨ Features](#-features)
-  - [For Customers](#for-customers)
-  - [For Admins (Event Organizers)](#for-admins-event-organizers)
-  - [For Subcontractors](#for-subcontractors)
-- [🛠️ Technology Stack](#️-technology-stack)
-- [🚀 Getting Started](#-getting-started)
-  - [Prerequisites](#prerequisites)
-  - [Database Setup](#database-setup)
-  - [Backend Deployment](#backend-deployment-spring-boot)
-  - [Frontend Deployment](#frontend-deployment-react--vite)
-  - [Running with Docker](#running-with-docker-optional)
-- [🔐 Authentication / Testing Credentials](#-authentication--testing-credentials)
-- [📁 Project Structure](#-project-structure)
-- [🔧 Configuration](#-configuration)
-- [📝 API Documentation](#-api-documentation)
-- [🤝 Contributing](#-contributing)
-- [👥 Developer Members](#-developer-members)
-- [📧 Support](#-support)
+- [EventEase - Web-Based Event Subcontractor Management and Reservation System](#eventease---web-based-event-subcontractor-management-and-reservation-system)
+  - [📑 Table of Contents](#-table-of-contents)
+  - [🎯 Overview](#-overview)
+  - [📖 User Guide](#-user-guide)
+  - [🛠️ Technology Stack](#️-technology-stack)
+    - [Frontend](#frontend)
+    - [Backend](#backend)
+    - [Database](#database)
+    - [DevOps \& Deployment](#devops--deployment)
+  - [🚀 Getting Started](#-getting-started)
+    - [Prerequisites](#prerequisites)
+    - [Database Setup](#database-setup)
+    - [Backend Deployment (Spring Boot)](#backend-deployment-spring-boot)
+    - [Frontend Deployment (React + Vite)](#frontend-deployment-react--vite)
+    - [Running with Docker (Optional)](#running-with-docker-optional)
+  - [🔐 Authentication / Testing Credentials](#-authentication--testing-credentials)
+    - [Admin Account](#admin-account)
+    - [Customer Account](#customer-account)
+  - [📁 Project Structure](#-project-structure)
+  - [🔧 Configuration](#-configuration)
+    - [Backend Configuration (`application.properties`)](#backend-configuration-applicationproperties)
+    - [Frontend Configuration (`vite.config.js`)](#frontend-configuration-viteconfigjs)
+  - [📝 API Documentation](#-api-documentation)
+  - [🤝 Contributing](#-contributing)
+  - [👥 Developer Members](#-developer-members)
+  - [📧 Support](#-support)
 
 ---
 
@@ -88,84 +94,6 @@ For detailed step-by-step instructions on how to use EventEase, please refer to 
 - **[Subcontractor Guide](https://docs.google.com/document/d/1Uo6bb0YNuBaRs_4CkT-IpD939_5jzmYJDjNsvNGj9-U/edit?tab=t.0#heading=h.203ipuueam35)** - Instructions for subcontractors on task management and work submission
 - **[Admin Guide](https://docs.google.com/document/d/1fuvmu7k2g9jWIHAchBigGSKkOYMq0_jqnI0Kt92NY_c/edit?tab=t.0)** - Comprehensive admin dashboard and management guide
 
-## ✨ Features
-
-### For Customers
-
-- ✅ **Event Discovery & Booking**
-  - Browse available event services
-  - View detailed event descriptions, pricing, and availability
-  - Book individual services
-  - Interactive service selection with visual previews
-
-- ✅ **Booking Management**
-  - Input custom event details (date, location, requirements)
-  - Preview booking summaries before confirmation
-  - Upload payment proof with chunked file upload support
-  - Track booking status and event progress
-  - Receive real-time notifications about booking updates
-
-- ✅ **Account Management**
-  - Secure registration with OTP email verification
-  - Profile management with customizable settings
-  - View booking history and transaction records
-  - Password reset functionality
-
-### For Admins (Event Organizers)
-
-- ✅ **Dashboard & Analytics**
-  - Comprehensive business overview with key metrics
-  - Visual analytics for bookings, revenue, and performance
-  - Monitor active events and pending requests
-
-- ✅ **Event Management**
-  - Create, edit, and delete event services
-  - Set pricing, availability, and service details
-  - Upload showcase images and event portfolios
-  - Manage service categories and customization options
-
-- ✅ **Booking Operations**
-  - View and manage all customer bookings
-  - Review payment proofs and verify transactions
-  - Approve or reject booking requests
-  - Track event progress from booking to completion
-  - Assign subcontractors to events
-
-- ✅ **Subcontractor Management**
-  - Add and manage subcontractor accounts
-  - Assign tasks and events to subcontractors
-  - Review submitted proof of work
-  - Track subcontractor performance and availability
-
-- ✅ **Customer Management**
-  - View customer profiles
-
-- ✅ **Communication System**
-  - In-app notification system
-  - Email notifications for important events
-  - Real-time updates on booking status changes
-
-### For Subcontractors
-
-- ✅ **Task Management**
-  - View assigned events and tasks
-  - Access event details and requirements
-  - Manage service availability
-  - Track upcoming and completed assignments
-
-- ✅ **Proof of Work Submission**
-  - Upload work completion documentation
-  - Submit photos and files for admin review
-  - Track submission status and feedback
-
-- ✅ **Transaction Tracking**
-  - View payment history
-  - Access transaction records
-
-- ✅ **Profile Management**
-  - Update availability status
-  - Manage personal information
-
 ## 🛠️ Technology Stack
 
 ### Frontend
@@ -174,8 +102,8 @@ For detailed step-by-step instructions on how to use EventEase, please refer to 
 - **Build Tool**: Vite
 - **Routing**: React Router DOM
 - **HTTP Client**: Axios
-- **Maps**: Maps React (`@react-google-maps/api`)
-- **UI/Styling**: CSS Modules, Responsive Design
+- **Maps**: openstreetmap.org
+- **UI/Styling**: CSS Modules, Responsive Design, Tailwind CSS
 - **State Management**: React Context API
 - **Form Handling**: Custom validation
 - **File Upload**: Chunked upload implementation
@@ -344,6 +272,14 @@ To test the application, use the following sample credentials:
 
 ### Admin Account
 
+> **Important**: On first deployment, you need to manually set up the admin account:
+> 1. Register a new account through the registration process with email: `admin@eventease.com`
+> 2. After registration, directly edit the database to change the user type to `'Admin'` to access the admin dashboard
+> 3. Execute this SQL command in your MySQL database:
+>    ```sql
+>    UPDATE users SET user_type = 'Admin' WHERE email = 'admin@eventease.com';
+>    ```
+
 - **Email**: `admin@eventease.com`
 - **Password**: `Admin123!`
 - **Role**: Administrator (full access to admin dashboard)
@@ -354,13 +290,11 @@ To test the application, use the following sample credentials:
 - **Password**: `JohnDoe123`
 - **Role**: Customer (booking and event management)
 
-### Subcontractor Account
+> **Note**: Customer accounts can be created through the normal registration process.
 
-- **Email**: `subcontractor@eventease.com`
-- **Password**: `Sub123!`
-- **Role**: Subcontractor (task and work submission)
+### Subcontractor Accounts
 
-> **Note**: On first deployment, you may need to create these accounts manually through the registration process or seed them directly into the database. The customer account (<johnDoe@gmail.com>) is provided as a standard testing credential.
+> **Note**: Subcontractor accounts are created and managed by the Admin through the admin dashboard. Admins can add subcontractors, assign them to events, and manage their access. Subcontractors cannot self-register.
 
 ## 📁 Project Structure
 
